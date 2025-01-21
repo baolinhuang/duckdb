@@ -156,7 +156,7 @@ select_clause:
  * However, this is not checked by the grammar; parse analysis must check it.
  */
 opt_select:
-		SELECT opt_all_clause opt_target_list_opt_comma
+		SELECT select_options opt_target_list_opt_comma
 			{
 				$$ = $3;
 			}
@@ -169,23 +169,7 @@ opt_select:
 
 
 simple_select:
-			SELECT opt_all_clause opt_target_list_opt_comma
-			into_clause from_clause where_clause
-			group_clause having_clause window_clause qualify_clause sample_clause
-				{
-					PGSelectStmt *n = makeNode(PGSelectStmt);
-					n->targetList = $3;
-					n->intoClause = $4;
-					n->fromClause = $5;
-					n->whereClause = $6;
-					n->groupClause = $7;
-					n->havingClause = $8;
-					n->windowClause = $9;
-					n->qualifyClause = $10;
-					n->sampleOptions = $11;
-					$$ = (PGNode *)n;
-				}
-			| SELECT distinct_clause target_list_opt_comma
+			SELECT select_options target_list_opt_comma
 			into_clause from_clause where_clause
 			group_clause having_clause window_clause qualify_clause sample_clause
 				{
@@ -202,25 +186,8 @@ simple_select:
 					n->sampleOptions = $11;
 					$$ = (PGNode *)n;
 				}
-			|  FROM from_list opt_select
-			into_clause where_clause
-			group_clause having_clause window_clause qualify_clause sample_clause
-				{
-					PGSelectStmt *n = makeNode(PGSelectStmt);
-					n->targetList = $3;
-					n->fromClause = $2;
-					n->intoClause = $4;
-					n->whereClause = $5;
-					n->groupClause = $6;
-					n->havingClause = $7;
-					n->windowClause = $8;
-					n->qualifyClause = $9;
-					n->sampleOptions = $10;
-					n->from_first = true;
-					$$ = (PGNode *)n;
-				}
 			|
-			FROM from_list SELECT distinct_clause target_list_opt_comma
+			FROM from_list SELECT select_options target_list_opt_comma
 			into_clause where_clause
 			group_clause having_clause window_clause qualify_clause sample_clause
 				{
@@ -592,6 +559,40 @@ opt_all_clause:
 			| /*EMPTY*/								{ $$ = NIL; }
 		;
 
+select_options:
+        	select_option_list
+          	{
+            	$$ = $1;
+          	}
+        	| /*EMPTY*/	
+			{
+				$$ = NULL;
+			}
+        ;
+
+select_option_list:
+          select_option_list select_option
+          {
+            if ($1) {
+				$$ = $1;
+			} else {
+				$$ = $2;
+			}
+          }
+        | select_option
+        ;
+
+select_option:
+        HIGH_PRIORITY       { $$ = NULL; }
+        | DISTINCT            { $$ = list_make1(NIL); }
+        | SQL_SMALL_RESULT    { $$ = NULL; }
+        | SQL_BIG_RESULT      { $$ = NULL; }
+        | SQL_BUFFER_RESULT   { $$ = NULL; }
+        | SQL_CALC_FOUND_ROWS { $$ = NULL; }
+		| SQL_NO_CACHE_SYM	  { $$ = NULL; }
+        | ALL                 { $$ = NULL; }
+        ;
+
 opt_ignore_nulls:
 			IGNORE_P NULLS_P						{ $$ = PG_IGNORE_NULLS;}
 			| RESPECT_P NULLS_P						{ $$ = PG_RESPECT_NULLS;}
@@ -658,8 +659,9 @@ opt_nulls_order: NULLS_LA FIRST_P			{ $$ = PG_SORTBY_NULLS_FIRST; }
 select_limit:
 			limit_clause offset_clause			{ $$ = list_make3($2, $1, NULL); }
 			| offset_clause limit_clause		{ $$ = list_make3($1, $2, $1); }
-			| limit_clause						{ $$ = list_make3(NULL, $1, NULL); }
-			| offset_clause						{ $$ = list_make3($1, NULL, $1); }
+			| limit_clause						{ $$ = ist_make3(NULL, $1, NULL); }
+			| offset_clause						{ $$ = ist_make3($1, NULL, $1); }
+			| LIMIT select_limit_value ',' select_offset_value { $$ = list_make2($4, $2, $4); }
 		;
 
 opt_select_limit:
@@ -670,15 +672,6 @@ opt_select_limit:
 limit_clause:
 			LIMIT select_limit_value
 				{ $$ = $2; }
-			| LIMIT select_limit_value ',' select_offset_value
-				{
-					/* Disabled because it was too confusing, bjm 2002-02-18 */
-					ereport(ERROR,
-							(errcode(PG_ERRCODE_SYNTAX_ERROR),
-							 errmsg("LIMIT #,# syntax is not supported"),
-							 errhint("Use separate LIMIT and OFFSET clauses."),
-							 parser_errposition(@1)));
-				}
 			/* SQL:2008 syntax */
 			/* to avoid shift/reduce conflicts, handle the optional value with
 			 * a separate production rather than an opt_ expression.  The fact
@@ -891,7 +884,14 @@ first_or_next: FIRST_P								{ $$ = 0; }
  * PGGroupingSet node of some type.
  */
 group_clause:
-			GROUP_P BY group_by_list_opt_comma				{ $$ = $3; }
+			GROUP_P BY group_by_list_opt_comma with_rollup_clause
+			{
+				if ($4) {
+					PGNode *node = (PGNode *)($3);
+					node->type = T_PGROLLUPLIST;
+				}
+				$$ = $3;
+			}
 			| GROUP_P BY ALL
 				{
 					PGNode *node = (PGNode *) makeGroupingSet(GROUPING_SET_ALL, NIL, @3);
@@ -924,6 +924,10 @@ empty_grouping_set:
 					$$ = (PGNode *) makeGroupingSet(GROUPING_SET_EMPTY, NIL, @1);
 				}
 		;
+
+with_rollup_clause:
+			WITH ROLLUP	{ $$ = true; }
+			| /*EMPTY*/								{ $$ = false; }
 
 /*
  * These hacks rely on setting precedence of CUBE and ROLLUP below that of '(',
@@ -1073,11 +1077,11 @@ alias_prefix_colon_clause:
 /*
  * table_ref is where an alias clause can be attached.
  */
-table_ref:	relation_expr opt_alias_clause opt_at_clause opt_tablesample_clause
+table_ref:	relation_expr opt_use_partition opt_alias_clause opt_at_clause opt_key_definition opt_tablesample_clause
 				{
-					$1->at_clause = $3;
-					$1->alias = $2;
-					$1->sample = $4;
+					$1->alias = $3;
+					$1->sample = $6;
+					$1->at_clause = $4;
 					$$ = (PGNode *) $1;
 				}
 			| alias_prefix_colon_clause relation_expr opt_at_clause opt_tablesample_clause
@@ -1271,6 +1275,81 @@ unpivot_value_list:	unpivot_value
 				}
 		;
 
+opt_use_partition:
+          /*EMPTY*/			{ }
+        | use_partition		{ }
+        ;
+
+use_partition:
+          PARTITION '(' partition_list ')'
+          {
+			ereport(ERROR,
+				(errcode(PG_ERRCODE_SYNTAX_ERROR),
+				errmsg("PARTITION selection syntax is not supported"),
+				errhint("Remove the PARTITION selection."),
+				parser_errposition(@1)));
+          }
+        ;
+
+partition_list:
+		ColIdOrString { }
+		| partition_list ',' ColIdOrString { };
+
+index_hint_clause:
+          /*EMPTY*/ 			{ }
+        | FOR JOIN      		{ }
+        | FOR ORDER BY  		{ }
+        | FOR GROUP_P BY  		{ }
+        ;
+
+index_hint_type:
+          FORCE  { }
+        | IGNORE_P { }
+        ;
+
+index_hint_definition:
+          index_hint_type key_or_index index_hint_clause
+          '(' key_usage_list ')'
+          {	}
+        | USE_P key_or_index index_hint_clause
+          '(' opt_key_usage_list ')'
+          { }
+       ;
+
+key_or_index:
+		  KEY	{}
+		| INDEX	{}
+		;
+
+index_hints_list:
+          index_hint_definition
+        | index_hints_list index_hint_definition	{ }
+        ;
+
+opt_index_hints_list:
+          /*EMPTY*/ { }
+        | index_hints_list	{ }
+        ;
+
+opt_key_definition:
+          opt_index_hints_list	{ }
+        ;
+
+opt_key_usage_list:
+          /*EMPTY*/	{ }
+        | key_usage_list { }
+        ;
+
+key_usage_element:
+          ColIdOrString	{}
+		;
+
+key_usage_list:
+          key_usage_element	{	}
+        | key_usage_list ',' key_usage_element	{	}
+        ;
+
+
 /*
  * It may seem silly to separate joined_table from table_ref, but there is
  * method in SQL's madness: if you don't do it this way you get reduce-
@@ -1322,6 +1401,21 @@ joined_table:
 					$$ = n;
 				}
 			| table_ref JOIN table_ref join_qual
+				{
+					/* letting join_type reduce to empty doesn't work */
+					PGJoinExpr *n = makeNode(PGJoinExpr);
+					n->jointype = PG_JOIN_INNER;
+					n->joinreftype = PG_JOIN_REGULAR;
+					n->larg = $1;
+					n->rarg = $3;
+					if ($4 != NULL && IsA($4, PGList))
+						n->usingClause = (PGList *) $4; /* USING clause */
+					else
+						n->quals = $4; /* ON clause */
+					n->location = @2;
+					$$ = n;
+				}
+			| table_ref STRAIGHT_JOIN table_ref join_qual
 				{
 					/* letting join_type reduce to empty doesn't work */
 					PGJoinExpr *n = makeNode(PGJoinExpr);
@@ -1433,6 +1527,32 @@ joined_table:
                    n->location = @2;
                    $$ = n;
                }
+			| table_ref JOIN table_ref %prec CONDITIONLESS_JOIN
+				{
+					/* MySQL Syntax, JOIN without on_clause. */
+					PGJoinExpr *n = makeNode(PGJoinExpr);
+					n->jointype = PG_JOIN_INNER;
+					n->joinreftype = PG_JOIN_REGULAR;
+					n->larg = $1;
+					n->rarg = $3;
+					n->usingClause = NIL;
+					n->quals = NULL;
+					n->location = @2;
+					$$ = n;
+				}
+			| table_ref STRAIGHT_JOIN table_ref %prec CONDITIONLESS_JOIN
+				{
+					/* MySQL Syntax, STRAIGHT_JOIN without on_clause. */
+					PGJoinExpr *n = makeNode(PGJoinExpr);
+					n->jointype = PG_JOIN_INNER;
+					n->joinreftype = PG_JOIN_REGULAR;
+					n->larg = $1;
+					n->rarg = $3;
+					n->usingClause = NIL;
+					n->quals = NULL;
+					n->location = @2;
+					$$ = n;
+				}
 		;
 
 alias_clause:
@@ -2276,7 +2396,11 @@ a_expr:		c_expr									{ $$ = $1; }
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "/", $1, $3, @2); }
 			| a_expr INTEGER_DIVISION a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "//", $1, $3, @2); }
+			| a_expr DIV a_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "//", $1, $3, @2); }
 			| a_expr '%' a_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
+			| a_expr MOD a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
 			| a_expr '^' a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "^", $1, $3, @2); }
@@ -2723,7 +2847,11 @@ b_expr:		c_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "/", $1, $3, @2); }
 			| b_expr INTEGER_DIVISION b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "//", $1, $3, @2); }
+			| b_expr DIV b_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "//", $1, $3, @2); }
 			| b_expr '%' b_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
+			| b_expr MOD b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
 			| b_expr '^' b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "^", $1, $3, @2); }
@@ -3143,6 +3271,18 @@ func_expr_common_subexpr:
 					c->args = $3;
 					c->location = @1;
 					$$ = (PGNode *)c;
+				}
+			| CONVERT '(' a_expr ',' Typename ')'
+				{
+					$$ = makeTypeCast($3, $5, 0, @1);
+				}
+			| TIMESTAMPDIFF '(' extract_arg ',' a_expr ',' a_expr ')'
+				{
+					$$ = (PGNode *) makeFuncCall(SystemFuncName("date_diff"), list_make3(makeStringConst($3, @1), $5, $7), @1);
+				}
+			| TIMESTAMPADD '(' opt_interval ',' a_expr ',' a_expr ')'
+				{
+					$$ = (PGNode *) makeFuncCall(SystemFuncName("date_add"), list_make2($7, makeIntervalNode($5, @5, $3)), @1);
 				}
 		;
 

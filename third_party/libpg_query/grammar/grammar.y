@@ -109,6 +109,7 @@
 %nonassoc	SET				/* see */
 %left		UNION EXCEPT
 %left		INTERSECT
+%left 		CONDITIONLESS_JOIN
 %left		SINGLE_ARROW DOUBLE_ARROW
 %left		OR
 %left		AND
@@ -148,7 +149,7 @@
 %nonassoc	IDENT GENERATED NULL_P PARTITION RANGE ROWS GROUPS PRECEDING FOLLOWING CUBE ROLLUP ENUM_P
 %left		Op OPERATOR		/* multi-character ops and user-defined operators */
 %left		'+' '-'
-%left		'*' '/' '%' INTEGER_DIVISION
+%left		'*' '/' '%' INTEGER_DIVISION DIV MOD
 %left		'^' POWER_OF
 /* Unary Operators */
 %left		AT				/* sets precedence for AT TIME ZONE */
@@ -165,7 +166,7 @@
  * They wouldn't be given a precedence at all, were it not that we need
  * left-associativity among the JOIN rules themselves.
  */
-%left		JOIN CROSS LEFT FULL RIGHT INNER_P NATURAL POSITIONAL PIVOT UNPIVOT ANTI SEMI ASOF
+%left		JOIN CROSS LEFT FULL RIGHT INNER_P NATURAL POSITIONAL PIVOT UNPIVOT ANTI SEMI ASOF STRAIGHT_JOIN ON USING
 /* kluge to keep from causing shift/reduce conflicts */
 %right		PRESERVE STRIP_P IGNORE_P RESPECT_P
 

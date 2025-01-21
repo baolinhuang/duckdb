@@ -177,7 +177,6 @@ static const DefaultMacro internal_macros[] = {
 	// mysql date function
 	{DEFAULT_SCHEMA, "convert_tz", {"timestamp", "tz1", "tz2", nullptr}, {{nullptr, nullptr}}, "timezone(tz2, timezone(tz1, timestamp))"},
 	{DEFAULT_SCHEMA, "datediff", {"date1", "date2", nullptr}, {{nullptr, nullptr}}, "date_diff('day', date2, date1)"},
-	{DEFAULT_SCHEMA, "timestampdiff", {"unit", "date1", "date2", nullptr}, {{nullptr, nullptr}}, "date_diff(unit, date1, date2)"},
 	{DEFAULT_SCHEMA, "subdate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date_add(date, -interval)"},
 	{DEFAULT_SCHEMA, "date_sub", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date_add(date, -interval)"},
 	{DEFAULT_SCHEMA, "date", {"expr", nullptr}, {{nullptr, nullptr}}, "cast(expr as DATE)"},

@@ -149,6 +149,30 @@ bool Transformer::TransformGroupBy(optional_ptr<duckdb_libpgquery::PGList> group
 	}
 	auto &result = select_node.groups;
 	GroupingExpressionMap map;
+
+	if (group->type == duckdb_libpgquery::T_PGROLLUPLIST) {
+		vector<GroupingSet> result_sets;
+		vector<GroupingSet> rollup_sets;
+		for (auto node = group->head; node != nullptr; node = node->next) {
+			auto n = PGPointerCast<duckdb_libpgquery::PGNode>(node->data.ptr_value);
+			assert(n->type != duckdb_libpgquery::T_PGGroupingSet);
+			
+			vector<idx_t> rollup_set;
+			TransformGroupByExpression(*n, map, result, rollup_set);
+			rollup_sets.push_back(VectorToGroupingSet(rollup_set));
+		}
+		// generate the subsets of the rollup set and add them to the grouping sets
+		GroupingSet current_set;
+		result_sets.push_back(current_set);
+		for (idx_t i = 0; i < rollup_sets.size(); i++) {
+			MergeGroupingSet(current_set, rollup_sets[i]);
+			result_sets.push_back(current_set);
+		}
+		assert(result.grouping_sets.empty());
+		result.grouping_sets = std::move(result_sets);
+		return true;
+	}
+
 	for (auto node = group->head; node != nullptr; node = node->next) {
 		auto n = PGPointerCast<duckdb_libpgquery::PGNode>(node->data.ptr_value);
 		vector<GroupingSet> result_sets;

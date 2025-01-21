@@ -8,7 +8,7 @@
  *
  *****************************************************************************/
 CreateAsStmt:
-		CREATE_P OptTemp TABLE create_as_target AS SelectStmt opt_with_data
+		CREATE_P OptTemp TABLE create_as_target AS SelectStmt
 				{
 					PGCreateTableAsStmt *ctas = makeNode(PGCreateTableAsStmt);
 					ctas->query = $6;
@@ -18,10 +18,9 @@ CreateAsStmt:
 					ctas->onconflict = PG_ERROR_ON_CONFLICT;
 					/* cram additional flags into the PGIntoClause */
 					$4->rel->relpersistence = $2;
-					$4->skipData = !($7);
 					$$ = (PGNode *) ctas;
 				}
-		| CREATE_P OptTemp TABLE IF_P NOT EXISTS create_as_target AS SelectStmt opt_with_data
+		| CREATE_P OptTemp TABLE IF_P NOT EXISTS create_as_target AS SelectStmt
 				{
 					PGCreateTableAsStmt *ctas = makeNode(PGCreateTableAsStmt);
 					ctas->query = $9;
@@ -31,10 +30,9 @@ CreateAsStmt:
 					ctas->onconflict = PG_IGNORE_ON_CONFLICT;
 					/* cram additional flags into the PGIntoClause */
 					$7->rel->relpersistence = $2;
-					$7->skipData = !($10);
 					$$ = (PGNode *) ctas;
 				}
-		| CREATE_P OR REPLACE OptTemp TABLE create_as_target AS SelectStmt opt_with_data
+		| CREATE_P OR REPLACE OptTemp TABLE create_as_target AS SelectStmt
 				{
 					PGCreateTableAsStmt *ctas = makeNode(PGCreateTableAsStmt);
 					ctas->query = $8;
@@ -44,7 +42,6 @@ CreateAsStmt:
 					ctas->onconflict = PG_REPLACE_ON_CONFLICT;
 					/* cram additional flags into the PGIntoClause */
 					$6->rel->relpersistence = $4;
-					$6->skipData = !($9);
 					$$ = (PGNode *) ctas;
 				}
 		;
