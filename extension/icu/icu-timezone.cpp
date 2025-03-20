@@ -476,7 +476,10 @@ void RegisterICUTimeZoneFunctions(DatabaseInstance &db) {
 	//	Scalar functions
 	ICUTimeZoneFunc::AddFunction("timezone", db);
 	ICULocalTimestampFunc::AddFunction("current_localtimestamp", db);
+	ICULocalTimestampFunc::AddFunction("localtimestamp", db);
+	ICULocalTimestampFunc::AddFunction("localtime", db);
 	ICULocalTimeFunc::AddFunction("current_localtime", db);
+	ICULocalTimestampFunc::AddFunction("now", db);
 
 	// 	Casts
 	ICUFromNaiveTimestamp::AddCasts(db);

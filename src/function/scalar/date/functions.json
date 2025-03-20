@@ -5,7 +5,8 @@
         "description": "Converts a date to a string according to the format string.",
         "example": "strftime(date '1992-01-01', '%a, %-d %B %Y')",
         "type": "scalar_function_set",
-        "struct": "StrfTimeFun"
+        "struct": "StrfTimeFun",
+        "aliases": ["date_format", "time_format"]
     },
     {
         "name": "strptime",
@@ -28,7 +29,8 @@
             }
         ],
         "type": "scalar_function_set",
-        "struct": "StrpTimeFun"
+        "struct": "StrpTimeFun",
+        "aliases": ["str_to_date"]
     },
     {
         "name": "try_strptime",

@@ -27,19 +27,25 @@ string GetSQLValueFunctionName(const string &column_name) {
 	} else if (lcase == "current_role") {
 		return "current_role";
 	} else if (lcase == "current_time") {
-		return "get_current_time";
+		return "current_time";
 	} else if (lcase == "current_timestamp") {
 		return "get_current_timestamp";
 	} else if (lcase == "current_user") {
 		return "current_user";
 	} else if (lcase == "localtime") {
-		return "current_localtime";
+		return "current_localtimestamp";
 	} else if (lcase == "localtimestamp") {
 		return "current_localtimestamp";
 	} else if (lcase == "session_user") {
 		return "session_user";
 	} else if (lcase == "user") {
 		return "user";
+	} else if (lcase == "utc_date") {
+		return "utc_date";
+	} else if (lcase == "utc_time") {
+		return "utc_time";
+	} else if (lcase == "utc_timestamp") {
+		return "utc_timestamp";
 	}
 	return string();
 }

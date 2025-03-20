@@ -174,6 +174,29 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "md5_number_upper", {"param"}, {{nullptr, nullptr}}, "((md5_number(param)::bit::varchar)[65:])::bit::uint64"},
 	{DEFAULT_SCHEMA, "md5_number_lower", {"param"}, {{nullptr, nullptr}}, "((md5_number(param)::bit::varchar)[:64])::bit::uint64"},
 
+	// mysql date function
+	{DEFAULT_SCHEMA, "convert_tz", {"timestamp", "tz1", "tz2", nullptr}, {{nullptr, nullptr}}, "timezone(tz2, timezone(tz1, timestamp))"},
+	{DEFAULT_SCHEMA, "datediff", {"date1", "date2", nullptr}, {{nullptr, nullptr}}, "date_diff('day', date2, date1)"},
+	{DEFAULT_SCHEMA, "timestampdiff", {"unit", "date1", "date2", nullptr}, {{nullptr, nullptr}}, "date_diff(unit, date1, date2)"},
+	{DEFAULT_SCHEMA, "subdate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date_add(date, -interval)"},
+	{DEFAULT_SCHEMA, "date_sub", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date_add(date, -interval)"},
+	{DEFAULT_SCHEMA, "date", {"expr", nullptr}, {{nullptr, nullptr}}, "cast(expr as DATE)"},
+	{DEFAULT_SCHEMA, "addtime", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 + to_days_duckdb(if(split_part(expr2, ' ', -2)=='', 0, cast(split_part(expr2, ' ', -2) as int))) + to_seconds_duckdb(epoch(cast(split_part(expr2, ' ', -1) as TIME)))"},
+	{DEFAULT_SCHEMA, "to_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast(expr1 as date) - DATE '0000-01-01'"},
+	{DEFAULT_SCHEMA, "to_seconds", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(expr1 - TIMESTAMP '0000-01-01')"},
+	{DEFAULT_SCHEMA, "timediff", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 - expr2 + TIME '00:00:00'"},
+	{DEFAULT_SCHEMA, "time_to_sec", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(expr1)"},
+	{DEFAULT_SCHEMA, "subtime", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 - to_days_duckdb(if(split_part(expr2, ' ', -2)=='', 0, cast(split_part(expr2, ' ', -2) as int))) - to_seconds_duckdb(epoch(cast(split_part(expr2, ' ', -1) as TIME)))"},
+	{DEFAULT_SCHEMA, "sec_to_time", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast((TIME '00:00:00' + to_seconds_duckdb(expr1)) AS TIME)"},
+	{DEFAULT_SCHEMA, "from_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "DATE '0000-01-01' + to_days_duckdb(cast(expr1 as int))"},
+	{DEFAULT_SCHEMA, "makedate", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "if(expr2 = 0, NULL, DATE '0000-01-01' + to_years(expr1) + to_days_duckdb(expr2 - 1))"},
+	{DEFAULT_SCHEMA, "period_add", {"p", "m", nullptr}, {{nullptr, nullptr}}, "strftime(CASE  WHEN length(CAST(p AS char)) <= 4 THEN  CASE  WHEN substring(LPAD(CAST(p AS char), 4, '0'), 1, 2) >= '70' THEN strptime('19' || LPAD(CAST(p AS char), 4, '0'), '%Y%m') ELSE strptime('20' || LPAD(CAST(p AS char), 4, '0'), '%Y%m') END ELSE strptime(LPAD(CAST(p AS char), 6, '0'), '%Y%m') END + to_months(m), '%Y%m')"},
+	{DEFAULT_SCHEMA, "period_diff", {"p1", "p2", nullptr}, {{nullptr, nullptr}}, "date_diff('month', CASE  WHEN length(CAST(p2 AS VARCHAR)) <= 4 THEN strptime(CASE  WHEN substring(LPAD(CAST(p2 AS char), 4, '0'), 1, 2) >= '70' THEN '19' ELSE '20' END || LPAD(CAST(p2 AS char), 4, '0'), '%Y%m') ELSE strptime(LPAD(CAST(p2 AS char), 6, '0'), '%Y%m') END, CASE  WHEN length(CAST(p1 AS VARCHAR)) = 4 THEN strptime(CASE  WHEN substring(LPAD(CAST(p1 AS char), 4, '0'), 1, 2) >= '70' THEN '19' ELSE '20' END || LPAD(CAST(p1 AS char), 4, '0'), '%Y%m') ELSE strptime(LPAD(CAST(p1 AS char), 6, '0'), '%Y%m') END)"},
+	{DEFAULT_SCHEMA, "maketime", {"h", "m", "s", nullptr}, {{nullptr, nullptr}}, "make_time(h, m, s)"},
+	{DEFAULT_SCHEMA, "adddate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date + interval"},
+	{DEFAULT_SCHEMA, "current_time", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
+	{DEFAULT_SCHEMA, "curtime", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
+
 	{nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}
 	};
 

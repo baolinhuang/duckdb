@@ -10,6 +10,33 @@
 
 namespace duckdb {
 
+struct UnixTimestampOperator {
+	template <typename INPUT_TYPE, typename RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input) {
+		const auto end = Timestamp::GetEpochMicroSeconds(input);
+		return end / Interval::MICROS_PER_SEC;
+	}
+};
+
+template<>
+double UnixTimestampOperator::Operation(timestamp_tz_t input) {
+	dtime_t t0(0);
+	const auto end = Timestamp::GetEpochMicroSeconds(input);
+	return end / Interval::MICROS_PER_SEC;
+}
+
+template<>
+double UnixTimestampOperator::Operation(date_t input) {
+	dtime_t t0(0);
+	const auto end = Timestamp::GetEpochMicroSeconds(Timestamp::FromDatetime(input, t0));
+	return end / Interval::MICROS_PER_SEC;
+}
+
+template<>
+double UnixTimestampOperator::Operation(time_t input) {
+	return 0;
+}
+
 static timestamp_t GetTransactionTimestamp(ExpressionState &state) {
 	return MetaTransaction::Get(state.GetContext()).start_timestamp;
 }
@@ -19,6 +46,67 @@ static void CurrentTimestampFunction(DataChunk &input, ExpressionState &state, V
 	auto ts = GetTransactionTimestamp(state);
 	auto val = Value::TIMESTAMPTZ(timestamp_tz_t(ts));
 	result.Reference(val);
+}
+
+static void UtcDateFunction(DataChunk &input, ExpressionState &state, Vector &result) {
+	D_ASSERT(input.ColumnCount() == 0);
+	auto val = Value::DATE(Timestamp::GetDate(GetTransactionTimestamp(state)));
+	result.Reference(val);
+}
+
+static void UtcTimeFunction(DataChunk &input, ExpressionState &state, Vector &result) {
+	D_ASSERT(input.ColumnCount() == 0);
+	auto val = Value::TIME(Timestamp::GetTime(GetTransactionTimestamp(state))/Interval::MICROS_PER_SEC*Interval::MICROS_PER_SEC);
+	result.Reference(val);
+}
+
+static void UtcTimeStampFunction(DataChunk &input, ExpressionState &state, Vector &result) {
+	D_ASSERT(input.ColumnCount() == 0);
+	auto ts = GetTransactionTimestamp(state);
+	ts.value /= Interval::MICROS_PER_SEC;
+	ts.value *= Interval::MICROS_PER_SEC;
+	auto val = Value::TIMESTAMP(ts);
+	result.Reference(val);
+}
+
+static void UnixTimestampFunctionNoParam(DataChunk &input, ExpressionState &state, Vector &result) {
+	D_ASSERT(input.ColumnCount() == 0);
+	auto val = Value::DOUBLE(GetTransactionTimestamp(state).value / Interval::MICROS_PER_SEC);
+	result.Reference(val);
+}
+
+template<typename T>
+static void UnixTimestampFunction(DataChunk &input, ExpressionState &state, Vector &result) {
+	D_ASSERT(input.ColumnCount() == 1);
+	UnaryExecutor::Execute<T, double, UnixTimestampOperator>(input.data[0], result, input.size());
+}
+
+ScalarFunction UtcDateFun::GetFunction() {
+	ScalarFunction current_date({}, LogicalType::DATE, UtcDateFunction);
+	current_date.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+	return current_date;
+}
+
+ScalarFunction UtcTimeFun::GetFunction() {
+	ScalarFunction current_time({}, LogicalType::TIME, UtcTimeFunction);
+	current_time.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+	return current_time;
+}
+
+ScalarFunction UtcTimestampFun::GetFunction() {
+	ScalarFunction current_time({}, LogicalType::TIMESTAMP, UtcTimeStampFunction);
+	current_time.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+	return current_time;
+}
+
+ScalarFunctionSet UnixTimestampFun::GetFunctions() {
+	ScalarFunctionSet unix_timestamp;
+	unix_timestamp.AddFunction(ScalarFunction({}, LogicalType::DOUBLE, UnixTimestampFunctionNoParam));
+	unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIMESTAMP}, LogicalType::DOUBLE, UnixTimestampFunction<timestamp_t>));
+	unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIMESTAMP_TZ}, LogicalType::DOUBLE, UnixTimestampFunction<timestamp_tz_t>));
+	unix_timestamp.AddFunction(ScalarFunction({LogicalType::DATE}, LogicalType::DOUBLE, UnixTimestampFunction<date_t>));
+	unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIME}, LogicalType::DOUBLE, UnixTimestampFunction<time_t>));
+	return unix_timestamp;
 }
 
 ScalarFunction GetCurrentTimestampFun::GetFunction() {

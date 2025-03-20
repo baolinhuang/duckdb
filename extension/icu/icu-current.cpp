@@ -48,13 +48,16 @@ ScalarFunction GetCurrentDateFun() {
 
 void RegisterICUCurrentFunctions(DatabaseInstance &db) {
 	//	temporal + interval
-	ScalarFunctionSet current_time("get_current_time");
-	current_time.AddFunction(GetCurrentTimeFun());
-	ExtensionUtil::RegisterFunction(db, current_time);
+	ScalarFunctionSet get_current_time("get_current_time");
+	get_current_time.AddFunction(GetCurrentTimeFun());
+	ExtensionUtil::RegisterFunction(db, get_current_time);
 
 	ScalarFunctionSet current_date("current_date");
+	ScalarFunctionSet curdate("curdate");
 	current_date.AddFunction(GetCurrentDateFun());
+	curdate.AddFunction(GetCurrentDateFun());
 	ExtensionUtil::RegisterFunction(db, current_date);
+	ExtensionUtil::RegisterFunction(db, curdate);
 
 	current_date.name = "today";
 	ExtensionUtil::RegisterFunction(db, current_date);

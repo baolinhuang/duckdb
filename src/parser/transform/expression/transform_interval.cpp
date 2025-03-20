@@ -93,7 +93,7 @@ unique_ptr<ParsedExpression> Transformer::TransformInterval(duckdb_libpgquery::P
 		target_type = LogicalType::INTEGER;
 	} else if (mask & DAY_MASK) {
 		// DAY
-		fname = "to_days";
+		fname = "to_days_duckdb";
 		target_type = LogicalType::INTEGER;
 	} else if (mask & HOUR_MASK) {
 		// HOUR
@@ -105,7 +105,7 @@ unique_ptr<ParsedExpression> Transformer::TransformInterval(duckdb_libpgquery::P
 		target_type = LogicalType::BIGINT;
 	} else if (mask & SECOND_MASK) {
 		// SECOND
-		fname = "to_seconds";
+		fname = "to_seconds_duckdb";
 		target_type = LogicalType::DOUBLE;
 	} else if (mask & MILLISECOND_MASK) {
 		// MILLISECOND

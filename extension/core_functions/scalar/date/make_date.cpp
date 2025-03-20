@@ -101,13 +101,17 @@ struct MakeTimestampOperator {
 		return Timestamp::FromDatetime(d, t);
 	}
 
-	template <typename T, typename RESULT_TYPE>
+	template <typename T, typename RESULT_TYPE, bool MICRO = true>
 	static RESULT_TYPE Operation(T value) {
 		const auto result = RESULT_TYPE(value);
 		if (!Timestamp::IsFinite(result)) {
 			throw ConversionException("Timestamp microseconds out of range: %ld", value);
 		}
-		return RESULT_TYPE(value);
+		if (MICRO) {
+			return RESULT_TYPE(value);
+		} else {
+			return RESULT_TYPE(value * 1000000LL);
+		}
 	}
 };
 
@@ -132,6 +136,12 @@ static void ExecuteMakeTimestampNs(DataChunk &input, ExpressionState &state, Vec
 	auto func = MakeTimestampOperator::Operation<T, timestamp_ns_t>;
 	UnaryExecutor::Execute<T, timestamp_ns_t>(input.data[0], result, input.size(), func);
 	return;
+}
+
+template <typename T>
+static void ExecuteFromUnixTime(DataChunk &input, ExpressionState &state, Vector &result) {
+	auto func = MakeTimestampOperator::Operation<T, timestamp_t, false>;
+	UnaryExecutor::Execute<T, timestamp_t>(input.data[0], result, input.size(), func);
 }
 
 ScalarFunctionSet MakeDateFun::GetFunctions() {
@@ -176,6 +186,10 @@ ScalarFunctionSet MakeTimestampNsFun::GetFunctions() {
 	operator_set.AddFunction(
 	    ScalarFunction({LogicalType::BIGINT}, LogicalType::TIMESTAMP_NS, ExecuteMakeTimestampNs<int64_t>));
 	return operator_set;
+}
+
+ScalarFunction FromUnixtimeFun::GetFunction() {
+	return ScalarFunction({LogicalType::DOUBLE}, LogicalType::TIMESTAMP, ExecuteFromUnixTime<double>);
 }
 
 } // namespace duckdb

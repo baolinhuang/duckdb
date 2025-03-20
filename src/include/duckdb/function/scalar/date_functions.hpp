@@ -25,6 +25,18 @@ struct StrfTimeFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
+struct DateFormatFun {
+	using ALIAS = StrfTimeFun;
+
+	static constexpr const char *Name = "date_format";
+};
+
+struct TimeFormatFun {
+	using ALIAS = StrfTimeFun;
+
+	static constexpr const char *Name = "time_format";
+};
+
 struct StrpTimeFun {
 	static constexpr const char *Name = "strptime";
 	static constexpr const char *Parameters = "text::VARCHAR,format::VARCHAR\1text::VARCHAR,format-list::VARCHAR[]";
@@ -33,6 +45,12 @@ struct StrpTimeFun {
 	static constexpr const char *Categories = "\1";
 
 	static ScalarFunctionSet GetFunctions();
+};
+
+struct StrToDateFun {
+	using ALIAS = StrpTimeFun;
+
+	static constexpr const char *Name = "str_to_date";
 };
 
 struct TryStrpTimeFun {

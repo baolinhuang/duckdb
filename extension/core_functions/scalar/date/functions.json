@@ -131,7 +131,7 @@
         "description": "Returns the current timestamp",
         "example": "get_current_timestamp()",
         "type": "scalar_function",
-        "aliases": ["now", "transaction_timestamp"]
+        "aliases": ["transaction_timestamp", "current_timestamp"]
     },
     {
         "struct": "HoursFun",
@@ -214,6 +214,13 @@
         "description": "The timestamp for the given nanoseconds since epoch",
         "example": "make_timestamp(1732117793000000000)",
         "type": "scalar_function_set"
+    },
+    {
+        "name": "from_unixtime",
+        "parameters": "seconds",
+        "description": "The timestamp for the given parts",
+        "example": "from_unixtime(123456)",
+        "type": "scalar_function"
     },
     {
         "struct": "MicrosecondsFun",
@@ -336,11 +343,11 @@
         "type": "scalar_function_set"
     },
     {
-        "name": "to_days",
+        "name": "to_days_duckdb",
         "parameters": "integer",
         "description": "Construct a day interval",
-        "example": "to_days(5)",
-        "type": "scalar_function_set"
+        "example": "to_days_duckdb(5)",
+        "type": "scalar_function"
     },
     {
         "name": "to_decades",
@@ -399,10 +406,10 @@
         "type": "scalar_function_set"
     },
     {
-        "name": "to_seconds",
+        "name": "to_seconds_duckdb",
         "parameters": "double",
         "description": "Construct a second interval",
-        "example": "to_seconds(5.5)",
+        "example": "to_seconds_duckdb(5.5)",
         "type": "scalar_function"
     },
     {
@@ -424,6 +431,30 @@
         "parameters": "integer",
         "description": "Construct a year interval",
         "example": "to_years(5)",
+        "type": "scalar_function_set"
+    },
+    {
+        "name": "utc_date",
+        "description": "Returns the current utc date",
+        "example": "utc_date()",
+        "type": "scalar_function"
+    },
+    {
+        "name": "utc_time",
+        "description": "Returns the current utc time",
+        "example": "utc_time()",
+        "type": "scalar_function"
+    },
+    {
+        "name": "utc_timestamp",
+        "description": "Returns the current utc timestamp",
+        "example": "utc_timestamp()",
+        "type": "scalar_function"
+    },
+    {
+        "name": "unix_timestamp",
+        "description": "Returns the unix timestamp",
+        "example": "unix_timestamp(), unix_timestamp('2020-01-01')",
         "type": "scalar_function_set"
     },
     {

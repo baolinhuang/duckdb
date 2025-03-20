@@ -144,6 +144,8 @@ idx_t StrfTimeFormat::GetSpecifierLength(StrTimeSpecifier specifier, date_t date
 	}
 	case StrTimeSpecifier::DAY_OF_MONTH:
 		return UnsafeNumericCast<idx_t>(NumericHelper::UnsignedLength<uint32_t>(UnsafeNumericCast<uint32_t>(data[2])));
+	case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
+		return UnsafeNumericCast<idx_t>(NumericHelper::UnsignedLength<uint32_t>(UnsafeNumericCast<uint32_t>(data[2]))) + 2;
 	case StrTimeSpecifier::DAY_OF_YEAR_DECIMAL:
 		return UnsafeNumericCast<idx_t>(
 		    NumericHelper::UnsignedLength<uint32_t>(UnsafeNumericCast<uint32_t>(Date::ExtractDayOfTheYear(date))));
@@ -399,6 +401,20 @@ char *StrfTimeFormat::WriteStandardSpecifier(StrTimeSpecifier specifier, int32_t
 		target = Write2(target, UnsafeNumericCast<uint8_t>(data[2] % 100));
 		break;
 	}
+	case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX: {
+		int32_t v = data[2] % 100;
+		target = Write2(target, UnsafeNumericCast<uint8_t>(data[2] % 100));
+		if (v == 1) {
+			target = WriteString(target, "st");
+		} else if (v == 2) {
+			target = WriteString(target, "nd");
+		} else if (v == 3) {
+			target = WriteString(target, "rd");
+		} else {
+			target = WriteString(target, "th");
+		}
+		break;
+	}
 	case StrTimeSpecifier::MONTH_DECIMAL: {
 		target = Write2(target, UnsafeNumericCast<uint8_t>(data[1]));
 		break;
@@ -555,7 +571,6 @@ string StrTimeFormat::ParseFormatSpecifier(const string &format_string, StrTimeF
 				case 'd':
 					specifier = StrTimeSpecifier::DAY_OF_MONTH_PADDED;
 					break;
-				case 'h':
 				case 'b':
 					specifier = StrTimeSpecifier::ABBREVIATED_MONTH_NAME;
 					break;
@@ -583,9 +598,7 @@ string StrTimeFormat::ParseFormatSpecifier(const string &format_string, StrTimeF
 				case 'p':
 					specifier = StrTimeSpecifier::AM_PM;
 					break;
-				case 'M':
-					specifier = StrTimeSpecifier::MINUTE_PADDED;
-					break;
+				case 's':
 				case 'S':
 					specifier = StrTimeSpecifier::SECOND_PADDED;
 					break;
@@ -611,20 +624,44 @@ string StrTimeFormat::ParseFormatSpecifier(const string &format_string, StrTimeF
 					specifier = StrTimeSpecifier::WEEK_NUMBER_PADDED_SUN_FIRST;
 					break;
 				case 'W':
-					specifier = StrTimeSpecifier::WEEK_NUMBER_PADDED_MON_FIRST;
+					specifier = StrTimeSpecifier::FULL_WEEKDAY_NAME;
 					break;
 				case 'V':
 					specifier = StrTimeSpecifier::WEEK_NUMBER_ISO;
 					break;
 				case 'c':
+					specifier = StrTimeSpecifier::MONTH_DECIMAL;
+					break;
+				case 'e':
+					specifier = StrTimeSpecifier::DAY_OF_MONTH;
+					break;
+				case 'h':
+					specifier = StrTimeSpecifier::HOUR_12_PADDED;
+					break;
+				case 'i':
+					specifier = StrTimeSpecifier::MINUTE_PADDED;
+					break;
+				case 'k':
+					specifier = StrTimeSpecifier::HOUR_24_DECIMAL;
+					break;
+				case 'l':
+					specifier = StrTimeSpecifier::HOUR_12_DECIMAL;
+					break;
+				case 'M':
+					specifier = StrTimeSpecifier::FULL_MONTH_NAME;
+					break;
+				case 'D':
+					specifier = StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX;
+					break;
 				case 'x':
 				case 'X':
-				case 'T': {
+				case 'T': 
+				case 'r': {
 					string subformat;
 					if (format_char == 'c') {
 						// %c: Locale’s appropriate date and time representation.
 						// we push the ISO timestamp representation here
-						subformat = "%Y-%m-%d %H:%M:%S";
+						subformat = "%Y-%m-%d %H:%i:%S";
 					} else if (format_char == 'x') {
 						// %x - Locale’s appropriate date representation.
 						// we push the ISO date format here
@@ -632,7 +669,9 @@ string StrTimeFormat::ParseFormatSpecifier(const string &format_string, StrTimeF
 					} else if (format_char == 'X' || format_char == 'T') {
 						// %X - Locale’s appropriate time representation.
 						// we push the ISO time format here
-						subformat = "%H:%M:%S";
+						subformat = "%H:%i:%S";
+					} else if (format_char == 'r') {
+						subformat = "%I:%i:%S %p";
 					}
 					// parse the subformat in a separate format specifier
 					StrfTimeFormat locale_format;
@@ -754,6 +793,28 @@ void StrpTimeFormat::AddFormatSpecifier(string preceding_literal, StrTimeSpecifi
 	StrTimeFormat::AddFormatSpecifier(std::move(preceding_literal), specifier);
 }
 
+void StrfTimeFormat::ConvertTimeVector(Vector &input, Vector &result, idx_t count) {
+	D_ASSERT(input.GetType().id() == LogicalTypeId::TIME);
+	D_ASSERT(result.GetType().id() == LogicalTypeId::VARCHAR);
+	UnaryExecutor::ExecuteWithNulls<dtime_t, string_t>(
+	    input, result, count, [&](dtime_t input, ValidityMask &mask, idx_t idx) {
+			idx_t size = constant_size;
+			date_t date(0);
+		    if (!var_length_specifiers.empty()) {
+				int32_t data[8];
+				Date::Convert(date, data[0], data[1], data[2]);
+				Time::Convert(input, data[3], data[4], data[5], data[6]);
+				data[6] *= Interval::NANOS_PER_MICRO;
+				data[7] = 0;
+				size = GetLength(date, data, nullptr);
+			}
+			string_t target = StringVector::EmptyString(result, size);
+			FormatString(date, input, target.GetDataWriteable());
+			target.Finalize();
+			return target;
+	    });
+}
+
 int StrpTimeFormat::NumericSpecifierWidth(StrTimeSpecifier specifier) {
 	switch (specifier) {
 	case StrTimeSpecifier::WEEKDAY_DECIMAL:
@@ -761,6 +822,7 @@ int StrpTimeFormat::NumericSpecifierWidth(StrTimeSpecifier specifier) {
 		return 1;
 	case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
 	case StrTimeSpecifier::DAY_OF_MONTH:
+	case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
 	case StrTimeSpecifier::MONTH_DECIMAL_PADDED:
 	case StrTimeSpecifier::MONTH_DECIMAL:
 	case StrTimeSpecifier::YEAR_WITHOUT_CENTURY_PADDED:
@@ -938,6 +1000,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 			switch (specifiers[i]) {
 			case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
 			case StrTimeSpecifier::DAY_OF_MONTH:
+			case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
 				if (number < 1 || number > 31) {
 					error_message = "Day out of range, expected a value between 1 and 31";
 					error_position = start_pos;
@@ -946,6 +1009,24 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				// day of the month
 				result_data[2] = UnsafeNumericCast<int32_t>(number);
 				offset_specifier = specifiers[i];
+				if (specifiers[i] == StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX) {
+					if (pos + 2 > size) {
+						error_message = "Expected day suffix";
+						error_position = pos;
+						return false;	
+					}
+					char first_char = char(std::tolower(data[pos]));
+					char second_char = char(std::tolower(data[pos + 1]));
+					if ((number == 1 && (first_char != 's' || second_char != 't')) ||
+						(number == 2 && (first_char != 'n' || second_char != 'd')) ||
+						(number == 3 && (first_char != 'r' || second_char != 'd')) ||
+						(number > 3 && (first_char != 't' || second_char != 'h'))) {
+						error_message = "Expected correct day suffix";
+						error_position = pos;
+						return false;	
+					}
+					pos += 2;
+				}
 				break;
 			case StrTimeSpecifier::MONTH_DECIMAL_PADDED:
 			case StrTimeSpecifier::MONTH_DECIMAL:
@@ -1011,6 +1092,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				// y/m/d overrides G/V/u but does not conflict
 				case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
 				case StrTimeSpecifier::DAY_OF_MONTH:
+				case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
 				case StrTimeSpecifier::MONTH_DECIMAL_PADDED:
 				case StrTimeSpecifier::MONTH_DECIMAL:
 				case StrTimeSpecifier::YEAR_WITHOUT_CENTURY_PADDED:
@@ -1114,6 +1196,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				switch (offset_specifier) {
 				case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
 				case StrTimeSpecifier::DAY_OF_MONTH:
+				case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
 				case StrTimeSpecifier::MONTH_DECIMAL_PADDED:
 				case StrTimeSpecifier::MONTH_DECIMAL:
 					// Just validate, don't use
@@ -1157,6 +1240,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 					return false;
 				case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
 				case StrTimeSpecifier::DAY_OF_MONTH:
+				case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
 				case StrTimeSpecifier::MONTH_DECIMAL_PADDED:
 				case StrTimeSpecifier::MONTH_DECIMAL:
 					// Just validate, don't use
@@ -1205,6 +1289,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				switch (offset_specifier) {
 				case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
 				case StrTimeSpecifier::DAY_OF_MONTH:
+				case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
 				case StrTimeSpecifier::MONTH_DECIMAL_PADDED:
 				case StrTimeSpecifier::MONTH_DECIMAL:
 					// Just validate, don't use
@@ -1403,6 +1488,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 	}
 	case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
 	case StrTimeSpecifier::DAY_OF_MONTH:
+	case StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX:
 	case StrTimeSpecifier::MONTH_DECIMAL_PADDED:
 	case StrTimeSpecifier::MONTH_DECIMAL:
 	case StrTimeSpecifier::YEAR_WITHOUT_CENTURY_PADDED:

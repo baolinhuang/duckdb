@@ -60,6 +60,7 @@ enum class StrTimeSpecifier : uint8_t {
 	WEEKDAY_ISO = 34,     // %u - ISO 8601 weekday as a decimal number where 1 is Monday (1..7)
 	WEEK_NUMBER_ISO = 35, // %V - ISO 8601 week as a decimal number with Monday as the first day of the week.
 	                      // Week 01 is the week containing Jan 4. (01..53)
+	DAY_OF_MONTH_WITH_SUFFIX = 36,
 };
 
 struct StrTimeFormat {
@@ -107,6 +108,7 @@ struct StrfTimeFormat : public StrTimeFormat { // NOLINT: work-around bug in cla
 	DUCKDB_API void ConvertDateVector(Vector &input, Vector &result, idx_t count);
 	DUCKDB_API void ConvertTimestampVector(Vector &input, Vector &result, idx_t count);
 	DUCKDB_API void ConvertTimestampNSVector(Vector &input, Vector &result, idx_t count);
+	DUCKDB_API void ConvertTimeVector(Vector &input, Vector &result, idx_t count);
 
 protected:
 	//! The variable-length specifiers. To determine total string size, these need to be checked.

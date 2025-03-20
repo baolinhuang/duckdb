@@ -219,16 +219,16 @@ struct GetCurrentTimestampFun {
 	static ScalarFunction GetFunction();
 };
 
-struct NowFun {
-	using ALIAS = GetCurrentTimestampFun;
-
-	static constexpr const char *Name = "now";
-};
-
 struct TransactionTimestampFun {
 	using ALIAS = GetCurrentTimestampFun;
 
 	static constexpr const char *Name = "transaction_timestamp";
+};
+
+struct CurrentTimestampFun {
+	using ALIAS = GetCurrentTimestampFun;
+
+	static constexpr const char *Name = "current_timestamp";
 };
 
 struct HoursFun {
@@ -319,6 +319,15 @@ struct MakeTimestampNsFun {
 	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
+};
+
+struct FromUnixtimeFun {
+	static constexpr const char *Name = "from_unixtime";
+	static constexpr const char *Parameters = "seconds";
+	static constexpr const char *Description = "The timestamp for the given parts";
+	static constexpr const char *Example = "from_unixtime(123456)";
+
+	static ScalarFunction GetFunction();
 };
 
 struct MicrosecondsFun {
@@ -481,12 +490,11 @@ struct ToCenturiesFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
-struct ToDaysFun {
-	static constexpr const char *Name = "to_days";
+struct ToDaysDuckdbFun {
+	static constexpr const char *Name = "to_days_duckdb";
 	static constexpr const char *Parameters = "integer";
 	static constexpr const char *Description = "Construct a day interval";
-	static constexpr const char *Example = "to_days(5)";
-	static constexpr const char *Categories = "";
+	static constexpr const char *Example = "to_days_duckdb(5)";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -571,12 +579,11 @@ struct ToQuartersFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
-struct ToSecondsFun {
-	static constexpr const char *Name = "to_seconds";
+struct ToSecondsDuckdbFun {
+	static constexpr const char *Name = "to_seconds_duckdb";
 	static constexpr const char *Parameters = "double";
 	static constexpr const char *Description = "Construct a second interval";
-	static constexpr const char *Example = "to_seconds(5.5)";
-	static constexpr const char *Categories = "";
+	static constexpr const char *Example = "to_seconds_duckdb(5.5)";
 
 	static ScalarFunction GetFunction();
 };
@@ -607,6 +614,42 @@ struct ToYearsFun {
 	static constexpr const char *Description = "Construct a year interval";
 	static constexpr const char *Example = "to_years(5)";
 	static constexpr const char *Categories = "";
+
+	static ScalarFunctionSet GetFunctions();
+};
+
+struct UtcDateFun {
+	static constexpr const char *Name = "utc_date";
+	static constexpr const char *Parameters = "";
+	static constexpr const char *Description = "Returns the current utc date";
+	static constexpr const char *Example = "utc_date()";
+
+	static ScalarFunction GetFunction();
+};
+
+struct UtcTimeFun {
+	static constexpr const char *Name = "utc_time";
+	static constexpr const char *Parameters = "";
+	static constexpr const char *Description = "Returns the current utc time";
+	static constexpr const char *Example = "utc_time()";
+
+	static ScalarFunction GetFunction();
+};
+
+struct UtcTimestampFun {
+	static constexpr const char *Name = "utc_timestamp";
+	static constexpr const char *Parameters = "";
+	static constexpr const char *Description = "Returns the current utc timestamp";
+	static constexpr const char *Example = "utc_timestamp()";
+
+	static ScalarFunction GetFunction();
+};
+
+struct UnixTimestampFun {
+	static constexpr const char *Name = "unix_timestamp";
+	static constexpr const char *Parameters = "";
+	static constexpr const char *Description = "Returns the unix timestamp";
+	static constexpr const char *Example = "unix_timestamp(), unix_timestamp('2020-01-01')";
 
 	static ScalarFunctionSet GetFunctions();
 };

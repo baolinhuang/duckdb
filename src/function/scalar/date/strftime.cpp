@@ -93,6 +93,19 @@ static void StrfTimeFunctionTimestampNS(DataChunk &args, ExpressionState &state,
 	info.format.ConvertTimestampNSVector(args.data[REVERSED ? 1 : 0], result, args.size());
 }
 
+template <bool REVERSED>
+static void StrfTimeFunctionTime(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &func_expr = state.expr.Cast<BoundFunctionExpression>();
+	auto &info = func_expr.bind_info->Cast<StrfTimeBindData>();
+
+	if (info.is_null) {
+		result.SetVectorType(VectorType::CONSTANT_VECTOR);
+		ConstantVector::SetNull(result, true);
+		return;
+	}
+	info.format.ConvertTimeVector(args.data[REVERSED ? 1 : 0], result, args.size());
+}
+
 ScalarFunctionSet StrfTimeFun::GetFunctions() {
 	ScalarFunctionSet strftime("strftime");
 
@@ -102,12 +115,16 @@ ScalarFunctionSet StrfTimeFun::GetFunctions() {
 	                                    StrfTimeFunctionTimestamp<false>, StrfTimeBindFunction<false>));
 	strftime.AddFunction(ScalarFunction({LogicalType::TIMESTAMP_NS, LogicalType::VARCHAR}, LogicalType::VARCHAR,
 	                                    StrfTimeFunctionTimestampNS<false>, StrfTimeBindFunction<false>));
+	strftime.AddFunction(ScalarFunction({LogicalType::TIME, LogicalType::VARCHAR}, LogicalType::VARCHAR,
+	                                    StrfTimeFunctionTime<false>, StrfTimeBindFunction<false>));
 	strftime.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::DATE}, LogicalType::VARCHAR,
 	                                    StrfTimeFunctionDate<true>, StrfTimeBindFunction<true>));
 	strftime.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::TIMESTAMP}, LogicalType::VARCHAR,
 	                                    StrfTimeFunctionTimestamp<true>, StrfTimeBindFunction<true>));
 	strftime.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::TIMESTAMP_NS}, LogicalType::VARCHAR,
 	                                    StrfTimeFunctionTimestampNS<true>, StrfTimeBindFunction<true>));
+	strftime.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::TIME}, LogicalType::VARCHAR,
+	                                    StrfTimeFunctionTime<true>, StrfTimeBindFunction<true>));
 	return strftime;
 }
 

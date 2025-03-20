@@ -290,9 +290,9 @@ struct DatePart {
 	struct DayOfWeekOperator {
 		template <class TR>
 		static inline TR DayOfWeekFromISO(TR isodow) {
-			// day of the week (Sunday = 0, Saturday = 6)
-			// turn sunday into 0 by doing mod 7
-			return isodow % 7;
+			// day of the week (Sunday = 1, Saturday = 7)
+			// turn sunday into 0 by doing mod 7, then add 1
+			return isodow % 7 + 1;
 		}
 
 		template <class TA, class TR>
@@ -302,7 +302,7 @@ struct DatePart {
 
 		template <class T>
 		static unique_ptr<BaseStatistics> PropagateStatistics(ClientContext &context, FunctionStatisticsInput &input) {
-			return PropagateSimpleDatePartStatistics<0, 6>(input.child_stats);
+			return PropagateSimpleDatePartStatistics<1, 7>(input.child_stats);
 		}
 	};
 
@@ -2183,7 +2183,7 @@ ScalarFunctionSet DayOfMonthFun::GetFunctions() {
 }
 
 ScalarFunctionSet WeekDayFun::GetFunctions() {
-	return GetDatePartFunction<DatePart::DayOfWeekOperator>();
+	return GetDatePartFunction<DatePart::ISODayOfWeekOperator>();
 }
 
 ScalarFunctionSet WeekOfYearFun::GetFunctions() {

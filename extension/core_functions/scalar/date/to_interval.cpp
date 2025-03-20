@@ -213,8 +213,8 @@ ScalarFunctionSet ToMonthsFun::GetFunctions() {
 ScalarFunctionSet ToWeeksFun::GetFunctions() {
 	return GetIntegerIntervalFunctions<ToWeeksOperator>();
 }
-
-ScalarFunctionSet ToDaysFun::GetFunctions() {
+	
+ScalarFunctionSet ToDaysDuckdbFun::GetFunctions() {
 	return GetIntegerIntervalFunctions<ToDaysOperator>();
 }
 
@@ -232,7 +232,7 @@ ScalarFunction ToMinutesFun::GetFunction() {
 	return function;
 }
 
-ScalarFunction ToSecondsFun::GetFunction() {
+ScalarFunction ToSecondsDuckdbFun::GetFunction() {
 	ScalarFunction function({LogicalType::DOUBLE}, LogicalType::INTERVAL,
 	                        ScalarFunction::UnaryFunction<double, interval_t, ToSecondsOperator>);
 	BaseScalarFunction::SetReturnsError(function);
