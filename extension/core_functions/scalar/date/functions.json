@@ -216,13 +216,6 @@
         "type": "scalar_function_set"
     },
     {
-        "name": "from_unixtime",
-        "parameters": "seconds",
-        "description": "The timestamp for the given parts",
-        "example": "from_unixtime(123456)",
-        "type": "scalar_function"
-    },
-    {
         "struct": "MicrosecondsFun",
         "name": "microsecond",
         "parameters": "ts",

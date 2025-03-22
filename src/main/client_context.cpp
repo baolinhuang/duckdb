@@ -45,6 +45,8 @@
 #include "duckdb/transaction/transaction_manager.hpp"
 #include "duckdb/logging/log_type.hpp"
 
+#include "duckdb/mysql/timestamp_context_state.hpp"
+
 namespace duckdb {
 
 struct ActiveQueryContext {
@@ -141,6 +143,7 @@ struct DebugClientContextState : public ClientContextState {
 ClientContext::ClientContext(shared_ptr<DatabaseInstance> database)
     : db(std::move(database)), interrupted(false), transaction(*this), connection_id(DConstants::INVALID_INDEX) {
 	registered_state = make_uniq<RegisteredStateManager>();
+	registered_state->GetOrCreate<TimestampContextState>("start_timestamp");
 #ifdef DEBUG
 	registered_state->GetOrCreate<DebugClientContextState>("debug_client_context_state");
 #endif

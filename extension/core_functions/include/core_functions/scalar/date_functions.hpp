@@ -321,15 +321,6 @@ struct MakeTimestampNsFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
-struct FromUnixtimeFun {
-	static constexpr const char *Name = "from_unixtime";
-	static constexpr const char *Parameters = "seconds";
-	static constexpr const char *Description = "The timestamp for the given parts";
-	static constexpr const char *Example = "from_unixtime(123456)";
-
-	static ScalarFunction GetFunction();
-};
-
 struct MicrosecondsFun {
 	static constexpr const char *Name = "microsecond";
 	static constexpr const char *Parameters = "ts";

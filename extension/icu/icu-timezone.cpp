@@ -9,6 +9,9 @@
 #include "include/icu-datefunc.hpp"
 #include "duckdb/transaction/meta_transaction.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/vector_operations/unary_executor.hpp"
+
+#include "duckdb/mysql/timestamp_context_state.hpp"
 
 namespace duckdb {
 
@@ -269,11 +272,56 @@ struct ICUToNaiveTimestamp : public ICUDateFunc {
 	}
 };
 
+
+struct ICUTimeToTimestamptz : public ICUDateFunc {
+	static inline timestamp_t Operation(icu::Calendar *calendar, timestamp_t instant, dtime_t time) {
+		date_t date = ICUMakeDate::Operation(calendar, instant);
+		return Timestamp::FromDatetime(date, time);
+	}
+
+	static bool CastToTimestamp(Vector &source, Vector &result, idx_t count, CastParameters &parameters) {
+		auto &cast_data = parameters.cast_data->Cast<CastData>();
+		auto &info = cast_data.info->Cast<BindData>();
+		CalendarPtr calendar(info.calendar->clone());
+		auto instant = info.start_timestamp;
+		UnaryExecutor::Execute<dtime_t, timestamp_t>(source, result, count, [&](dtime_t input) {
+			return Operation(calendar.get(), instant, input);
+		});
+		return true;
+	}
+
+	struct BindData : ICUDateFunc::BindData {
+		explicit BindData(ClientContext &context);
+		timestamp_t start_timestamp;
+	};
+
+	static BoundCastInfo BindCastToTimestamp(BindCastInput &input, const LogicalType &source, const LogicalType &target) {
+		if (!input.context) {
+			throw InternalException("Missing context for TIME to TIMESTAMPTZ cast.");
+		}
+
+		auto cast_data = make_uniq<CastData>(make_uniq<BindData>(*input.context));
+
+		return BoundCastInfo(CastToTimestamp, std::move(cast_data));
+	}
+
+	static void AddCasts(DatabaseInstance &db) {
+		auto &config = DBConfig::GetConfig(db);
+		auto &casts = config.GetCastFunctions();
+
+		casts.RegisterCastFunction(LogicalType::TIME, LogicalType::TIMESTAMP, BindCastToTimestamp, 100);
+	}
+};
+
+ICUTimeToTimestamptz::BindData::BindData(ClientContext &context) : ICUDateFunc::BindData(context) {
+	start_timestamp = context.registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
+}
+
 struct ICULocalTimestampFunc : public ICUDateFunc {
 
 	struct BindDataNow : public BindData {
 		explicit BindDataNow(ClientContext &context) : BindData(context) {
-			now = MetaTransaction::Get(context).start_timestamp;
+			now = context.registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
 		}
 
 		BindDataNow(const BindDataNow &other) : BindData(other), now(other.now) {
@@ -338,6 +386,14 @@ struct ICULocalTimeFunc : public ICUDateFunc {
 		set.AddFunction(ScalarFunction({}, LogicalType::TIME, Execute, ICULocalTimestampFunc::BindNow));
 		ExtensionUtil::RegisterFunction(db, set);
 	}
+};
+
+struct ICUSysdateFunc : ICULocalTimestampFunc{
+	struct BindDataNow : public ICULocalTimestampFunc::BindDataNow {
+		explicit BindDataNow(ClientContext &context) : ICULocalTimestampFunc::BindDataNow(context) {
+			now = Timestamp::GetCurrentTimestamp();
+		}
+	};
 };
 
 dtime_tz_t ICUToTimeTZ::Operation(icu::Calendar *calendar, dtime_tz_t timetz) {
@@ -468,6 +524,44 @@ timestamp_t ICUDateFunc::FromNaive(icu::Calendar *calendar, timestamp_t naive) {
 	return ICUFromNaiveTimestamp::Operation(calendar, naive);
 }
 
+struct ICUUnixTimestampOperator {
+	template <typename INPUT_TYPE, typename RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input) {
+		auto end = Timestamp::GetEpochMicroSeconds(input);
+		end = std::max(end, 0L);
+		return static_cast<double>(end) / Interval::MICROS_PER_SEC;
+	}
+};
+
+template<>
+double ICUUnixTimestampOperator::Operation(timestamp_tz_t input) {
+	dtime_t t0(0);
+	auto end = Timestamp::GetEpochMicroSeconds(input);
+	return static_cast<double>(end) / Interval::MICROS_PER_SEC;
+}
+
+struct ICUUnixTimestampFunc : ICUDateFunc {
+
+	template<typename T>
+	static void Execute(DataChunk &input, ExpressionState &state, Vector &result) {
+		auto &func_expr = state.expr.Cast<BoundFunctionExpression>();
+		auto &info = func_expr.bind_info->Cast<BindData>();
+		CalendarPtr calendar_ptr(info.calendar->clone());
+		auto calendar = calendar_ptr.get();
+
+		// Two cases: constant TZ, variable TZ
+		D_ASSERT(input.ColumnCount() == 1);
+		UnaryExecutor::Execute<T, double>(input.data[0], result, input.size(),
+									[&](T ts) { return ICUUnixTimestampOperator::Operation<T, double>(ICUFromNaiveTimestamp::Operation(calendar, ts)); });
+	}
+
+	static void AddFunction(const string &name, DatabaseInstance &db) {
+		ScalarFunctionSet set(name);
+		set.AddFunction(ScalarFunction({LogicalTypeId::TIMESTAMP}, LogicalTypeId::DOUBLE, Execute<timestamp_t>, Bind));
+		ExtensionUtil::RegisterFunction(db, set);
+	}
+};
+
 void RegisterICUTimeZoneFunctions(DatabaseInstance &db) {
 	//	Table functions
 	TableFunction tz_names("pg_timezone_names", {}, ICUTimeZoneFunction, ICUTimeZoneBind, ICUTimeZoneInit);
@@ -480,11 +574,15 @@ void RegisterICUTimeZoneFunctions(DatabaseInstance &db) {
 	ICULocalTimestampFunc::AddFunction("localtime", db);
 	ICULocalTimeFunc::AddFunction("current_localtime", db);
 	ICULocalTimestampFunc::AddFunction("now", db);
+	ICUUnixTimestampFunc::AddFunction("unix_timestamp", db);
+
+	ICUSysdateFunc::AddFunction("sysdate", db);
 
 	// 	Casts
 	ICUFromNaiveTimestamp::AddCasts(db);
 	ICUToNaiveTimestamp::AddCasts(db);
 	ICUToTimeTZ::AddCasts(db);
+	ICUTimeToTimestamptz::AddCasts(db);
 }
 
 } // namespace duckdb

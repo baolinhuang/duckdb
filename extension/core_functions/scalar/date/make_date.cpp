@@ -188,8 +188,4 @@ ScalarFunctionSet MakeTimestampNsFun::GetFunctions() {
 	return operator_set;
 }
 
-ScalarFunction FromUnixtimeFun::GetFunction() {
-	return ScalarFunction({LogicalType::DOUBLE}, LogicalType::TIMESTAMP, ExecuteFromUnixTime<double>);
-}
-
 } // namespace duckdb

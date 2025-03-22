@@ -9,15 +9,21 @@
 #include "include/icu-current.hpp"
 #include "include/icu-casts.hpp"
 
+#include "duckdb/mysql/timestamp_context_state.hpp"
+
 namespace duckdb {
 
 static timestamp_t GetTransactionTimestamp(ExpressionState &state) {
 	return MetaTransaction::Get(state.GetContext()).start_timestamp;
 }
 
+static timestamp_t GetQueryTimestamp(ExpressionState &state) {
+	return state.GetContext().registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
+}
+
 static void CurrentTimeFunction(DataChunk &input, ExpressionState &state, Vector &result) {
 	D_ASSERT(input.ColumnCount() == 0);
-	auto instant = GetTransactionTimestamp(state);
+	auto instant = GetQueryTimestamp(state);
 	ICUDateFunc::BindData data(state.GetContext());
 
 	dtime_tz_t result_time(dtime_t(0), 0);
@@ -28,7 +34,7 @@ static void CurrentTimeFunction(DataChunk &input, ExpressionState &state, Vector
 
 static void CurrentDateFunction(DataChunk &input, ExpressionState &state, Vector &result) {
 	D_ASSERT(input.ColumnCount() == 0);
-	auto instant = GetTransactionTimestamp(state);
+	auto instant = GetQueryTimestamp(state);
 
 	auto val = Value::DATE(ICUMakeDate::ToDate(state.GetContext(), instant));
 	result.Reference(val);

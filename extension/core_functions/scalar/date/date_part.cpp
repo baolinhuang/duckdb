@@ -292,7 +292,7 @@ struct DatePart {
 		static inline TR DayOfWeekFromISO(TR isodow) {
 			// day of the week (Sunday = 1, Saturday = 7)
 			// turn sunday into 0 by doing mod 7, then add 1
-			return isodow % 7 + 1;
+			return (isodow + 1) % 7 + 1;
 		}
 
 		template <class TA, class TR>
@@ -1774,7 +1774,7 @@ struct MonthNameOperator {
 struct DayNameOperator {
 	template <class TA, class TR>
 	static inline TR Operation(TA input) {
-		return Date::DAY_NAMES[DatePart::DayOfWeekOperator::Operation<TA, int64_t>(input)];
+		return Date::DAY_NAMES[DatePart::DayOfWeekOperator::Operation<TA, int64_t>(input) - 1];
 	}
 };
 

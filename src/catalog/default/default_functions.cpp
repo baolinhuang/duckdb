@@ -195,7 +195,11 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "maketime", {"h", "m", "s", nullptr}, {{nullptr, nullptr}}, "make_time(h, m, s)"},
 	{DEFAULT_SCHEMA, "adddate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date + interval"},
 	{DEFAULT_SCHEMA, "current_time", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
+	{DEFAULT_SCHEMA, "current_time", {"fsp", nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
 	{DEFAULT_SCHEMA, "curtime", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
+	{DEFAULT_SCHEMA, "curtime", {"fsp", nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
+	{DEFAULT_SCHEMA, "from_unixtime", {"sec", nullptr}, {{nullptr, nullptr}}, "make_timestamptz(cast(cast(sec as double) * 1000000 as bigint))"},
+	{DEFAULT_SCHEMA, "from_unixtime", {"sec", "format", nullptr}, {{nullptr, nullptr}}, "strftime(make_timestamptz(cast(cast(sec as double) * 1000000 as bigint)), format)"},
 
 	{nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}
 	};
