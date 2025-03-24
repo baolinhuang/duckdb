@@ -216,7 +216,7 @@ struct GetCurrentTimestampFun {
 	static constexpr const char *Example = "get_current_timestamp()";
 	static constexpr const char *Categories = "";
 
-	static ScalarFunction GetFunction();
+	static ScalarFunctionSet GetFunctions();
 };
 
 struct TransactionTimestampFun {
@@ -624,7 +624,7 @@ struct UtcTimeFun {
 	static constexpr const char *Description = "Returns the current utc time";
 	static constexpr const char *Example = "utc_time()";
 
-	static ScalarFunction GetFunction();
+	static ScalarFunctionSet GetFunctions();
 };
 
 struct UtcTimestampFun {
@@ -633,7 +633,7 @@ struct UtcTimestampFun {
 	static constexpr const char *Description = "Returns the current utc timestamp";
 	static constexpr const char *Example = "utc_timestamp()";
 
-	static ScalarFunction GetFunction();
+	static ScalarFunctionSet GetFunctions();
 };
 
 struct UnixTimestampFun {

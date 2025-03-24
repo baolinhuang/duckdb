@@ -314,6 +314,13 @@ struct ICUTimeToTimestamptz : public ICUDateFunc {
 };
 
 ICUTimeToTimestamptz::BindData::BindData(ClientContext &context) : ICUDateFunc::BindData(context) {
+	Value ts;
+	if(context.TryGetCurrentSetting("timestamp", ts)) {
+		if (BigIntValue::Get(ts) != -1) {
+			start_timestamp = timestamp_t(BigIntValue::Get(ts));
+			return;
+		}
+	}
 	start_timestamp = context.registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
 }
 
@@ -321,6 +328,13 @@ struct ICULocalTimestampFunc : public ICUDateFunc {
 
 	struct BindDataNow : public BindData {
 		explicit BindDataNow(ClientContext &context) : BindData(context) {
+			Value ts;
+			if(context.TryGetCurrentSetting("timestamp", ts)) {
+				if (BigIntValue::Get(ts) != -1) {
+					now = timestamp_t(BigIntValue::Get(ts));
+					return;
+				}
+			}
 			now = context.registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
 		}
 
@@ -359,7 +373,7 @@ struct ICULocalTimestampFunc : public ICUDateFunc {
 	}
 
 	static void Execute(DataChunk &input, ExpressionState &state, Vector &result) {
-		D_ASSERT(input.ColumnCount() == 0);
+		D_ASSERT(input.ColumnCount() == 0 || input.ColumnCount() == 1);
 		result.SetVectorType(VectorType::CONSTANT_VECTOR);
 		auto rdata = ConstantVector::GetData<timestamp_t>(result);
 		rdata[0] = GetLocalTimestamp(state);
@@ -368,6 +382,7 @@ struct ICULocalTimestampFunc : public ICUDateFunc {
 	static void AddFunction(const string &name, DatabaseInstance &db) {
 		ScalarFunctionSet set(name);
 		set.AddFunction(ScalarFunction({}, LogicalType::TIMESTAMP, Execute, BindNow));
+		set.AddFunction(ScalarFunction({LogicalTypeId::INTEGER}, LogicalType::TIMESTAMP, Execute, BindNow));
 		ExtensionUtil::RegisterFunction(db, set);
 	}
 };

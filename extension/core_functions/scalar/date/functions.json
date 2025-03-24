@@ -130,7 +130,7 @@
         "name": "get_current_timestamp",
         "description": "Returns the current timestamp",
         "example": "get_current_timestamp()",
-        "type": "scalar_function",
+        "type": "scalar_function_set",
         "aliases": ["transaction_timestamp", "current_timestamp"]
     },
     {
@@ -436,13 +436,13 @@
         "name": "utc_time",
         "description": "Returns the current utc time",
         "example": "utc_time()",
-        "type": "scalar_function"
+        "type": "scalar_function_set"
     },
     {
         "name": "utc_timestamp",
         "description": "Returns the current utc timestamp",
         "example": "utc_timestamp()",
-        "type": "scalar_function"
+        "type": "scalar_function_set"
     },
     {
         "name": "unix_timestamp",

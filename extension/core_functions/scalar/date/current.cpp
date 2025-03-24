@@ -44,11 +44,17 @@ static timestamp_t GetTransactionTimestamp(ExpressionState &state) {
 }
 
 static timestamp_t GetQueryTimestamp(ExpressionState &state) {
+	Value ts;
+	if(state.GetContext().TryGetCurrentSetting("timestamp", ts)) {
+		if (BigIntValue::Get(ts) != -1) {
+			return timestamp_t(BigIntValue::Get(ts));
+		}
+	}
 	return state.GetContext().registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
 }
 
 static void CurrentTimestampFunction(DataChunk &input, ExpressionState &state, Vector &result) {
-	D_ASSERT(input.ColumnCount() == 0);
+	D_ASSERT(input.ColumnCount() == 0 || input.ColumnCount() == 1);
 	auto ts = GetQueryTimestamp(state);
 	auto val = Value::TIMESTAMPTZ(timestamp_tz_t(ts));
 	result.Reference(val);
@@ -61,13 +67,13 @@ static void UtcDateFunction(DataChunk &input, ExpressionState &state, Vector &re
 }
 
 static void UtcTimeFunction(DataChunk &input, ExpressionState &state, Vector &result) {
-	D_ASSERT(input.ColumnCount() == 0);
+	D_ASSERT(input.ColumnCount() == 0 || input.ColumnCount() == 1);
 	auto val = Value::TIME(Timestamp::GetTime(GetQueryTimestamp(state)));
 	result.Reference(val);
 }
 
 static void UtcTimeStampFunction(DataChunk &input, ExpressionState &state, Vector &result) {
-	D_ASSERT(input.ColumnCount() == 0);
+	D_ASSERT(input.ColumnCount() == 0 || input.ColumnCount() == 1);
 	auto ts = GetQueryTimestamp(state);
 	auto val = Value::TIMESTAMP(ts);
 	result.Reference(val);
@@ -91,31 +97,45 @@ ScalarFunction UtcDateFun::GetFunction() {
 	return current_date;
 }
 
-ScalarFunction UtcTimeFun::GetFunction() {
-	ScalarFunction current_time({}, LogicalType::TIME, UtcTimeFunction);
-	current_time.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
-	return current_time;
+ScalarFunctionSet UtcTimeFun::GetFunctions() {
+	ScalarFunctionSet utc_time;
+	utc_time.AddFunction(ScalarFunction({}, LogicalType::TIME, UtcTimeFunction));
+	utc_time.AddFunction(ScalarFunction({LogicalTypeId::INTEGER}, LogicalType::TIME, UtcTimeFunction));
+	for (auto &func : utc_time.functions) {
+		func.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+	}
+	return utc_time;
 }
 
-ScalarFunction UtcTimestampFun::GetFunction() {
-	ScalarFunction current_time({}, LogicalType::TIMESTAMP, UtcTimeStampFunction);
-	current_time.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
-	return current_time;
+ScalarFunctionSet UtcTimestampFun::GetFunctions() {
+	ScalarFunctionSet utc_timestamp;
+	utc_timestamp.AddFunction(ScalarFunction({}, LogicalType::TIMESTAMP, UtcTimeStampFunction));
+	utc_timestamp.AddFunction(ScalarFunction({LogicalTypeId::INTEGER}, LogicalType::TIMESTAMP, UtcTimeStampFunction));
+	for (auto &func : utc_timestamp.functions) {
+		func.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+	}
+	return utc_timestamp;
 }
 
 ScalarFunctionSet UnixTimestampFun::GetFunctions() {
 	ScalarFunctionSet unix_timestamp;
 	unix_timestamp.AddFunction(ScalarFunction({}, LogicalType::DOUBLE, UnixTimestampFunctionNoParam));
-	// unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIMESTAMP}, LogicalType::DOUBLE, UnixTimestampFunction<timestamp_t>));
 	unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIMESTAMP_TZ}, LogicalType::DOUBLE, UnixTimestampFunction<timestamp_tz_t>));
 	unix_timestamp.AddFunction(ScalarFunction({LogicalType::DATE}, LogicalType::DOUBLE, UnixTimestampFunction<date_t>));
 	unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIME}, LogicalType::DOUBLE, UnixTimestampFunction<time_t>));
+	for (auto &func : unix_timestamp.functions) {
+		func.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+	}
 	return unix_timestamp;
 }
 
-ScalarFunction GetCurrentTimestampFun::GetFunction() {
-	ScalarFunction current_timestamp({}, LogicalType::TIMESTAMP_TZ, CurrentTimestampFunction);
-	current_timestamp.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+ScalarFunctionSet GetCurrentTimestampFun::GetFunctions() {
+	ScalarFunctionSet current_timestamp;
+	current_timestamp.AddFunction(ScalarFunction({}, LogicalType::TIMESTAMP_TZ, CurrentTimestampFunction));
+	current_timestamp.AddFunction(ScalarFunction({LogicalTypeId::INTEGER}, LogicalType::TIMESTAMP_TZ, CurrentTimestampFunction));
+	for (auto &func : current_timestamp.functions) {
+		func.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
+	}
 	return current_timestamp;
 }
 

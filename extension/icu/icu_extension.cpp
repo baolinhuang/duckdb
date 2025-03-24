@@ -275,6 +275,10 @@ static void SetICUTimeZone(ClientContext &context, SetScope scope, Value &parame
 	parameter = Value(tz_str);
 }
 
+static void SetTimestamp(ClientContext &context, SetScope scope, Value &parameter) {
+	return;
+}
+
 struct ICUCalendarData : public GlobalTableFunctionState {
 	ICUCalendarData() {
 		// All calendars are available in all locales
@@ -410,6 +414,9 @@ static void LoadInternal(DuckDB &ddb) {
 	tz->getID(tz_id).toUTF8String(tz_string);
 	config.AddExtensionOption("TimeZone", "The current time zone", LogicalType::VARCHAR, Value(tz_string),
 	                          SetICUTimeZone);
+
+	// timestamp
+	config.AddExtensionOption("timestamp", "timestamp session variable in MySQL", LogicalType::BIGINT, Value(-1L), SetTimestamp);
 
 	RegisterICUCurrentFunctions(db);
 	RegisterICUDateAddFunctions(db);

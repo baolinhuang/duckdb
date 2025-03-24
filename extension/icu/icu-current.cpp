@@ -18,6 +18,12 @@ static timestamp_t GetTransactionTimestamp(ExpressionState &state) {
 }
 
 static timestamp_t GetQueryTimestamp(ExpressionState &state) {
+	Value ts;
+	if(state.GetContext().TryGetCurrentSetting("timestamp", ts)) {
+		if (BigIntValue::Get(ts) != -1) {
+			return timestamp_t(BigIntValue::Get(ts));
+		}
+	}
 	return state.GetContext().registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
 }
 
