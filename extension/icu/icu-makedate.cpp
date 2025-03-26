@@ -173,7 +173,6 @@ struct ICUMakeTimestampTZFunc : public ICUDateFunc {
 
 void RegisterICUMakeDateFunctions(DatabaseInstance &db) {
 	ICUMakeTimestampTZFunc::AddFunction("make_timestamptz", db);
-	// ICUMakeTimestampTZFunc::AddFunction("from_unixtime", db);
 	ICUMakeDate::AddCasts(db);
 }
 

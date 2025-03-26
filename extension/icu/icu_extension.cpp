@@ -279,6 +279,10 @@ static void SetTimestamp(ClientContext &context, SetScope scope, Value &paramete
 	return;
 }
 
+static void SetDefualtWeekFormat(ClientContext &context, SetScope scope, Value &parameter) {
+	return;
+}
+
 struct ICUCalendarData : public GlobalTableFunctionState {
 	ICUCalendarData() {
 		// All calendars are available in all locales
@@ -417,6 +421,7 @@ static void LoadInternal(DuckDB &ddb) {
 
 	// timestamp
 	config.AddExtensionOption("timestamp", "timestamp session variable in MySQL", LogicalType::BIGINT, Value(-1L), SetTimestamp);
+	config.AddExtensionOption("default_week_format", "timestamp session variable in MySQL", LogicalType::BIGINT, Value(0L), SetDefualtWeekFormat);
 
 	RegisterICUCurrentFunctions(db);
 	RegisterICUDateAddFunctions(db);

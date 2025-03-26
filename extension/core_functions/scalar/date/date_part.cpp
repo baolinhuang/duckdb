@@ -290,9 +290,9 @@ struct DatePart {
 	struct DayOfWeekOperator {
 		template <class TR>
 		static inline TR DayOfWeekFromISO(TR isodow) {
+			// isodow (Monday = 1, Sunday = 7)
 			// day of the week (Sunday = 1, Saturday = 7)
-			// turn sunday into 0 by doing mod 7, then add 1
-			return (isodow + 1) % 7 + 1;
+			return (isodow % 7) + 1;
 		}
 
 		template <class TA, class TR>
@@ -310,12 +310,13 @@ struct DatePart {
 		template <class TA, class TR>
 		static inline TR Operation(TA input) {
 			// isodow (Monday = 1, Sunday = 7)
-			return Date::ExtractISODayOfTheWeek(input);
+			// weekday (Monday = 0, Sunday = 6)
+			return Date::ExtractISODayOfTheWeek(input) - 1;
 		}
 
 		template <class T>
 		static unique_ptr<BaseStatistics> PropagateStatistics(ClientContext &context, FunctionStatisticsInput &input) {
-			return PropagateSimpleDatePartStatistics<1, 7>(input.child_stats);
+			return PropagateSimpleDatePartStatistics<0, 6>(input.child_stats);
 		}
 	};
 
@@ -340,6 +341,36 @@ struct DatePart {
 		template <class T>
 		static unique_ptr<BaseStatistics> PropagateStatistics(ClientContext &context, FunctionStatisticsInput &input) {
 			return PropagateSimpleDatePartStatistics<1, 54>(input.child_stats);
+		}
+	};
+
+	struct WeekMysqlOperator {
+		template <class TA, class TR>
+		static inline TR Operation(TA input, int64_t week_format) {
+			switch(week_format % 8) {
+				case 0:
+					return Date::ExtractWeekNumberMysql(input, false, true, false);
+				case 1:
+					return Date::ExtractWeekNumberMysql(input, true, true, true);
+				case 2:
+					return Date::ExtractWeekNumberMysql(input, false, false, false);
+				case 3:
+					return Date::ExtractWeekNumberMysql(input, true, false, true);
+				case 4:
+					return Date::ExtractWeekNumberMysql(input, false, true, true);
+				case 5:
+					return Date::ExtractWeekNumberMysql(input, true, true, false);
+				case 6:
+					return Date::ExtractWeekNumberMysql(input, false, false, true);
+				case 7:
+					return Date::ExtractWeekNumberMysql(input, true, false, false);
+			}
+			return 0;
+		}
+
+		template <class T>
+		static unique_ptr<BaseStatistics> PropagateStatistics(ClientContext &context, FunctionStatisticsInput &input) {
+			return PropagateSimpleDatePartStatistics<0, 54>(input.child_stats);
 		}
 	};
 
@@ -371,6 +402,74 @@ struct DatePart {
 		template <class T>
 		static unique_ptr<BaseStatistics> PropagateStatistics(ClientContext &context, FunctionStatisticsInput &input) {
 			return PropagateDatePartStatistics<T, YearWeekOperator>(input.child_stats);
+		}
+	};
+
+	struct YearWeekMysqlOperator  {
+		template <class TR>
+		static inline TR YearWeekFromParts(TR yyyy, TR ww) {
+			return yyyy * 100 + ((yyyy > 0) ? ww : -ww);
+		}
+
+		template <class TA, class TR>
+		static inline TR Operation(TA input, int64_t format) {
+			int32_t yyyy, ww;
+			switch(format % 8) {
+				case 0:
+				case 2:	{
+					Date::ExtractYearWeekMysql(input, yyyy, ww, false, false);
+					break;
+				}
+				case 1:
+				case 3: {
+					Date::ExtractYearWeekMysql(input, yyyy, ww, true, true);
+					break;
+				}
+				case 4:
+				case 6: {
+					Date::ExtractYearWeekMysql(input, yyyy, ww, false, true);
+					break;
+				}
+				case 5:
+				case 7: {
+					Date::ExtractYearWeekMysql(input, yyyy, ww, true, false);
+					break;
+				}
+			}
+			return YearWeekFromParts(yyyy, ww);
+		}
+
+		template <class T>
+		static unique_ptr<BaseStatistics> PropagateStatistics(ClientContext &context, FunctionStatisticsInput &input) {
+			auto &nstats = input.child_stats[0];
+			if (!NumericStats::HasMinMax(nstats)) {
+				return nullptr;
+			}
+			// run the operator on both the min and the max, this gives us the [min, max] bound
+			auto min = NumericStats::GetMin<T>(nstats);
+			auto max = NumericStats::GetMax<T>(nstats);
+			if (min > max) {
+				return nullptr;
+			}
+			// Infinities prevent us from computing generic ranges
+			if (!Value::IsFinite(min) || !Value::IsFinite(max)) {
+				return nullptr;
+			}
+
+			int64_t min_part = std::min(
+								std::min(Operation<T, int64_t>(min, 2), Operation<T, int64_t>(min, 3)), 
+								std::min(Operation<T, int64_t>(min, 6), Operation<T, int64_t>(min, 7))
+							   );
+			int64_t max_part = std::max(
+								std::max(Operation<T, int64_t>(min, 2), Operation<T, int64_t>(min, 3)), 
+								std::max(Operation<T, int64_t>(min, 6), Operation<T, int64_t>(min, 7))
+							   );
+			
+			auto result = NumericStats::CreateEmpty(LogicalTypeId::BIGINT);
+			NumericStats::SetMin(result, Value(min_part));
+			NumericStats::SetMax(result, Value(max_part));
+			result.CopyValidity(input.child_stats[0]);
+			return result.ToUnique();
 		}
 	};
 
@@ -719,7 +818,7 @@ struct DatePart {
 				auto isodow = Date::ExtractISODayOfTheWeek(input);
 				bigint_data = HasPartValue(bigint_values, DatePartSpecifier::DOW);
 				if (bigint_data) {
-					bigint_data[idx] = DayOfWeekOperator::DayOfWeekFromISO(isodow);
+					bigint_data[idx] = (DayOfWeekOperator::DayOfWeekFromISO(isodow) + 5) % 7 + 1;
 				}
 				bigint_data = HasPartValue(bigint_values, DatePartSpecifier::ISODOW);
 				if (bigint_data) {
@@ -982,6 +1081,26 @@ int64_t DatePart::WeekOperator::Operation(dtime_tz_t input) {
 }
 
 template <>
+int64_t DatePart::WeekMysqlOperator::Operation(timestamp_t input, int64_t week_format) {
+	return WeekMysqlOperator::Operation<date_t, int64_t>(Timestamp::GetDate(input), week_format);
+}
+
+template <>
+int64_t DatePart::WeekMysqlOperator::Operation(interval_t input, int64_t week_format) {
+	throw NotImplementedException("interval units \"week\" not recognized");
+}
+
+template <>
+int64_t DatePart::WeekMysqlOperator::Operation(dtime_t input, int64_t week_format) {
+	throw NotImplementedException("\"time\" units \"week\" not recognized");
+}
+
+template <>
+int64_t DatePart::WeekMysqlOperator::Operation(dtime_tz_t input, int64_t week_format) {
+	return WeekMysqlOperator::Operation<dtime_t, int64_t>(input.time(), week_format);
+}
+
+template <>
 int64_t DatePart::ISOYearOperator::Operation(timestamp_t input) {
 	return ISOYearOperator::Operation<date_t, int64_t>(Timestamp::GetDate(input));
 }
@@ -1021,6 +1140,28 @@ int64_t DatePart::YearWeekOperator::Operation(dtime_t input) {
 template <>
 int64_t DatePart::YearWeekOperator::Operation(dtime_tz_t input) {
 	return YearWeekOperator::Operation<dtime_t, int64_t>(input.time());
+}
+
+template <>
+int64_t DatePart::YearWeekMysqlOperator::Operation(timestamp_t input, int64_t format) {
+	return YearWeekMysqlOperator::Operation<date_t, int64_t>(Timestamp::GetDate(input), format);
+}
+
+template <>
+int64_t DatePart::YearWeekMysqlOperator::Operation(interval_t input, int64_t format) {
+	const auto yyyy = YearOperator::Operation<interval_t, int64_t>(input);
+	const auto ww = WeekMysqlOperator::Operation<interval_t, int64_t>(input, format);
+	return YearWeekMysqlOperator::YearWeekFromParts<int64_t>(yyyy, ww);
+}
+
+template <>
+int64_t DatePart::YearWeekMysqlOperator::Operation(dtime_t input, int64_t format) {
+	throw NotImplementedException("\"time\" units \"yearweek\" not recognized");
+}
+
+template <>
+int64_t DatePart::YearWeekMysqlOperator::Operation(dtime_tz_t input, int64_t format) {
+	return YearWeekMysqlOperator::Operation<dtime_t, int64_t>(input.time(), format);
 }
 
 template <>
@@ -1555,7 +1696,7 @@ void DatePart::StructOperator::Operation(bigint_vec &bigint_values, double_vec &
 }
 
 template <typename T>
-static int64_t ExtractElement(DatePartSpecifier type, T element) {
+static int64_t ExtractElement(DatePartSpecifier type, T element, int64_t format) {
 	switch (type) {
 	case DatePartSpecifier::YEAR:
 		return DatePart::YearOperator::template Operation<T, int64_t>(element);
@@ -1578,11 +1719,11 @@ static int64_t ExtractElement(DatePartSpecifier type, T element) {
 	case DatePartSpecifier::DOY:
 		return DatePart::DayOfYearOperator::template Operation<T, int64_t>(element);
 	case DatePartSpecifier::WEEK:
-		return DatePart::WeekOperator::template Operation<T, int64_t>(element);
+		return DatePart::WeekMysqlOperator::template Operation<T, int64_t>(element, format);
 	case DatePartSpecifier::ISOYEAR:
 		return DatePart::ISOYearOperator::template Operation<T, int64_t>(element);
 	case DatePartSpecifier::YEARWEEK:
-		return DatePart::YearWeekOperator::template Operation<T, int64_t>(element);
+		return DatePart::YearWeekMysqlOperator::template Operation<T, int64_t>(element, 0);
 	case DatePartSpecifier::MICROSECONDS:
 		return DatePart::MicrosecondsOperator::template Operation<T, int64_t>(element);
 	case DatePartSpecifier::MILLISECONDS:
@@ -1612,15 +1753,82 @@ static void DatePartFunction(DataChunk &args, ExpressionState &state, Vector &re
 	auto &spec_arg = args.data[0];
 	auto &date_arg = args.data[1];
 
+	Value f;
+	int64_t format;
+	if(state.GetContext().TryGetCurrentSetting("default_week_format", f)) {
+		format = BigIntValue::Get(f);
+	}
+
 	BinaryExecutor::ExecuteWithNulls<string_t, T, int64_t>(
 	    spec_arg, date_arg, result, args.size(), [&](string_t specifier, T date, ValidityMask &mask, idx_t idx) {
 		    if (Value::IsFinite(date)) {
-			    return ExtractElement<T>(GetDatePartSpecifier(specifier.GetString()), date);
+			    return ExtractElement<T>(GetDatePartSpecifier(specifier.GetString()), date, format);
 		    } else {
 			    mask.SetInvalid(idx);
 			    return int64_t(0);
 		    }
 	    });
+}
+
+template <typename T>
+static void WeekFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	D_ASSERT(args.ColumnCount() >= 1);
+	auto &date_arg = args.data[0];
+	if (args.ColumnCount() > 1) {
+		auto &format_arg = args.data[1];
+		BinaryExecutor::ExecuteWithNulls<T, int64_t, int64_t>(
+			date_arg, format_arg, result, args.size(), [&](T date, int32_t format, ValidityMask &mask, idx_t idx) {
+				if (Value::IsFinite(date)) {
+					return DatePart::WeekMysqlOperator::Operation<T, int64_t>(date, format);
+				} else {
+					mask.SetInvalid(idx);
+					return int64_t(0);
+				}
+			});
+	} else {
+		Value f;
+		int64_t format;
+		if(state.GetContext().TryGetCurrentSetting("default_week_format", f)) {
+			format = BigIntValue::Get(f);
+		}
+		UnaryExecutor::ExecuteWithNulls<T, int64_t>(
+			date_arg, result, args.size(), [&](T date, ValidityMask &mask, idx_t idx){
+				if (Value::IsFinite(date)) {
+					return DatePart::WeekMysqlOperator::Operation<T, int64_t>(date, format);
+				} else {
+					mask.SetInvalid(idx);
+					return int64_t(0);
+				}
+			});
+	}
+}
+
+template <typename T>
+static void YearWeekFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	D_ASSERT(args.ColumnCount() >= 1);
+	auto &date_arg = args.data[0];
+	if (args.ColumnCount() > 1) {
+		auto &format_arg = args.data[1];
+		BinaryExecutor::ExecuteWithNulls<T, int64_t, int64_t>(
+			date_arg, format_arg, result, args.size(), [&](T date, int32_t format, ValidityMask &mask, idx_t idx) {
+				if (Value::IsFinite(date)) {
+					return DatePart::YearWeekMysqlOperator::Operation<T, int64_t>(date, format);
+				} else {
+					mask.SetInvalid(idx);
+					return int64_t(0);
+				}
+			});
+	} else {
+		UnaryExecutor::ExecuteWithNulls<T, int64_t>(
+			date_arg, result, args.size(), [&](T date, ValidityMask &mask, idx_t idx){
+				if (Value::IsFinite(date)) {
+					return DatePart::YearWeekMysqlOperator::Operation<T, int64_t>(date, 0);
+				} else {
+					mask.SetInvalid(idx);
+					return int64_t(0);
+				}
+			});
+	}
 }
 
 static unique_ptr<FunctionData> DatePartBind(ClientContext &context, ScalarFunction &bound_function,
@@ -2038,7 +2246,14 @@ ScalarFunctionSet DayOfYearFun::GetFunctions() {
 }
 
 ScalarFunctionSet WeekFun::GetFunctions() {
-	return GetDatePartFunction<DatePart::WeekOperator>();
+	ScalarFunctionSet operator_set;
+	operator_set.AddFunction(ScalarFunction({LogicalType::DATE, LogicalTypeId::BIGINT}, LogicalType::BIGINT, WeekFunction<date_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::INTERVAL, LogicalTypeId::BIGINT}, LogicalType::BIGINT, WeekFunction<interval_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::TIMESTAMP, LogicalTypeId::BIGINT}, LogicalType::BIGINT, WeekFunction<timestamp_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::DATE}, LogicalType::BIGINT, WeekFunction<date_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::INTERVAL}, LogicalType::BIGINT, WeekFunction<interval_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::TIMESTAMP}, LogicalType::BIGINT, WeekFunction<timestamp_t>));
+	return operator_set;
 }
 
 ScalarFunctionSet ISOYearFun::GetFunctions() {
@@ -2175,7 +2390,14 @@ ScalarFunctionSet HoursFun::GetFunctions() {
 }
 
 ScalarFunctionSet YearWeekFun::GetFunctions() {
-	return GetDatePartFunction<DatePart::YearWeekOperator>();
+	ScalarFunctionSet operator_set;
+	operator_set.AddFunction(ScalarFunction({LogicalType::DATE, LogicalTypeId::BIGINT}, LogicalType::BIGINT, YearWeekFunction<date_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::INTERVAL, LogicalTypeId::BIGINT}, LogicalType::BIGINT, YearWeekFunction<interval_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::TIMESTAMP, LogicalTypeId::BIGINT}, LogicalType::BIGINT, YearWeekFunction<timestamp_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::DATE}, LogicalType::BIGINT, YearWeekFunction<date_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::INTERVAL}, LogicalType::BIGINT, YearWeekFunction<interval_t>));
+	operator_set.AddFunction(ScalarFunction({LogicalType::TIMESTAMP}, LogicalType::BIGINT, YearWeekFunction<timestamp_t>));
+	return operator_set;
 }
 
 ScalarFunctionSet DayOfMonthFun::GetFunctions() {

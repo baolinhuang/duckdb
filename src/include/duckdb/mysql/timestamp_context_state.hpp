@@ -8,7 +8,7 @@ namespace duckdb {
     struct TimestampContextState : ClientContextState
     {
         timestamp_t start_timestamp;
-        void QueryBegin(ClientContext &context) {
+        void QueryBegin(ClientContext &context) override {
             start_timestamp = Timestamp::GetCurrentTimestamp();
         }
     };

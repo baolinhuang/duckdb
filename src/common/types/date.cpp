@@ -518,10 +518,10 @@ int32_t Date::ExtractISODayOfTheWeek(date_t date) {
 	// 7  = 4
 	if (date.days < 0) {
 		// negative date: start off at 4 and cycle downwards
-		return UnsafeNumericCast<int32_t>((7 - ((-int64_t(date.days) + 3) % 7))) - 1;
+		return UnsafeNumericCast<int32_t>((7 - ((-int64_t(date.days) + 3) % 7)));
 	} else {
 		// positive date: start off at 4 and cycle upwards
-		return UnsafeNumericCast<int32_t>(((int64_t(date.days) + 3) % 7) + 1) - 1;
+		return UnsafeNumericCast<int32_t>(((int64_t(date.days) + 3) % 7) + 1);
 	}
 }
 
@@ -614,6 +614,70 @@ int32_t Date::ExtractWeekNumberRegular(date_t date, bool monday_first) {
 		return 0;
 	}
 	return ((day_of_the_year - first_week_start) / 7) + 1;
+}
+
+date_t GetWeekOne(int32_t year, bool monday_first, bool iso) {
+	date_t first_day = Date::FromDate(year, 1, 1);
+	int32_t day_of_jan_first = Date::ExtractISODayOfTheWeek(first_day);
+
+	if (iso) {
+		int32_t first_weekday;
+		if (monday_first) {
+			first_weekday = day_of_jan_first - 1;
+		} else {
+			first_weekday = day_of_jan_first % 7;
+		}
+		
+		date_t week1_day = first_day - first_weekday;
+		if (first_weekday > 3) { /* if 1/1 was Fri, Sat, Sun */
+			week1_day += 7;
+		}
+		return week1_day;
+	} else {
+		int32_t first_week_start = day_of_jan_first;
+		if (monday_first) {
+			if (day_of_jan_first == 1) {
+				first_week_start = 0;
+			} else {
+				first_week_start = 8 - first_week_start;
+			}
+		} else {
+			if (day_of_jan_first == 7) {
+				first_week_start = 0;
+			} else {
+				first_week_start = 7 - day_of_jan_first;
+			}
+		}
+		return first_day + first_week_start;
+	}
+}
+
+int32_t GetWeekNumberMysql(date_t date, int32_t &year, bool monday_first, bool zero_first, bool iso){
+	int32_t month, day;
+	Date::Convert(date, year, month, day);
+
+	date_t week1_monday = GetWeekOne(year, monday_first, iso);
+	auto week = PythonDivMod((date.days - week1_monday.days), 7, day);
+	if (zero_first) {
+		return std::max(week + 1, 0);
+	}
+	if (week < 0) {
+		week1_monday = GetWeekOne(--year, monday_first, iso);
+		week = PythonDivMod((date.days - week1_monday.days), 7, day);
+	} else if (week >= 52 && date >= GetWeekOne(year + 1, monday_first, iso)) {
+		++year;
+		week = 0;
+	}
+	return week + 1;
+}
+
+int32_t Date::ExtractWeekNumberMysql(date_t date, bool monday_first, bool zero_first, bool iso) {
+	int32_t year;
+	return GetWeekNumberMysql(date, year, monday_first, zero_first, iso);
+}
+
+void Date::ExtractYearWeekMysql(date_t date, int32_t &year, int32_t &week, bool monday_first, bool iso) {
+	week = GetWeekNumberMysql(date, year, monday_first, false, iso);
 }
 
 // Returns the date of the monday of the current week.

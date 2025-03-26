@@ -1,5 +1,6 @@
 #include "include/icu-datepart.hpp"
 #include "include/icu-datefunc.hpp"
+#include "include/icu-casts.hpp"
 
 #include "duckdb/main/extension_util.hpp"
 #include "duckdb/common/enums/date_part_specifier.hpp"
@@ -13,6 +14,123 @@
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 
 namespace duckdb {
+
+template <typename OP>
+static void ICUDateMysqlFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	using CalendarPtr = unique_ptr<icu::Calendar>;
+	D_ASSERT(args.ColumnCount() >= 1);
+	auto &timestamp_arg = args.data[0];
+
+	auto &func_expr = state.expr.Cast<BoundFunctionExpression>();
+	auto &info = func_expr.bind_info->Cast<ICUDateFunc::BindData>();
+	CalendarPtr calendar_ptr(info.calendar->clone());
+	auto calendar = calendar_ptr.get();
+
+	if (args.ColumnCount() == 1) {
+		int64_t format = OP::GetDefaultWeekFormat(state);
+		UnaryExecutor::ExecuteWithNulls<timestamp_t, int64_t>(timestamp_arg, result, args.size(),
+																[&](timestamp_t input, ValidityMask &mask, idx_t idx) {
+																	if (Timestamp::IsFinite(input)) {
+																		date_t date = ICUMakeDate::Operation(calendar, input);
+																		OP::Operation(date, format);
+																	} else {
+																		mask.SetInvalid(idx);
+																		return int64_t(0);
+																	}
+																});
+	} else {
+		auto &format_arg = args.data[1];
+		BinaryExecutor::ExecuteWithNulls<timestamp_t, int64_t, int64_t>(timestamp_arg, format_arg, result, args.size(),
+																[&](timestamp_t input, int64_t format, ValidityMask &mask, idx_t idx) {
+																	if (Timestamp::IsFinite(input)) {
+																		date_t date = ICUMakeDate::Operation(calendar, input);
+																		OP::Operation(date, format);
+																	} else {
+																		mask.SetInvalid(idx);
+																		return int64_t(0);
+																	}
+																});
+	}
+}
+
+struct ICUWeekMysqlFunc : ICUDateFunc {
+	static inline int64_t GetDefaultWeekFormat(ExpressionState &state) {
+		Value f;
+		int64_t format;
+		if(state.GetContext().TryGetCurrentSetting("default_week_format", f)) {
+			format = BigIntValue::Get(f);
+		}
+		return format;
+	}
+	static inline int64_t Operation(date_t input, int64_t week_format) {
+		switch(week_format % 8) {
+			case 0:
+				return Date::ExtractWeekNumberMysql(input, false, true, false);
+			case 1:
+				return Date::ExtractWeekNumberMysql(input, true, true, true);
+			case 2:
+				return Date::ExtractWeekNumberMysql(input, false, false, false);
+			case 3:
+				return Date::ExtractWeekNumberMysql(input, true, false, true);
+			case 4:
+				return Date::ExtractWeekNumberMysql(input, false, true, true);
+			case 5:
+				return Date::ExtractWeekNumberMysql(input, true, true, false);
+			case 6:
+				return Date::ExtractWeekNumberMysql(input, false, false, true);
+			case 7:
+				return Date::ExtractWeekNumberMysql(input, true, false, false);
+		}
+		return 0;
+	}
+
+	static void AddFunctions(const string &name, DatabaseInstance &db) {
+		ScalarFunctionSet set(name);
+		set.AddFunction(ScalarFunction({LogicalTypeId::TIMESTAMP_TZ}, LogicalTypeId::BIGINT, ICUDateMysqlFunction<ICUWeekMysqlFunc>, Bind));
+		set.AddFunction(ScalarFunction({LogicalTypeId::TIMESTAMP_TZ, LogicalTypeId::BIGINT}, LogicalTypeId::BIGINT, ICUDateMysqlFunction<ICUWeekMysqlFunc>, Bind));
+		ExtensionUtil::RegisterFunction(db, set);
+	}
+};
+
+struct ICUYearWeekMysqlFunc : public ICUDateFunc {
+	static inline int64_t GetDefaultWeekFormat(ExpressionState &state) {
+		return 0;
+	}
+	static inline int64_t Operation(date_t input, int64_t week_format) {
+		int32_t yyyy, ww;
+		switch(week_format % 8) {
+			case 0:
+			case 2:	{
+				Date::ExtractYearWeekMysql(input, yyyy, ww, false, false);
+				break;
+			}
+			case 1:
+			case 3: {
+				Date::ExtractYearWeekMysql(input, yyyy, ww, true, true);
+				break;
+			}
+			case 4:
+			case 6: {
+				Date::ExtractYearWeekMysql(input, yyyy, ww, false, true);
+				break;
+			}
+			case 5:
+			case 7: {
+				Date::ExtractYearWeekMysql(input, yyyy, ww, true, false);
+				break;
+			}
+		}
+		return yyyy * 100 + ((yyyy > 0) ? ww : -ww);
+	}
+
+	static void AddFunctions(const string &name, DatabaseInstance &db) {
+		ScalarFunctionSet set(name);
+		set.AddFunction(ScalarFunction({LogicalTypeId::TIMESTAMP_TZ}, LogicalTypeId::BIGINT, ICUDateMysqlFunction<ICUYearWeekMysqlFunc>, Bind));
+		set.AddFunction(ScalarFunction({LogicalTypeId::TIMESTAMP_TZ, LogicalTypeId::BIGINT}, LogicalTypeId::BIGINT, ICUDateMysqlFunction<ICUYearWeekMysqlFunc>, Bind));
+		ExtensionUtil::RegisterFunction(db, set);
+	}
+
+};
 
 struct ICUDatePart : public ICUDateFunc {
 	typedef int64_t (*part_bigint_t)(icu::Calendar *calendar, const uint64_t micros);
@@ -308,10 +426,24 @@ struct ICUDatePart : public ICUDateFunc {
 		CalendarPtr calendar_ptr(info.calendar->clone());
 		auto calendar = calendar_ptr.get();
 
+		Value f;
+		int64_t format;
+		if(state.GetContext().TryGetCurrentSetting("default_week_format", f)) {
+			format = BigIntValue::Get(f);
+		}
+
 		BinaryExecutor::ExecuteWithNulls<string_t, INPUT_TYPE, RESULT_TYPE>(
 		    part_arg, date_arg, result, args.size(),
 		    [&](string_t specifier, INPUT_TYPE input, ValidityMask &mask, idx_t idx) {
 			    if (Timestamp::IsFinite(input)) {
+					if (specifier == "week" || specifier == "yearweek") {
+						date_t date = ICUMakeDate::Operation(calendar, input);
+						if (specifier == "week") {
+							return ICUWeekMysqlFunc::Operation(date, format);
+						} else {
+							return ICUYearWeekMysqlFunc::Operation(date, 0);
+						}
+					}
 				    const auto micros = SetTime(calendar, input);
 				    auto adapter = PartCodeBigintFactory(GetDatePartSpecifier(specifier.GetString()));
 				    return adapter(calendar, micros);
@@ -686,7 +818,7 @@ void RegisterICUDatePartFunctions(DatabaseInstance &db) {
 	ICUDatePart::AddUnaryPartCodeFunctions("hour", db);
 	ICUDatePart::AddUnaryPartCodeFunctions("dayofweek", db);
 	ICUDatePart::AddUnaryPartCodeFunctions("isodow", db);
-	ICUDatePart::AddUnaryPartCodeFunctions("week", db); //  Note that WeekOperator is ISO-8601, not US
+	// ICUDatePart::AddUnaryPartCodeFunctions("week", db); //  Note that WeekOperator is ISO-8601, not US
 	ICUDatePart::AddUnaryPartCodeFunctions("dayofyear", db);
 	ICUDatePart::AddUnaryPartCodeFunctions("quarter", db);
 	ICUDatePart::AddUnaryPartCodeFunctions("isoyear", db);
@@ -694,12 +826,15 @@ void RegisterICUDatePartFunctions(DatabaseInstance &db) {
 	ICUDatePart::AddUnaryPartCodeFunctions("timezone_hour", db);
 	ICUDatePart::AddUnaryPartCodeFunctions("timezone_minute", db);
 
+	ICUWeekMysqlFunc::AddFunctions("week", db);
+	ICUYearWeekMysqlFunc::AddFunctions("yearweek", db);
+
 	//	DOUBLEs
 	ICUDatePart::AddUnaryPartCodeFunctions<double>("epoch", db, LogicalType::DOUBLE);
 	ICUDatePart::AddUnaryPartCodeFunctions<double>("julian", db, LogicalType::DOUBLE);
 
 	//  register combinations
-	ICUDatePart::AddUnaryPartCodeFunctions("yearweek", db); //  Note this is ISO year and week
+	// ICUDatePart::AddUnaryPartCodeFunctions("yearweek", db); //  Note this is ISO year and week
 
 	//  register various aliases
 	ICUDatePart::AddUnaryPartCodeFunctions("dayofmonth", db);
