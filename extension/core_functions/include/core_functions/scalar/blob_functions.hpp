@@ -52,7 +52,7 @@ struct ToBase64Fun {
 	static constexpr const char *Example = "base64('A'::BLOB)";
 	static constexpr const char *Categories = "string,blob";
 
-	static ScalarFunction GetFunction();
+	static ScalarFunctionSet GetFunctions();
 };
 
 struct Base64Fun {

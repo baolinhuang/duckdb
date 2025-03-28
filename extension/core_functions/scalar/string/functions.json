@@ -172,6 +172,20 @@
         "type": "scalar_function_set"
     },
     {
+        "name": "oct",
+        "parameters": "integer",
+        "description": "Returns a string representation of the octal value of N",
+        "example": "oct(123)",
+        "type": "scalar_function_set"
+    },
+    {
+        "name": "ord",
+        "parameters": "string",
+        "description": "ORD function in MySQL",
+        "example": "ord('hello')",
+        "type": "scalar_function"
+    },
+    {
         "name": "parse_dirname",
         "parameters": "string,separator",
         "description": "Returns the top-level directory name. separator options: system, both_slash (default), forward_slash, backslash",
@@ -310,8 +324,7 @@
         "parameters": "str",
         "description": "Returns the unicode codepoint of the first character of the string",
         "example": "unicode('ü')",
-        "type": "scalar_function",
-        "aliases": ["ord"]
+        "type": "scalar_function"
     },
     {
         "name": "to_base",

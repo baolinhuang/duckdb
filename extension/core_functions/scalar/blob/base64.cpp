@@ -34,12 +34,15 @@ static void Base64DecodeFunction(DataChunk &args, ExpressionState &state, Vector
 	UnaryExecutor::ExecuteString<string_t, string_t, Base64DecodeOperator>(args.data[0], result, args.size());
 }
 
-ScalarFunction ToBase64Fun::GetFunction() {
-	return ScalarFunction({LogicalType::BLOB}, LogicalType::VARCHAR, Base64EncodeFunction);
+ScalarFunctionSet ToBase64Fun::GetFunctions() {
+	ScalarFunctionSet set;
+	set.AddFunction(ScalarFunction({LogicalType::BLOB}, LogicalType::VARCHAR, Base64EncodeFunction));
+	set.AddFunction(ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, Base64EncodeFunction));
+	return set;
 }
 
 ScalarFunction FromBase64Fun::GetFunction() {
-	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::BLOB, Base64DecodeFunction);
+	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::VARCHAR, Base64DecodeFunction);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }

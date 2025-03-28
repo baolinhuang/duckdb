@@ -64,6 +64,42 @@ static void WriteHugeIntBinBytes(T x, char *&output, idx_t buffer_size) {
 	}
 }
 
+static void WriteOctBytes(uint64_t x, char *&output, idx_t buffer_size) {
+	idx_t offset = buffer_size * 3;
+
+	for (; offset >= 3; offset -= 3) {
+		uint8_t byte = (x >> (offset - 3)) & 0x07;
+		*output = Blob::HEX_TABLE[byte];
+		output++;
+	}
+}
+
+template <class T>
+static void WriteHugeIntOctBytes(T x, char *&output, idx_t buffer_size) {
+	idx_t offset = buffer_size * 3;
+	auto upper = x.upper;
+	auto lower = x.lower;
+
+	for (; offset >= 69; offset -= 3) {
+		uint8_t byte = (upper >> (offset - 66)) & 0x07;
+		*output = Blob::HEX_TABLE[byte];
+		output++;
+	}
+
+	{
+		uint8_t byte = ((upper & 0x03) << 1) + ((lower >> offset) & 0x01);
+		*output = Blob::HEX_TABLE[byte];
+		output++;
+		offset -= 3;
+	}
+
+	for (; offset >= 3; offset -= 3) {
+		uint8_t byte = (lower >> (offset - 3)) & 0x07;
+		*output = Blob::HEX_TABLE[byte];
+		output++;
+	}
+}
+
 struct HexStrOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
@@ -178,24 +214,107 @@ static void ToHexFunction(DataChunk &args, ExpressionState &state, Vector &resul
 	UnaryExecutor::ExecuteString<INPUT, string_t, OP>(input, result, count);
 }
 
+struct OctStrOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
+		auto target = StringVector::EmptyString(result, 1);
+		auto output = target.GetDataWriteable();
+		*output = '0';
+		target.Finalize();
+		return target;
+	}
+};
+
+struct OctIntegralOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
+
+		auto num_leading_zero = CountZeros<uint64_t>::Leading(static_cast<uint64_t>(input));
+		idx_t num_bits_to_check = 64 - num_leading_zero;
+		D_ASSERT(num_bits_to_check <= sizeof(INPUT_TYPE) * 8);
+
+		idx_t buffer_size = (num_bits_to_check + 2) / 3;
+
+		// Special case: All bits are zero
+		if (buffer_size == 0) {
+			auto target = StringVector::EmptyString(result, 1);
+			auto output = target.GetDataWriteable();
+			*output = '0';
+			target.Finalize();
+			return target;
+		}
+
+		D_ASSERT(buffer_size > 0);
+		auto target = StringVector::EmptyString(result, buffer_size);
+		auto output = target.GetDataWriteable();
+
+		WriteOctBytes(static_cast<uint64_t>(input), output, buffer_size);
+
+		target.Finalize();
+		return target;
+	}
+};
+
+struct OctHugeIntOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
+
+		idx_t num_leading_zero = CountZeros<hugeint_t>::Leading(UnsafeNumericCast<hugeint_t>(input));
+		idx_t buffer_size = (sizeof(INPUT_TYPE) * 2 - num_leading_zero + 2) / 3;
+
+		// Special case: All bits are zero
+		if (buffer_size == 0) {
+			auto target = StringVector::EmptyString(result, 1);
+			auto output = target.GetDataWriteable();
+			*output = '0';
+			target.Finalize();
+			return target;
+		}
+
+		D_ASSERT(buffer_size > 0);
+		auto target = StringVector::EmptyString(result, buffer_size);
+		auto output = target.GetDataWriteable();
+
+		WriteHugeIntOctBytes<hugeint_t>(input, output, buffer_size);
+
+		target.Finalize();
+		return target;
+	}
+};
+
+struct OctUhugeIntOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
+
+		idx_t num_leading_zero = CountZeros<uhugeint_t>::Leading(UnsafeNumericCast<uhugeint_t>(input));
+		idx_t buffer_size = (sizeof(INPUT_TYPE) * 2 - num_leading_zero + 2) / 3;
+
+		// Special case: All bits are zero
+		if (buffer_size == 0) {
+			auto target = StringVector::EmptyString(result, 1);
+			auto output = target.GetDataWriteable();
+			*output = '0';
+			target.Finalize();
+			return target;
+		}
+
+		D_ASSERT(buffer_size > 0);
+		auto target = StringVector::EmptyString(result, buffer_size);
+		auto output = target.GetDataWriteable();
+
+		WriteHugeIntOctBytes<uhugeint_t>(input, output, buffer_size);
+
+		target.Finalize();
+		return target;
+	}
+};
+
 struct BinaryStrOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
-		auto data = input.GetData();
-		auto size = input.GetSize();
-
-		// Allocate empty space
-		auto target = StringVector::EmptyString(result, size * 8);
+		auto target = StringVector::EmptyString(result, 1);
 		auto output = target.GetDataWriteable();
-
-		for (idx_t i = 0; i < size; ++i) {
-			auto byte = static_cast<uint8_t>(data[i]);
-			for (idx_t i = 8; i >= 1; --i) {
-				*output = ((byte >> (i - 1)) & 0x01) + '0';
-				output++;
-			}
-		}
-
+		*output = '0';
 		target.Finalize();
 		return target;
 	}
@@ -388,6 +507,14 @@ static void FromHexFunction(DataChunk &args, ExpressionState &state, Vector &res
 	UnaryExecutor::ExecuteString<string_t, string_t, FromHexOperator>(input, result, count);
 }
 
+template <class INPUT, class OP>
+static void ToOctFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	D_ASSERT(args.ColumnCount() == 1);
+	auto &input = args.data[0];
+	idx_t count = args.size();
+	UnaryExecutor::ExecuteString<INPUT, string_t, OP>(input, result, count);
+}
+
 ScalarFunctionSet HexFun::GetFunctions() {
 	ScalarFunctionSet to_hex;
 	to_hex.AddFunction(
@@ -408,7 +535,7 @@ ScalarFunctionSet HexFun::GetFunctions() {
 }
 
 ScalarFunction UnhexFun::GetFunction() {
-	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::BLOB, FromHexFunction);
+	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::VARCHAR, FromHexFunction);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
@@ -435,6 +562,25 @@ ScalarFunction UnbinFun::GetFunction() {
 	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::BLOB, FromBinaryFunction);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
+}
+
+ScalarFunctionSet OctFun::GetFunctions() {
+	ScalarFunctionSet to_oct;
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::VARINT}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::BLOB}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::BIGINT}, LogicalType::VARCHAR, ToOctFunction<int64_t, OctIntegralOperator>));
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::UBIGINT}, LogicalType::VARCHAR, ToOctFunction<uint64_t, OctIntegralOperator>));
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::HUGEINT}, LogicalType::VARCHAR, ToOctFunction<hugeint_t, OctHugeIntOperator>));
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::UHUGEINT}, LogicalType::VARCHAR, ToOctFunction<uhugeint_t, OctUhugeIntOperator>));
+	return to_oct;
 }
 
 } // namespace duckdb

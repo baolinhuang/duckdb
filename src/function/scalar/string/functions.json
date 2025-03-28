@@ -113,7 +113,7 @@
         "struct": "NFCNormalizeFun"
     },
     {
-        "name": "length",
+        "name": "char_length",
         "parameters": "string",
         "description": "Number of characters in `string`.",
         "example": "length('Hello🦆')",
@@ -121,39 +121,18 @@
         "aliases": ["len", "char_length", "character_length"]
     },
     {
-        "name": "strlen",
+        "name": "length",
         "parameters": "string",
-        "description": "Number of bytes in `string`.",
-        "example": "strlen('🦆')",
-        "type": "scalar_function"
+        "description": "Number of bytes in string.",
+        "example": "length('🦆')",
+        "type": "scalar_function_set",
+        "aliases": ["octet_length"]
     },
     {
         "name": "bit_length",
         "parameters": "",
         "description": "",
         "example": "",
-        "type": "scalar_function_set"
-    },
-    {
-        "name": "octet_length",
-        "variants": [
-            {
-                "parameters": [
-                    {"name": "blob", "type": "BLOB"}
-                ],
-                "description": "Number of bytes in `blob`.",
-                "example": "octet_length('\\xAA\\xBB'::BLOB)",
-                "categories": ["blob"]
-            },
-            {
-                "parameters": [
-                    {"name": "bitstring", "type": "BIT"}
-                ],
-                "description": "Returns the number of bytes in the `bitstring`.",
-                "example": "octet_length('1101011'::BITSTRING)",
-                "categories": ["bitstring"]
-            }
-        ],
         "type": "scalar_function_set"
     },
     {
@@ -176,7 +155,7 @@
         "description": "Extract substring of `length` characters starting from character `start`. Note that a start value of 1 refers to the first character of the `string`.",
         "example": "substring('Hello', 2, 2)",
         "type": "scalar_function_set",
-        "aliases": ["substr"]
+        "aliases": ["substr", "mid"]
     },
     {
         "name": "substring_grapheme",

@@ -161,42 +161,36 @@ struct NFCNormalizeFun {
 	static ScalarFunction GetFunction();
 };
 
-struct LengthFun {
-	static constexpr const char *Name = "length";
+struct CharLengthFun {
+	static constexpr const char *Name = "char_length";
 	static constexpr const char *Parameters = "string";
-	static constexpr const char *Description = "Number of characters in `string`.";
-	static constexpr const char *Example = "length('Hello🦆')";
+	static constexpr const char *Description = "Number of characters in string.";
+	static constexpr const char *Example = "char_length('Hello🦆')";
 	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };
 
-struct LenFun {
-	using ALIAS = LengthFun;
-
-	static constexpr const char *Name = "len";
-};
-
-struct CharLengthFun {
-	using ALIAS = LengthFun;
-
-	static constexpr const char *Name = "char_length";
-};
-
 struct CharacterLengthFun {
-	using ALIAS = LengthFun;
+	using ALIAS = CharLengthFun;
 
 	static constexpr const char *Name = "character_length";
 };
 
-struct StrlenFun {
-	static constexpr const char *Name = "strlen";
+struct LengthFun {
+	static constexpr const char *Name = "length";
 	static constexpr const char *Parameters = "string";
-	static constexpr const char *Description = "Number of bytes in `string`.";
-	static constexpr const char *Example = "strlen('🦆')";
+	static constexpr const char *Description = "Number of bytes in string.";
+	static constexpr const char *Example = "length('🦆')";
 	static constexpr const char *Categories = "";
 
-	static ScalarFunction GetFunction();
+	static ScalarFunctionSet GetFunctions();
+};
+
+struct OctetLengthFun {
+	using ALIAS = LengthFun;
+
+	static constexpr const char *Name = "octet_length";
 };
 
 struct BitLengthFun {
@@ -205,16 +199,6 @@ struct BitLengthFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 	static constexpr const char *Categories = "";
-
-	static ScalarFunctionSet GetFunctions();
-};
-
-struct OctetLengthFun {
-	static constexpr const char *Name = "octet_length";
-	static constexpr const char *Parameters = "blob::BLOB\1bitstring::BIT";
-	static constexpr const char *Description = "Number of bytes in `blob`.\1Returns the number of bytes in the `bitstring`.";
-	static constexpr const char *Example = "octet_length('\\xAA\\xBB'::BLOB)\1octet_length('1101011'::BITSTRING)";
-	static constexpr const char *Categories = "blob\1bitstring";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -253,6 +237,12 @@ struct SubstrFun {
 	using ALIAS = SubstringFun;
 
 	static constexpr const char *Name = "substr";
+};
+
+struct MidFun {
+	using ALIAS = SubstringFun;
+
+	static constexpr const char *Name = "mid";
 };
 
 struct SubstringGraphemeFun {

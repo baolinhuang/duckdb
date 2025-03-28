@@ -217,8 +217,8 @@ static unique_ptr<FunctionData> ArrayOrListLengthBinaryBind(ClientContext &conte
 	}
 }
 
-ScalarFunctionSet LengthFun::GetFunctions() {
-	ScalarFunctionSet length("length");
+ScalarFunctionSet CharLengthFun::GetFunctions() {
+	ScalarFunctionSet length("char_length");
 	length.AddFunction(ScalarFunction({LogicalType::VARCHAR}, LogicalType::BIGINT,
 	                                  ScalarFunction::UnaryFunction<string_t, int64_t, StringLengthOperator>, nullptr,
 	                                  nullptr, LengthPropagateStats));
@@ -249,9 +249,13 @@ ScalarFunctionSet ArrayLengthFun::GetFunctions() {
 	return (array_length);
 }
 
-ScalarFunction StrlenFun::GetFunction() {
-	return ScalarFunction("strlen", {LogicalType::VARCHAR}, LogicalType::BIGINT,
-	                      ScalarFunction::UnaryFunction<string_t, int64_t, StrLenOperator>);
+ScalarFunctionSet LengthFun::GetFunctions() {
+	ScalarFunctionSet set;
+	set.AddFunction(ScalarFunction({LogicalType::VARCHAR}, LogicalType::BIGINT,
+									ScalarFunction::UnaryFunction<string_t, int64_t, StrLenOperator>));
+	set.AddFunction(ScalarFunction({LogicalType::BLOB}, LogicalType::BIGINT,
+	                                ScalarFunction::UnaryFunction<string_t, int64_t, StrLenOperator>));
+	return set;
 }
 
 ScalarFunctionSet BitLengthFun::GetFunctions() {
@@ -261,16 +265,6 @@ ScalarFunctionSet BitLengthFun::GetFunctions() {
 	bit_length.AddFunction(ScalarFunction({LogicalType::BIT}, LogicalType::BIGINT,
 	                                      ScalarFunction::UnaryFunction<string_t, int64_t, BitStringLenOperator>));
 	return (bit_length);
-}
-
-ScalarFunctionSet OctetLengthFun::GetFunctions() {
-	// length for BLOB type
-	ScalarFunctionSet octet_length("octet_length");
-	octet_length.AddFunction(ScalarFunction({LogicalType::BLOB}, LogicalType::BIGINT,
-	                                        ScalarFunction::UnaryFunction<string_t, int64_t, StrLenOperator>));
-	octet_length.AddFunction(ScalarFunction({LogicalType::BIT}, LogicalType::BIGINT,
-	                                        ScalarFunction::UnaryFunction<string_t, int64_t, OctetLenOperator>));
-	return (octet_length);
 }
 
 } // namespace duckdb

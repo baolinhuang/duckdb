@@ -28,8 +28,8 @@
         "parameters": "blob",
         "description": "Converts a `blob` to a base64 encoded `string`.",
         "example": "base64('A'::BLOB)",
-        "type": "scalar_function",
         "categories": ["string", "blob"],
+        "type": "scalar_function_set",
         "aliases": ["base64"]
     }
 ]

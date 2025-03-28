@@ -16,6 +16,7 @@ add_library_unity(
   parse_path.cpp
   left_right.cpp
   to_base.cpp
+  ord.cpp
   pad.cpp
   trim.cpp
   format_bytes.cpp

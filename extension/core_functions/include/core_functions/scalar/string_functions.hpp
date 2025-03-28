@@ -263,6 +263,24 @@ struct LtrimFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
+struct OctFun {
+	static constexpr const char *Name = "oct";
+	static constexpr const char *Parameters = "integer";
+	static constexpr const char *Description = "Returns a string representation of the octal value of N";
+	static constexpr const char *Example = "oct(123)";
+
+	static ScalarFunctionSet GetFunctions();
+};
+
+struct OrdFun {
+	static constexpr const char *Name = "ord";
+	static constexpr const char *Parameters = "string";
+	static constexpr const char *Description = "ORD function in MySQL";
+	static constexpr const char *Example = "ord('hello')";
+
+	static ScalarFunction GetFunction();
+};
+
 struct ParseDirnameFun {
 	static constexpr const char *Name = "parse_dirname";
 	static constexpr const char *Parameters = "string,separator";
@@ -443,12 +461,6 @@ struct UnicodeFun {
 	static constexpr const char *Categories = "";
 
 	static ScalarFunction GetFunction();
-};
-
-struct OrdFun {
-	using ALIAS = UnicodeFun;
-
-	static constexpr const char *Name = "ord";
 };
 
 struct ToBaseFun {
