@@ -803,9 +803,37 @@ ScalarFunction PowOperatorFun::GetFunction() {
 	                      ScalarFunction::BinaryFunction<double, double, double, PowOperator>);
 }
 
+template <typename TA, typename TR, typename OP>
+static void GetUnaryFunctionWithDomain(DataChunk &chunk, ExpressionState &state, Vector &result) {
+	UnaryExecutor::ExecuteWithNulls<TA, TR>(chunk.data[0], result, chunk.size(),
+											[&](TA input, ValidityMask &mask, idx_t idx){
+												if (OP::template InDomain<TA>(input)) {
+													return OP::template Operation<TA, TR>(input);
+												} else {
+													mask.SetInvalid(idx);
+													return TR();
+												}
+											});
+}
+
+template <typename TA, typename TB, typename TR, typename OP>
+static void GetBinaryFunctionWithDomain(DataChunk &chunk, ExpressionState &state, Vector &result) {
+	BinaryExecutor::ExecuteWithNulls<TA, TB, TR>(chunk.data[0], chunk.data[1], result, chunk.size(),
+												[&](TA left, TB right, ValidityMask &mask, idx_t idx){
+													if (OP::template InDomain<TA, TB>(left, right)) {
+														return OP::template Operation<TA, TB, TR>(left, right);
+													} else {
+														mask.SetInvalid(idx);
+														return TR();
+													}
+												});
+}
+
+
 //===--------------------------------------------------------------------===//
 // sqrt
 //===--------------------------------------------------------------------===//
+
 struct SqrtOperator {
 	template <class TA, class TR>
 	static inline TR Operation(TA input) {
@@ -814,11 +842,16 @@ struct SqrtOperator {
 		}
 		return std::sqrt(input);
 	}
+
+	template <class TA>
+	static inline bool InDomain(TA input) {
+		return input >= 0;
+	}
 };
 
 ScalarFunction SqrtFun::GetFunction() {
 	ScalarFunction function({LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                        ScalarFunction::UnaryFunction<double, double, SqrtOperator>);
+	                        GetUnaryFunctionWithDomain<double, double, SqrtOperator>);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
@@ -853,11 +886,16 @@ struct LnOperator {
 		}
 		return std::log(input);
 	}
+
+	template <class TA>
+	static inline bool InDomain(TA input) {
+		return input > 0;
+	}
 };
 
 ScalarFunction LnFun::GetFunction() {
 	ScalarFunction function({LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                        ScalarFunction::UnaryFunction<double, double, LnOperator>);
+	                        GetUnaryFunctionWithDomain<double, double, LnOperator>);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
@@ -876,11 +914,16 @@ struct Log10Operator {
 		}
 		return std::log10(input);
 	}
+
+	template <class TA>
+	static inline bool InDomain(TA input) {
+		return input > 0;
+	}
 };
 
 ScalarFunction Log10Fun::GetFunction() {
 	ScalarFunction function({LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                        ScalarFunction::UnaryFunction<double, double, Log10Operator>);
+	                        GetUnaryFunctionWithDomain<double, double, Log10Operator>);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
@@ -897,14 +940,19 @@ struct LogBaseOperator {
 		}
 		return Log10Operator::Operation<TB, TR>(x) / divisor;
 	}
+
+	template <class TA, class TB>
+	static inline bool InDomain(TA b, TB x) {
+		return b > 0 && x > 0;
+	}	
 };
 
 ScalarFunctionSet LogFun::GetFunctions() {
 	ScalarFunctionSet funcs;
 	funcs.AddFunction(ScalarFunction({LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                                 ScalarFunction::UnaryFunction<double, double, Log10Operator>));
+	                                 GetUnaryFunctionWithDomain<double, double, LnOperator>));
 	funcs.AddFunction(ScalarFunction({LogicalType::DOUBLE, LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                                 ScalarFunction::BinaryFunction<double, double, double, LogBaseOperator>));
+	                                 GetBinaryFunctionWithDomain<double, double, double, LogBaseOperator>));
 	for (auto &function : funcs.functions) {
 		BaseScalarFunction::SetReturnsError(function);
 	}
@@ -925,11 +973,16 @@ struct Log2Operator {
 		}
 		return std::log2(input);
 	}
+
+	template <class TA>
+	static inline bool InDomain(TA input) {
+		return input > 0;
+	}
 };
 
 ScalarFunction Log2Fun::GetFunction() {
 	ScalarFunction function({LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                        ScalarFunction::UnaryFunction<double, double, Log2Operator>);
+	                        GetUnaryFunctionWithDomain<double, double, Log2Operator>);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
@@ -1090,6 +1143,11 @@ struct NoInfiniteDoubleWrapper {
 		}
 		return OP::template Operation<INPUT_TYPE, RESULT_TYPE>(input);
 	}
+	
+	template <class INPUT_TYPE>
+	static bool InDomain(INPUT_TYPE input) {
+		return OP::template InDomain<INPUT_TYPE>(input);
+	}
 };
 
 struct SinOperator {
@@ -1151,11 +1209,16 @@ struct ASinOperator {
 		}
 		return (double)std::asin(input);
 	}
+
+	template <class TA>
+	static inline bool InDomain(TA input) {
+		return input <= 1 && input >= -1;
+	}
 };
 
 ScalarFunction AsinFun::GetFunction() {
 	ScalarFunction function({LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                        ScalarFunction::UnaryFunction<double, double, NoInfiniteDoubleWrapper<ASinOperator>>);
+	                        GetUnaryFunctionWithDomain<double, double, NoInfiniteDoubleWrapper<ASinOperator>>);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
@@ -1201,11 +1264,16 @@ struct ACos {
 		}
 		return (double)std::acos(input);
 	}
+
+	template <class TA>
+	static inline bool InDomain(TA input) {
+		return input <= 1 && input >= -1;
+	}
 };
 
 ScalarFunction AcosFun::GetFunction() {
 	ScalarFunction function({LogicalType::DOUBLE}, LogicalType::DOUBLE,
-	                        ScalarFunction::UnaryFunction<double, double, NoInfiniteDoubleWrapper<ACos>>);
+	                        GetUnaryFunctionWithDomain<double, double, NoInfiniteDoubleWrapper<ACos>>);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }

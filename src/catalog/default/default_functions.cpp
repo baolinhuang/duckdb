@@ -210,6 +210,9 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "space", {"num", nullptr}, {{nullptr, nullptr}}, "repeat(' ', num)"},
 	{DEFAULT_SCHEMA, "insert", {"str", "pos", "len", "newstr", nullptr}, {{nullptr, nullptr}}, "if(pos between 1 and length(str), str[:pos - 1] || if(len between 1 and length(newstr), newstr[:length(str)-pos] || str[pos+len:], newstr[:length(str)-pos]), str)"},
 
+	// mysql numeric function
+	{DEFAULT_SCHEMA, "rand", {nullptr}, {{nullptr, nullptr}}, "random()"},
+	{DEFAULT_SCHEMA, "mod", {"n", "m", nullptr}, {{nullptr, nullptr}}, "n % m"},
 	{nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}
 	};
 
