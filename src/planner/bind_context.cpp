@@ -493,6 +493,7 @@ void BindContext::GenerateAllColumnExpressions(StarExpression &expr,
 		// SELECT * case
 		// bind all expressions of each table in-order
 		reference_set_t<UsingColumnSet> handled_using_columns;
+		vector<unique_ptr<ParsedExpression>> using_list;
 		for (auto &entry : bindings_list) {
 			auto &binding = *entry;
 			for (auto &column_name : binding.names) {
@@ -519,12 +520,12 @@ void BindContext::GenerateAllColumnExpressions(StarExpression &expr,
 						}
 						coalesce->SetAlias(column_name);
 						HandleRename(expr, qualified_column, *coalesce);
-						new_select_list.push_back(std::move(coalesce));
+						using_list.push_back(std::move(coalesce));
 					} else {
 						// primary binding: output the qualified column ref
 						auto new_expr = make_uniq<ColumnRefExpression>(column_name, using_binding.primary_binding);
 						HandleRename(expr, qualified_column, *new_expr);
-						new_select_list.push_back(std::move(new_expr));
+						using_list.push_back(std::move(new_expr));
 					}
 					handled_using_columns.insert(using_binding);
 					continue;
@@ -535,6 +536,7 @@ void BindContext::GenerateAllColumnExpressions(StarExpression &expr,
 				new_select_list.push_back(std::move(new_expr));
 			}
 		}
+		new_select_list.insert(new_select_list.begin(), std::make_move_iterator(using_list.begin()), std::make_move_iterator(using_list.end()));
 	} else {
 		// SELECT tbl.* case
 		// SELECT struct.* case
