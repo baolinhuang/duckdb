@@ -91,6 +91,18 @@ struct StdDevPopFun {
 	static AggregateFunction GetFunction();
 };
 
+struct StddevFun {
+	using ALIAS = StdDevPopFun;
+
+	static constexpr const char *Name = "stddev";
+};
+
+struct StdFun {
+	using ALIAS = StdDevPopFun;
+
+	static constexpr const char *Name = "std";
+};
+
 struct StdDevSampFun {
 	static constexpr const char *Name = "stddev_samp";
 	static constexpr const char *Parameters = "x";
@@ -99,12 +111,6 @@ struct StdDevSampFun {
 	static constexpr const char *Categories = "";
 
 	static AggregateFunction GetFunction();
-};
-
-struct StddevFun {
-	using ALIAS = StdDevSampFun;
-
-	static constexpr const char *Name = "stddev";
 };
 
 struct VarPopFun {
@@ -117,6 +123,12 @@ struct VarPopFun {
 	static AggregateFunction GetFunction();
 };
 
+struct VarianceFun {
+	using ALIAS = VarPopFun;
+
+	static constexpr const char *Name = "variance";
+};
+
 struct VarSampFun {
 	static constexpr const char *Name = "var_samp";
 	static constexpr const char *Parameters = "x";
@@ -125,12 +137,6 @@ struct VarSampFun {
 	static constexpr const char *Categories = "";
 
 	static AggregateFunction GetFunction();
-};
-
-struct VarianceFun {
-	using ALIAS = VarSampFun;
-
-	static constexpr const char *Name = "variance";
 };
 
 } // namespace duckdb

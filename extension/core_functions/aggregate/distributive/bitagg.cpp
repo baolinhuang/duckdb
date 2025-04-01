@@ -19,23 +19,23 @@ template <class OP>
 static AggregateFunction GetBitfieldUnaryAggregate(LogicalType type) {
 	switch (type.id()) {
 	case LogicalTypeId::TINYINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint8_t>, int8_t, int8_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int8_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::SMALLINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint16_t>, int16_t, int16_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int16_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::INTEGER:
-		return AggregateFunction::UnaryAggregate<BitState<uint32_t>, int32_t, int32_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int32_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::BIGINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int64_t, int64_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int64_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::HUGEINT:
-		return AggregateFunction::UnaryAggregate<BitState<hugeint_t>, hugeint_t, hugeint_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<hugeint_t>, hugeint_t, uhugeint_t, OP>(type, type);
 	case LogicalTypeId::UTINYINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint8_t>, uint8_t, uint8_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint8_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::USMALLINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint16_t>, uint16_t, uint16_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint16_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::UINTEGER:
-		return AggregateFunction::UnaryAggregate<BitState<uint32_t>, uint32_t, uint32_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint32_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::UBIGINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint64_t, uint64_t, OP>(type, type);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint64_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
 	case LogicalTypeId::UHUGEINT:
 		return AggregateFunction::UnaryAggregate<BitState<uhugeint_t>, uhugeint_t, uhugeint_t, OP>(type, type);
 	default:

@@ -1004,8 +1004,6 @@ template <typename Char, typename It> It write_exponent(int exp, It it) {
   if (exp < 0) {
     *it++ = static_cast<Char>('-');
     exp = -exp;
-  } else {
-    *it++ = static_cast<Char>('+');
   }
   if (exp >= 100) {
     const char* top = data::digits + (exp / 100) * 2;

@@ -1032,6 +1032,24 @@ bool TryCast::Operation(date_t input, timestamp_t &result, bool strict) {
 	return Timestamp::TryFromDatetime(input, Time::FromTime(0, 0, 0), result);
 }
 
+template <>
+bool TryCast::Operation(date_t input, double &result, bool strict) {
+	int32_t year, month, day;
+	Date::Convert(input, year, month, day);
+	result = 0;
+	result = year * 10000LL + month * 100LL + day;
+	return true;
+}
+
+template <>
+bool TryCast::Operation(date_t input, int64_t &result, bool strict) {
+	int32_t year, month, day;
+	Date::Convert(input, year, month, day);
+	result = 0;
+	result = year * 10000LL + month * 100LL + day;
+	return true;
+}
+
 //===--------------------------------------------------------------------===//
 // Cast From Time
 //===--------------------------------------------------------------------===//
@@ -1044,6 +1062,16 @@ bool TryCast::Operation(dtime_t input, dtime_t &result, bool strict) {
 template <>
 bool TryCast::Operation(dtime_t input, dtime_tz_t &result, bool strict) {
 	result = dtime_tz_t(input, 0);
+	return true;
+}
+
+template <>
+bool TryCast::Operation(dtime_t input, double &result, bool strict) {
+	int32_t hour, min, sec, micros;
+	Time::Convert(input, hour, min, sec, micros);
+	result = 0;
+	result += hour * 10000LL + min * 100LL + sec;
+	result += (micros / 1000000.);
 	return true;
 }
 
@@ -1145,6 +1173,23 @@ bool TryCast::Operation(timestamp_t input, dtime_tz_t &result, bool strict) {
 		return false;
 	}
 	result = dtime_tz_t(Timestamp::GetTime(input), 0);
+	return true;
+}
+
+template <>
+bool TryCast::Operation(timestamp_t input, double &result, bool strict) {
+	date_t date;
+	dtime_t time;
+	int32_t year, month, day, hour, min, sec, micros;
+
+	Timestamp::Convert(input, date, time);
+	Time::Convert(time, hour, min, sec, micros);
+	Date::Convert(date, year, month, day);
+
+	result = year * 10000LL + month * 100LL + day;
+	result *= 1000000LL;
+	result += hour * 10000LL + min * 100LL + sec;
+	result += (micros / 1000000.);
 	return true;
 }
 

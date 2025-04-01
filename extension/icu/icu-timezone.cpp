@@ -313,6 +313,51 @@ struct ICUTimeToTimestamptz : public ICUDateFunc {
 	}
 };
 
+struct ICUTimestampToDouble : public ICUDateFunc {
+
+	static bool CastToDouble(Vector &source, Vector &result, idx_t count, CastParameters &parameters) {
+		auto &cast_data = parameters.cast_data->Cast<CastData>();
+		auto &info = cast_data.info->Cast<BindData>();
+		CalendarPtr calendar(info.calendar->clone());
+		UnaryExecutor::Execute<timestamp_t, double>(source, result, count, [&](timestamp_t input) {
+			auto micros = int32_t(SetTime(calendar.get(), input));
+			const auto era = ExtractField(calendar.get(), UCAL_ERA);
+			const auto year = ExtractField(calendar.get(), UCAL_YEAR);
+			const auto mm = ExtractField(calendar.get(), UCAL_MONTH) + 1;
+			const auto dd = ExtractField(calendar.get(), UCAL_DATE);
+
+			const auto yyyy = era ? year : (-year + 1);
+			date_t local_date;
+			if (!Date::TryFromDate(yyyy, mm, dd, local_date)) {
+				throw ConversionException("Unable to convert TIMESTAMPTZ to local date");
+			}
+
+			const auto hr = ExtractField(calendar.get(), UCAL_HOUR_OF_DAY);
+			const auto mn = ExtractField(calendar.get(), UCAL_MINUTE);
+			const auto secs = ExtractField(calendar.get(), UCAL_SECOND);
+			const auto millis = ExtractField(calendar.get(), UCAL_MILLISECOND);
+			return (year * 10000LL + mm * 100LL + dd) * 1000000LL + hr * 10000LL + mn * 100LL + secs + millis / 1000000.;
+		});
+		return true;
+	}
+	static BoundCastInfo BindCastToTimestamp(BindCastInput &input, const LogicalType &source, const LogicalType &target) {
+		if (!input.context) {
+			throw InternalException("Missing context for TIME to TIMESTAMPTZ cast.");
+		}
+
+		auto cast_data = make_uniq<CastData>(make_uniq<BindData>(*input.context));
+
+		return BoundCastInfo(CastToDouble, std::move(cast_data));
+	}
+
+	static void AddCasts(DatabaseInstance &db) {
+		auto &config = DBConfig::GetConfig(db);
+		auto &casts = config.GetCastFunctions();
+
+		casts.RegisterCastFunction(LogicalType::TIMESTAMP_TZ, LogicalType::DOUBLE, BindCastToTimestamp, 200);
+	}
+};
+
 ICUTimeToTimestamptz::BindData::BindData(ClientContext &context) : ICUDateFunc::BindData(context) {
 	Value ts;
 	if(context.TryGetCurrentSetting("timestamp", ts)) {
@@ -598,6 +643,7 @@ void RegisterICUTimeZoneFunctions(DatabaseInstance &db) {
 	ICUToNaiveTimestamp::AddCasts(db);
 	ICUToTimeTZ::AddCasts(db);
 	ICUTimeToTimestamptz::AddCasts(db);
+	ICUTimestampToDouble::AddCasts(db);
 }
 
 } // namespace duckdb

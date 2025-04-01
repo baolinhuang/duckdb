@@ -488,8 +488,10 @@ struct ICUStrftime : public ICUDateFunc {
 		offset /= Interval::SECS_PER_MINUTE;
 		int hour_offset = offset / 60;
 		int minute_offset = offset % 60;
-		auto offset_str = Time::ToUTCOffset(hour_offset, minute_offset);
-		const auto offset_len = offset_str.size();
+
+		// To unify the format with MySQL
+		// auto offset_str = Time::ToUTCOffset(hour_offset, minute_offset);
+		const auto offset_len = 0;
 
 		const auto len = date_len + 1 + time_len + offset_len;
 		string_t target = StringVector::EmptyString(result, len);
@@ -503,7 +505,7 @@ struct ICUStrftime : public ICUDateFunc {
 		                         micro_buffer);
 		buffer += time_len;
 
-		memcpy(buffer, offset_str.c_str(), offset_len);
+		// memcpy(buffer, offset_str.c_str(), offset_len);
 		buffer += offset_len;
 
 		target.Finalize();

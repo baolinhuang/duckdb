@@ -50,6 +50,7 @@
         "description": "Returns the population standard deviation.",
         "example": "sqrt(var_pop(x))",
         "type": "aggregate_function",
+        "aliases": ["stddev", "std"],
         "struct": "StdDevPopFun"
     },
     {
@@ -58,7 +59,6 @@
         "description": "Returns the sample standard deviation",
         "example": "sqrt(var_samp(x))",
         "type": "aggregate_function",
-        "aliases": ["stddev"],
         "struct": "StdDevSampFun"
     },
     {
@@ -66,14 +66,14 @@
         "parameters": "x",
         "description": "Returns the population variance.",
         "example": "",
-        "type": "aggregate_function"
+        "type": "aggregate_function",
+        "aliases": ["variance"]
     },
     {
         "name": "var_samp",
         "parameters": "x",
         "description": "Returns the sample variance of all input values.",
         "example": "(SUM(x^2) - SUM(x)^2 / COUNT(x)) / (COUNT(x) - 1)",
-        "type": "aggregate_function",
-        "aliases": ["variance"]
+        "type": "aggregate_function"
     }
 ]
