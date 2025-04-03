@@ -45,6 +45,7 @@
         "description": "Bitwise XOR",
         "example": "xor(17, 5)",
         "type": "scalar_function_set",
+        "aliases": ["^"],
         "struct": "BitwiseXorFun"
     }
 ]

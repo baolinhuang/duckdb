@@ -59,7 +59,7 @@ static const StaticFunctionDefinition core_functions[] = {
 	DUCKDB_SCALAR_FUNCTION_SET(RightShiftFun),
 	DUCKDB_SCALAR_FUNCTION_SET(AbsOperatorFun),
 	DUCKDB_SCALAR_FUNCTION_ALIAS(ListHasAllFunAlias),
-	DUCKDB_SCALAR_FUNCTION_ALIAS(PowOperatorFunAlias),
+	DUCKDB_SCALAR_FUNCTION_SET_ALIAS(BitwiseXorFunAlias),
 	DUCKDB_SCALAR_FUNCTION(StartsWithOperatorFun),
 	DUCKDB_SCALAR_FUNCTION_SET_ALIAS(AbsFun),
 	DUCKDB_SCALAR_FUNCTION(AcosFun),

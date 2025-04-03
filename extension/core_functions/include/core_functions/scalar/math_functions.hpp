@@ -53,12 +53,6 @@ struct PowerFun {
 	static constexpr const char *Name = "power";
 };
 
-struct PowOperatorFunAlias {
-	using ALIAS = PowOperatorFun;
-
-	static constexpr const char *Name = "^";
-};
-
 struct FactorialOperatorFun {
 	static constexpr const char *Name = "!__postfix";
 	static constexpr const char *Parameters = "x";

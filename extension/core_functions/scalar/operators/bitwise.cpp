@@ -10,25 +10,25 @@ static scalar_function_t GetScalarIntegerUnaryFunction(const LogicalType &type) 
 	scalar_function_t function;
 	switch (type.id()) {
 	case LogicalTypeId::TINYINT:
-		function = &ScalarFunction::UnaryFunction<int8_t, int8_t, OP>;
+		function = &ScalarFunction::UnaryFunction<int8_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::SMALLINT:
-		function = &ScalarFunction::UnaryFunction<int16_t, int16_t, OP>;
+		function = &ScalarFunction::UnaryFunction<int16_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::INTEGER:
-		function = &ScalarFunction::UnaryFunction<int32_t, int32_t, OP>;
+		function = &ScalarFunction::UnaryFunction<int32_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::BIGINT:
-		function = &ScalarFunction::UnaryFunction<int64_t, int64_t, OP>;
+		function = &ScalarFunction::UnaryFunction<int64_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::UTINYINT:
-		function = &ScalarFunction::UnaryFunction<uint8_t, uint8_t, OP>;
+		function = &ScalarFunction::UnaryFunction<uint8_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::USMALLINT:
-		function = &ScalarFunction::UnaryFunction<uint16_t, uint16_t, OP>;
+		function = &ScalarFunction::UnaryFunction<uint16_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::UINTEGER:
-		function = &ScalarFunction::UnaryFunction<uint32_t, uint32_t, OP>;
+		function = &ScalarFunction::UnaryFunction<uint32_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::UBIGINT:
 		function = &ScalarFunction::UnaryFunction<uint64_t, uint64_t, OP>;
@@ -50,25 +50,25 @@ static scalar_function_t GetScalarIntegerBinaryFunction(const LogicalType &type)
 	scalar_function_t function;
 	switch (type.id()) {
 	case LogicalTypeId::TINYINT:
-		function = &ScalarFunction::BinaryFunction<int8_t, int8_t, int8_t, OP>;
+		function = &ScalarFunction::BinaryFunction<int8_t, int8_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::SMALLINT:
-		function = &ScalarFunction::BinaryFunction<int16_t, int16_t, int16_t, OP>;
+		function = &ScalarFunction::BinaryFunction<int16_t, int16_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::INTEGER:
-		function = &ScalarFunction::BinaryFunction<int32_t, int32_t, int32_t, OP>;
+		function = &ScalarFunction::BinaryFunction<int32_t, int32_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::BIGINT:
-		function = &ScalarFunction::BinaryFunction<int64_t, int64_t, int64_t, OP>;
+		function = &ScalarFunction::BinaryFunction<int64_t, int64_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::UTINYINT:
-		function = &ScalarFunction::BinaryFunction<uint8_t, uint8_t, uint8_t, OP>;
+		function = &ScalarFunction::BinaryFunction<uint8_t, uint8_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::USMALLINT:
-		function = &ScalarFunction::BinaryFunction<uint16_t, uint16_t, uint16_t, OP>;
+		function = &ScalarFunction::BinaryFunction<uint16_t, uint16_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::UINTEGER:
-		function = &ScalarFunction::BinaryFunction<uint32_t, uint32_t, uint32_t, OP>;
+		function = &ScalarFunction::BinaryFunction<uint32_t, uint32_t, uint64_t, OP>;
 		break;
 	case LogicalTypeId::UBIGINT:
 		function = &ScalarFunction::BinaryFunction<uint64_t, uint64_t, uint64_t, OP>;
@@ -108,8 +108,13 @@ static void BitwiseANDOperation(DataChunk &args, ExpressionState &state, Vector 
 ScalarFunctionSet BitwiseAndFun::GetFunctions() {
 	ScalarFunctionSet functions;
 	for (auto &type : LogicalType::Integral()) {
-		functions.AddFunction(
-		    ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseANDOperator>(type)));
+		if (type != LogicalTypeId::HUGEINT && type != LogicalTypeId::UHUGEINT) {
+			functions.AddFunction(
+				ScalarFunction({type, type}, LogicalTypeId::UBIGINT, GetScalarIntegerBinaryFunction<BitwiseANDOperator>(type)));
+		} else {
+			functions.AddFunction(
+				ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseANDOperator>(type)));
+		}
 	}
 	functions.AddFunction(ScalarFunction({LogicalType::BIT, LogicalType::BIT}, LogicalType::BIT, BitwiseANDOperation));
 	for (auto &function : functions.functions) {
@@ -141,8 +146,13 @@ static void BitwiseOROperation(DataChunk &args, ExpressionState &state, Vector &
 ScalarFunctionSet BitwiseOrFun::GetFunctions() {
 	ScalarFunctionSet functions;
 	for (auto &type : LogicalType::Integral()) {
-		functions.AddFunction(
-		    ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseOROperator>(type)));
+		if (type != LogicalTypeId::HUGEINT && type != LogicalTypeId::UHUGEINT) {
+			functions.AddFunction(
+				ScalarFunction({type, type}, LogicalTypeId::UBIGINT, GetScalarIntegerBinaryFunction<BitwiseOROperator>(type)));
+		} else {
+			functions.AddFunction(
+				ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseOROperator>(type)));
+		}
 	}
 	functions.AddFunction(ScalarFunction({LogicalType::BIT, LogicalType::BIT}, LogicalType::BIT, BitwiseOROperation));
 	for (auto &function : functions.functions) {
@@ -174,8 +184,13 @@ static void BitwiseXOROperation(DataChunk &args, ExpressionState &state, Vector 
 ScalarFunctionSet BitwiseXorFun::GetFunctions() {
 	ScalarFunctionSet functions;
 	for (auto &type : LogicalType::Integral()) {
-		functions.AddFunction(
-		    ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseXOROperator>(type)));
+		if (type != LogicalTypeId::HUGEINT && type != LogicalTypeId::UHUGEINT) {
+			functions.AddFunction(
+				ScalarFunction({type, type}, LogicalTypeId::UBIGINT, GetScalarIntegerBinaryFunction<BitwiseXOROperator>(type)));
+		} else {
+			functions.AddFunction(
+				ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseXOROperator>(type)));
+		}
 	}
 	functions.AddFunction(ScalarFunction({LogicalType::BIT, LogicalType::BIT}, LogicalType::BIT, BitwiseXOROperation));
 	for (auto &function : functions.functions) {
@@ -206,7 +221,12 @@ static void BitwiseNOTOperation(DataChunk &args, ExpressionState &state, Vector 
 ScalarFunctionSet BitwiseNotFun::GetFunctions() {
 	ScalarFunctionSet functions;
 	for (auto &type : LogicalType::Integral()) {
-		functions.AddFunction(ScalarFunction({type}, type, GetScalarIntegerUnaryFunction<BitwiseNotOperator>(type)));
+		if (type != LogicalTypeId::HUGEINT && type != LogicalTypeId::UHUGEINT) {
+			functions.AddFunction(
+				ScalarFunction({type}, LogicalTypeId::UBIGINT, GetScalarIntegerUnaryFunction<BitwiseNotOperator>(type)));
+		} else {
+			functions.AddFunction(ScalarFunction({type}, type, GetScalarIntegerUnaryFunction<BitwiseNotOperator>(type)));
+		}
 	}
 	functions.AddFunction(ScalarFunction({LogicalType::BIT}, LogicalType::BIT, BitwiseNOTOperation));
 	for (auto &function : functions.functions) {
@@ -221,28 +241,17 @@ ScalarFunctionSet BitwiseNotFun::GetFunctions() {
 struct BitwiseShiftLeftOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA input, TB shift) {
-		TA max_shift = TA(sizeof(TA) * 8) + (NumericLimits<TA>::IsSigned() ? 0 : 1);
-		if (input < 0) {
-			throw OutOfRangeException("Cannot left-shift negative number %s", NumericHelper::ToString(input));
-		}
+		TR max_shift = TR(sizeof(TR) * 8);
 		if (shift < 0) {
-			throw OutOfRangeException("Cannot left-shift by negative number %s", NumericHelper::ToString(shift));
+			return 0;
 		}
 		if (shift >= max_shift) {
-			if (input == 0) {
-				return 0;
-			}
-			throw OutOfRangeException("Left-shift value %s is out of range", NumericHelper::ToString(shift));
+			return 0;
 		}
 		if (shift == 0) {
 			return input;
 		}
-		TA max_value = UnsafeNumericCast<TA>((TA(1) << (max_shift - shift - 1)));
-		if (input >= max_value) {
-			throw OutOfRangeException("Overflow in left shift (%s << %s)", NumericHelper::ToString(input),
-			                          NumericHelper::ToString(shift));
-		}
-		return UnsafeNumericCast<TR>(input << shift);
+		return TR(input) << shift;
 	}
 };
 
@@ -270,8 +279,13 @@ static void BitwiseShiftLeftOperation(DataChunk &args, ExpressionState &state, V
 ScalarFunctionSet LeftShiftFun::GetFunctions() {
 	ScalarFunctionSet functions;
 	for (auto &type : LogicalType::Integral()) {
-		functions.AddFunction(
-		    ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseShiftLeftOperator>(type)));
+		if (type != LogicalTypeId::HUGEINT && type != LogicalTypeId::UHUGEINT) {
+			functions.AddFunction(
+				ScalarFunction({type, type}, LogicalTypeId::UBIGINT, GetScalarIntegerBinaryFunction<BitwiseShiftLeftOperator>(type)));
+		} else {
+			functions.AddFunction(
+				ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseShiftLeftOperator>(type)));
+		}
 	}
 	functions.AddFunction(
 	    ScalarFunction({LogicalType::BIT, LogicalType::INTEGER}, LogicalType::BIT, BitwiseShiftLeftOperation));
@@ -292,7 +306,7 @@ bool RightShiftInRange(T shift) {
 struct BitwiseShiftRightOperator {
 	template <class TA, class TB, class TR>
 	static inline TR Operation(TA input, TB shift) {
-		return RightShiftInRange(shift) ? input >> shift : 0;
+		return RightShiftInRange(TR(shift)) ? TR(input) >> shift : 0;
 	}
 };
 
@@ -316,8 +330,13 @@ static void BitwiseShiftRightOperation(DataChunk &args, ExpressionState &state, 
 ScalarFunctionSet RightShiftFun::GetFunctions() {
 	ScalarFunctionSet functions;
 	for (auto &type : LogicalType::Integral()) {
-		functions.AddFunction(
-		    ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseShiftRightOperator>(type)));
+		if (type != LogicalTypeId::HUGEINT && type != LogicalTypeId::UHUGEINT) {
+			functions.AddFunction(
+				ScalarFunction({type, type}, LogicalTypeId::UBIGINT, GetScalarIntegerBinaryFunction<BitwiseShiftRightOperator>(type)));
+		} else {
+			functions.AddFunction(
+				ScalarFunction({type, type}, type, GetScalarIntegerBinaryFunction<BitwiseShiftRightOperator>(type)));
+		}
 	}
 	functions.AddFunction(
 	    ScalarFunction({LogicalType::BIT, LogicalType::INTEGER}, LogicalType::BIT, BitwiseShiftRightOperation));

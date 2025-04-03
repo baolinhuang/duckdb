@@ -15,7 +15,7 @@
         "example": "pow(2, 3)",
         "type": "scalar_function",
         "struct": "PowOperatorFun",
-        "aliases": ["pow", "power", "^"]
+        "aliases": ["pow", "power"]
     },
     {
         "name": "!__postfix",

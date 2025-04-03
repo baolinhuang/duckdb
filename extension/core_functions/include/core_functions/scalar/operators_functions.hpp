@@ -75,4 +75,10 @@ struct BitwiseXorFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
+struct BitwiseXorFunAlias {
+	using ALIAS = BitwiseXorFun;
+
+	static constexpr const char *Name = "^";
+};
+
 } // namespace duckdb
