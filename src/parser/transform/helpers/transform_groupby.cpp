@@ -163,6 +163,7 @@ bool Transformer::TransformGroupBy(optional_ptr<duckdb_libpgquery::PGList> group
 		}
 		// generate the subsets of the rollup set and add them to the grouping sets
 		GroupingSet current_set;
+		result_sets.push_back(current_set);
 		for (idx_t i = 0; i < rollup_sets.size(); i++) {
 			MergeGroupingSet(current_set, rollup_sets[i]);
 			result_sets.push_back(current_set);

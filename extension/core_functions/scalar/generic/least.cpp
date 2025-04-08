@@ -159,7 +159,6 @@ static void LeastGreatestFunction(DataChunk &args, ExpressionState &state, Vecto
 				} else {
 					input_has_null[i] = true;
 					result_has_value[i] = false;
-					break;
 				}
 			}
 		} else {
