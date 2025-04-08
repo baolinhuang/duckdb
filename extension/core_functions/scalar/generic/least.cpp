@@ -130,12 +130,14 @@ static void LeastGreatestFunction(DataChunk &args, ExpressionState &state, Vecto
 	}
 
 	auto result_data = FlatVector::GetData<T>(result_vector);
+	bool input_has_null[STANDARD_VECTOR_SIZE] {false};
 	bool result_has_value[STANDARD_VECTOR_SIZE] {false};
 	// perform the operation column-by-column
 	for (idx_t col_idx = 0; col_idx < input.ColumnCount(); col_idx++) {
 		if (input.data[col_idx].GetVectorType() == VectorType::CONSTANT_VECTOR &&
 		    ConstantVector::IsNull(input.data[col_idx])) {
-			// ignore null vector
+			memset(input_has_null, 1, sizeof(input_has_null));
+			memset(result_has_value, 0, sizeof(result_has_value));
 			continue;
 		}
 
@@ -147,13 +149,17 @@ static void LeastGreatestFunction(DataChunk &args, ExpressionState &state, Vecto
 			// potential new null entries: have to check the null mask
 			for (idx_t i = 0; i < input.size(); i++) {
 				auto vindex = vdata.sel->get_index(i);
-				if (vdata.validity.RowIsValid(vindex)) {
+				if (vdata.validity.RowIsValid(vindex) && !input_has_null[i]) {
 					// not a null entry: perform the operation and add to new set
 					auto ivalue = input_data[vindex];
 					if (!result_has_value[i] || OP::template Operation<T>(ivalue, result_data[i])) {
 						result_has_value[i] = true;
 						result_data[i] = ivalue;
 					}
+				} else {
+					input_has_null[i] = true;
+					result_has_value[i] = false;
+					break;
 				}
 			}
 		} else {
