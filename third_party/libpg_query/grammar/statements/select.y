@@ -2386,6 +2386,8 @@ a_expr:		c_expr									{ $$ = $1; }
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "+", NULL, $2, @1); }
 			| '-' a_expr					%prec UMINUS
 				{ $$ = doNegate($2, @1); }
+			| '~' a_expr					%prec UMINUS
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "~", NULL, $2, @1); }
 			| a_expr '+' a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "+", $1, $3, @2); }
 			| a_expr '-' a_expr
@@ -2402,6 +2404,10 @@ a_expr:		c_expr									{ $$ = $1; }
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
 			| a_expr MOD a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
+			| a_expr SHIFT_RIGHT a_expr		%prec SHIFT_RIGHT
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, ">>", $1, $3, @2); }
+			| a_expr SHIFT_LEFT a_expr		%prec SHIFT_LEFT
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "<<", $1, $3, @2); }
 			| a_expr '^' a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "^", $1, $3, @2); }
 			| a_expr POWER_OF a_expr
@@ -2412,6 +2418,10 @@ a_expr:		c_expr									{ $$ = $1; }
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, ">", $1, $3, @2); }
 			| a_expr '=' a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "=", $1, $3, @2); }
+			| a_expr '&' a_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "&", $1, $3, @2); }
+			| a_expr '|' a_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "|", $1, $3, @2); }
 			| a_expr LESS_EQUALS a_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "<=", $1, $3, @2); }
 			| a_expr GREATER_EQUALS a_expr
@@ -2837,6 +2847,8 @@ b_expr:		c_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "+", NULL, $2, @1); }
 			| '-' b_expr					%prec UMINUS
 				{ $$ = doNegate($2, @1); }
+			| '~' b_expr					%prec UMINUS
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "~", NULL, $2, @1); }
 			| b_expr '+' b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "+", $1, $3, @2); }
 			| b_expr '-' b_expr
@@ -2853,6 +2865,10 @@ b_expr:		c_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
 			| b_expr MOD b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $1, $3, @2); }
+			| b_expr SHIFT_LEFT b_expr		%prec SHIFT_LEFT
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "<<", $1, $3, @2); }
+			| b_expr SHIFT_RIGHT b_expr		%prec SHIFT_RIGHT
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, ">>", $1, $3, @2); }
 			| b_expr '^' b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "^", $1, $3, @2); }
 			| b_expr POWER_OF b_expr
@@ -2863,6 +2879,10 @@ b_expr:		c_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, ">", $1, $3, @2); }
 			| b_expr '=' b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "=", $1, $3, @2); }
+			| b_expr '&' b_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "&", $1, $3, @2); }
+			| b_expr '|' b_expr
+				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "|", $1, $3, @2); }
 			| b_expr LESS_EQUALS b_expr
 				{ $$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "<=", $1, $3, @2); }
 			| b_expr GREATER_EQUALS b_expr

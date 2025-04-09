@@ -902,14 +902,14 @@ ScalarFunctionSet OperatorMultiplyFun::GetFunctions() {
 // / [divide]
 //===--------------------------------------------------------------------===//
 template <>
-float DivideOperator::Operation(float left, float right) {
-	auto result = left / right;
+int64_t DivideOperator::Operation(float left, float right) {
+	int64_t result = left / right;
 	return result;
 }
 
 template <>
-double DivideOperator::Operation(double left, double right) {
-	auto result = left / right;
+int64_t DivideOperator::Operation(double left, double right) {
+	int64_t result = left / right;
 	return result;
 }
 
@@ -1053,10 +1053,16 @@ ScalarFunctionSet OperatorIntegerDivideFun::GetFunctions() {
 		if (type.id() == LogicalTypeId::DECIMAL) {
 			continue;
 		} else {
-			full_divide.AddFunction(
-			    ScalarFunction({type, type}, type, GetBinaryFunctionIgnoreZero<DivideOperator>(type.InternalType())));
+			if (type.id() != LogicalTypeId::DOUBLE && type.id() != LogicalTypeId::FLOAT) {
+				full_divide.AddFunction(
+					ScalarFunction({type, type}, type, GetBinaryFunctionIgnoreZero<DivideOperator>(type.InternalType())));
+			}
 		}
 	}
+	full_divide.AddFunction(
+		ScalarFunction({LogicalTypeId::FLOAT, LogicalTypeId::FLOAT}, LogicalTypeId::BIGINT, BinaryScalarFunctionIgnoreZero<float, float, int64_t, DivideOperator>));
+	full_divide.AddFunction(
+		ScalarFunction({LogicalTypeId::DOUBLE, LogicalTypeId::DOUBLE}, LogicalTypeId::BIGINT, BinaryScalarFunctionIgnoreZero<double, double, int64_t, DivideOperator>));
 	for (auto &func : full_divide.functions) {
 		ScalarFunction::SetReturnsError(func);
 	}

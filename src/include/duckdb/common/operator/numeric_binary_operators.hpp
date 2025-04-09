@@ -30,9 +30,9 @@ struct ModuloOperator {
 };
 
 template <>
-float DivideOperator::Operation(float left, float right);
+int64_t DivideOperator::Operation(float left, float right);
 template <>
-double DivideOperator::Operation(double left, double right);
+int64_t DivideOperator::Operation(double left, double right);
 template <>
 hugeint_t DivideOperator::Operation(hugeint_t left, hugeint_t right);
 template <>

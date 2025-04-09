@@ -44,12 +44,14 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 	// iterate over the vectors to count how large the final string will be
 	idx_t constant_lengths = 0;
 	vector<idx_t> result_lengths(args.size(), 0);
+	vector<bool> input_has_null(args.size(), false);
 	for (idx_t col_idx = 0; col_idx < args.ColumnCount(); col_idx++) {
 		auto &input = args.data[col_idx];
 		D_ASSERT(input.GetType().InternalType() == PhysicalType::VARCHAR);
 		if (input.GetVectorType() == VectorType::CONSTANT_VECTOR) {
 			if (ConstantVector::IsNull(input)) {
 				// constant null, skip
+				input_has_null.assign(input_has_null.size(), true);
 				continue;
 			}
 			auto input_data = ConstantVector::GetData<string_t>(input);
@@ -66,6 +68,7 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 			for (idx_t i = 0; i < args.size(); i++) {
 				auto idx = vdata.sel->get_index(i);
 				if (!vdata.validity.RowIsValid(idx)) {
+					input_has_null[idx] = true;
 					continue;
 				}
 				result_lengths[i] += input_data[idx].GetSize();
@@ -77,7 +80,7 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 	auto result_data = FlatVector::GetData<string_t>(result);
 	for (idx_t i = 0; i < args.size(); i++) {
 		// allocate an empty string of the required size
-		idx_t str_length = constant_lengths + result_lengths[i];
+		idx_t str_length = input_has_null[i] ? 0 : constant_lengths + result_lengths[i];
 		result_data[i] = StringVector::EmptyString(result, str_length);
 		// we reuse the result_lengths vector to store the currently appended size
 		result_lengths[i] = 0;
@@ -90,9 +93,8 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 		// loop over the vector and concat to all results
 		if (input.GetVectorType() == VectorType::CONSTANT_VECTOR) {
 			// constant vector
-			if (ConstantVector::IsNull(input)) {
-				// constant null, skip
-				continue;
+			if (ConstantVector::IsNull(input) || input_has_null[0]) {
+				break;
 			}
 			// append the constant vector to each of the strings
 			auto input_data = ConstantVector::GetData<string_t>(input);
@@ -110,7 +112,7 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 			auto input_data = UnifiedVectorFormat::GetData<string_t>(idata);
 			for (idx_t i = 0; i < args.size(); i++) {
 				auto idx = idata.sel->get_index(i);
-				if (!idata.validity.RowIsValid(idx)) {
+				if (!idata.validity.RowIsValid(idx) || input_has_null[i]) {
 					continue;
 				}
 				auto input_ptr = input_data[idx].GetData();
@@ -120,8 +122,20 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 			}
 		}
 	}
-	for (idx_t i = 0; i < args.size(); i++) {
-		result_data[i].Finalize();
+	if (result.GetVectorType() == VectorType::CONSTANT_VECTOR) {
+		if (input_has_null[0]) {
+			auto &result_validity = ConstantVector::Validity(result);
+			result_validity.SetAllInvalid(args.size());
+		}
+		result_data[0].Finalize();
+	} else {
+		auto &result_validity = FlatVector::Validity(result);
+		for (idx_t i = 0; i < args.size(); i++) {
+			if (input_has_null[i]) {
+				result_validity.SetInvalid(i);
+			}
+			result_data[i].Finalize();
+		}
 	}
 }
 

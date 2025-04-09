@@ -78,7 +78,7 @@
  */
 %token <str>	IDENT FCONST SCONST BCONST XCONST Op
 %token <ival>	ICONST PARAM
-%token			TYPECAST DOT_DOT COLON_EQUALS EQUALS_GREATER INTEGER_DIVISION POWER_OF SINGLE_ARROW DOUBLE_ARROW SINGLE_COLON
+%token			TYPECAST DOT_DOT COLON_EQUALS EQUALS_GREATER INTEGER_DIVISION POWER_OF SINGLE_ARROW DOUBLE_ARROW SHIFT_RIGHT SHIFT_LEFT
 %token			LESS_EQUALS GREATER_EQUALS NOT_EQUALS
 
 /*
@@ -148,13 +148,16 @@
 %nonassoc	UNBOUNDED		/* ideally should have same precedence as IDENT */
 %nonassoc	IDENT GENERATED NULL_P PARTITION RANGE ROWS GROUPS PRECEDING FOLLOWING CUBE ROLLUP ENUM_P
 %left		Op OPERATOR		/* multi-character ops and user-defined operators */
+%left		'|'
+%left		'&'
+%left		SHIFT_LEFT SHIFT_RIGHT
 %left		'+' '-'
 %left		'*' '/' '%' INTEGER_DIVISION DIV MOD
 %left		'^' POWER_OF
 /* Unary Operators */
 %left		AT				/* sets precedence for AT TIME ZONE */
 %left		COLLATE
-%right		UMINUS
+%right		UMINUS '~'
 %left		'[' ']'
 %left		'(' ')'
 %left		TYPECAST

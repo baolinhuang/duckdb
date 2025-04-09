@@ -336,6 +336,8 @@ single_colon	":"
 double_arrow    "->>"
 power_of        "**"
 integer_div     "//"
+shift_right		">>"
+shift_left		"<<"
 
 /* " */
 
@@ -363,7 +365,7 @@ not_equals		"!="
  * If you change either set, adjust the character lists appearing in the
  * rule for "operator"!
  */
-self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=]
+self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=\&\|\~]
 op_chars		[\~\!\@\^\&\|\`\+\-\*\/\%\<\>\=]
 operator		{op_chars}+
 
@@ -845,6 +847,16 @@ other			.
 {integer_div}	{
 					SET_YYLLOC();
 					return INTEGER_DIVISION;
+				}
+
+{shift_left}	{
+					SET_YYLLOC();
+					return SHIFT_LEFT;
+				}
+
+{shift_right}	{
+					SET_YYLLOC();
+					return SHIFT_RIGHT;
 				}
 
 {equals_greater} {

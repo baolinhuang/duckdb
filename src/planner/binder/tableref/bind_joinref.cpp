@@ -304,9 +304,14 @@ unique_ptr<BoundTableRef> Binder::Bind(JoinRef &ref) {
 	auto right_bindings = right_binder.bind_context.GetBindingAliases();
 	auto left_bindings = left_binder.bind_context.GetBindingAliases();
 
-	bind_context.AddContext(std::move(left_binder.bind_context));
-	bind_context.AddContext(std::move(right_binder.bind_context));
-
+	if (!extra_using_columns.empty() && ref.type == JoinType::RIGHT) {
+		bind_context.AddContext(std::move(right_binder.bind_context));
+		bind_context.AddContext(std::move(left_binder.bind_context));
+	} else {
+		bind_context.AddContext(std::move(left_binder.bind_context));
+		bind_context.AddContext(std::move(right_binder.bind_context));
+	}
+	
 	// Update the correlated columns for the parent binder
 	// For the left binder, depth >= 1 indicates correlations from the parent binder
 	for (const auto &col : left_binder.correlated_columns) {
