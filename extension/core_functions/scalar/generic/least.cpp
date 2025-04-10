@@ -244,7 +244,7 @@ template <class OP>
 ScalarFunction GetLeastGreatestFunction() {
 	return ScalarFunction({LogicalType::ANY}, LogicalType::ANY, nullptr, BindLeastGreatest<OP>, nullptr, nullptr,
 	                      nullptr, LogicalType::ANY, FunctionStability::CONSISTENT,
-	                      FunctionNullHandling::SPECIAL_HANDLING);
+	                      FunctionNullHandling::DEFAULT_NULL_HANDLING);
 }
 
 template <class OP>

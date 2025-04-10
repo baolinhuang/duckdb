@@ -19,23 +19,23 @@ template <class OP>
 static AggregateFunction GetBitfieldUnaryAggregate(LogicalType type) {
 	switch (type.id()) {
 	case LogicalTypeId::TINYINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int8_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int8_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::SMALLINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int16_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int16_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::INTEGER:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int32_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int32_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::BIGINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int64_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, int64_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::HUGEINT:
 		return AggregateFunction::UnaryAggregate<BitState<hugeint_t>, hugeint_t, uhugeint_t, OP>(type, type);
 	case LogicalTypeId::UTINYINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint8_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint8_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::USMALLINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint16_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint16_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::UINTEGER:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint32_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint32_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::UBIGINT:
-		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint64_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT);
+		return AggregateFunction::UnaryAggregate<BitState<uint64_t>, uint64_t, uint64_t, OP>(type, LogicalTypeId::UBIGINT, FunctionNullHandling::SPECIAL_HANDLING);
 	case LogicalTypeId::UHUGEINT:
 		return AggregateFunction::UnaryAggregate<BitState<uhugeint_t>, uhugeint_t, uhugeint_t, OP>(type, type);
 	default:
@@ -89,7 +89,8 @@ struct BitwiseOperation {
 	template <class T, class STATE>
 	static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
 		if (!state.is_set) {
-			finalize_data.ReturnNull();
+			state.is_set = true;
+			target = T(0);
 		} else {
 			target = T(state.value);
 		}

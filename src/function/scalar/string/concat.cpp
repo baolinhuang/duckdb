@@ -368,7 +368,7 @@ ScalarFunction ConcatFun::GetFunction() {
 	ScalarFunction concat =
 	    ScalarFunction("concat", {LogicalType::ANY}, LogicalType::ANY, ConcatFunction, BindConcatFunction);
 	concat.varargs = LogicalType::ANY;
-	concat.null_handling = FunctionNullHandling::SPECIAL_HANDLING;
+	// concat.null_handling = FunctionNullHandling::SPECIAL_HANDLING;
 	return concat;
 }
 

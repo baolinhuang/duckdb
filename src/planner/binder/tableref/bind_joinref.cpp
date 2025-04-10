@@ -311,7 +311,7 @@ unique_ptr<BoundTableRef> Binder::Bind(JoinRef &ref) {
 		bind_context.AddContext(std::move(left_binder.bind_context));
 		bind_context.AddContext(std::move(right_binder.bind_context));
 	}
-	
+
 	// Update the correlated columns for the parent binder
 	// For the left binder, depth >= 1 indicates correlations from the parent binder
 	for (const auto &col : left_binder.correlated_columns) {

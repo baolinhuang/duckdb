@@ -271,6 +271,14 @@ BindResult BaseSelectBinder::BindAggregate(FunctionExpression &aggr, AggregateFu
 		auto &config = DBConfig::GetConfig(context);
 		for (auto &order : aggr.order_bys->orders) {
 			auto &order_expr = BoundExpression::GetExpression(*order.expression);
+			if (order_expr->GetExpressionType() == ExpressionType::VALUE_CONSTANT) {
+				auto &const_order_expr = order_expr->Cast<BoundConstantExpression>();
+				auto index = IntegerValue::Get(const_order_expr.value);
+				if (index > aggr.children.size() || index <= 0) {
+					throw BinderException(*order.expression, "ORDER term out of range - should be between 1 and %lld", types.size());
+				}
+				order_expr = children[index - 1]->Copy();
+			}
 			PushCollation(context, order_expr, order_expr->return_type);
 			const auto sense = config.ResolveOrder(order.type);
 			const auto null_order = config.ResolveNullOrder(sense, order.null_order);
