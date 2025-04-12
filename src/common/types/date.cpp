@@ -327,6 +327,14 @@ DateCastResult Date::TryConvertDate(const char *buf, idx_t len, idx_t &pos, date
 		}
 	}
 
+	if (year_length == 2) {
+		if (year > 0 && year <= 69) {
+			year = 2000 + year;
+		} else {
+			year = 1900 + year;
+		}
+	}
+
 	return Date::TryFromDate(year, month, day, result) ? DateCastResult::SUCCESS : DateCastResult::ERROR_RANGE;
 }
 

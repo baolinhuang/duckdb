@@ -83,37 +83,49 @@ static void BinaryTrimFunction(DataChunk &input, ExpressionState &state, Vector 
 		    auto data = input.GetData();
 		    auto size = input.GetSize();
 
-		    unordered_set<utf8proc_int32_t> ignored_codepoints;
-		    GetIgnoredCodepoints(ignored, ignored_codepoints);
-
-		    utf8proc_int32_t codepoint;
 		    auto str = reinterpret_cast<const utf8proc_uint8_t *>(data);
+			auto str_ignored = reinterpret_cast<const utf8proc_uint8_t *>(ignored.GetData());
 
 		    // Find the first character that is not left trimmed
 		    idx_t begin = 0;
 		    if (LTRIM) {
 			    while (begin < size) {
-				    auto bytes =
-				        utf8proc_iterate(str + begin, UnsafeNumericCast<utf8proc_ssize_t>(size - begin), &codepoint);
-				    if (ignored_codepoints.find(codepoint) == ignored_codepoints.end()) {
-					    break;
-				    }
-				    begin += UnsafeNumericCast<idx_t>(bytes);
+					idx_t begin_tmp = begin;
+					bool all_match = true;
+					for (size_t i = 0; i < ignored.GetSize(); ++i) {
+						all_match = (begin_tmp < size) && (*(str + begin_tmp) == *(str_ignored + i)) && all_match;
+						begin_tmp++;
+						if (!all_match) {
+							break;
+						}
+					}
+					if (all_match) {
+						begin = begin_tmp;
+					} else {
+						break;
+					}
 			    }
 		    }
 
 		    // Find the last character that is not right trimmed
 		    idx_t end;
 		    if (RTRIM) {
-			    end = begin;
-			    for (auto next = begin; next < size;) {
-				    auto bytes =
-				        utf8proc_iterate(str + next, UnsafeNumericCast<utf8proc_ssize_t>(size - next), &codepoint);
-				    D_ASSERT(bytes > 0);
-				    next += UnsafeNumericCast<idx_t>(bytes);
-				    if (ignored_codepoints.find(codepoint) == ignored_codepoints.end()) {
-					    end = next;
-				    }
+				end = size;
+				while (end >= begin) {
+					idx_t end_tmp = end;
+					bool all_match = true;
+					for (size_t i = ignored.GetSize(); i > 0; i--){
+						end_tmp--;
+						all_match = (end_tmp >= begin) && (*(str + end_tmp) == *(str_ignored + i - 1)) && all_match;
+						if (!all_match) {
+							break;
+						}
+					}
+					if (all_match) {
+						end = end_tmp;
+					} else {
+						break;
+					}
 			    }
 		    } else {
 			    end = size;

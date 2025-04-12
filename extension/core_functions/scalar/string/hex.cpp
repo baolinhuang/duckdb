@@ -555,6 +555,9 @@ ScalarFunctionSet BinFun::GetFunctions() {
 	                                     ToBinaryFunction<hugeint_t, BinaryHugeIntOperator>));
 	to_binary.AddFunction(ScalarFunction({LogicalType::UHUGEINT}, LogicalType::VARCHAR,
 	                                     ToBinaryFunction<uhugeint_t, BinaryUhugeIntOperator>));
+	to_binary.AddFunction(ScalarFunction({LogicalTypeId::DOUBLE}, LogicalTypeId::VARCHAR, ToBinaryFunction<double, BinaryStrOperator>));
+	to_binary.AddFunction(ScalarFunction({LogicalTypeId::FLOAT}, LogicalTypeId::FLOAT, ToBinaryFunction<double, BinaryStrOperator>));
+										 
 	return to_binary;
 }
 
