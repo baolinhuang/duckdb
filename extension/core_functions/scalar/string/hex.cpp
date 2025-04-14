@@ -206,6 +206,14 @@ struct HexUhugeIntOperator {
 	}
 };
 
+struct HexFloatOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result){
+		int64_t input_integer = std::round(input);
+		return HexIntegralOperator::Operation<int64_t, string_t>(input_integer, result);
+	}
+};
+
 template <class INPUT, class OP>
 static void ToHexFunction(DataChunk &args, ExpressionState &state, Vector &result) {
 	D_ASSERT(args.ColumnCount() == 1);
@@ -400,6 +408,14 @@ struct BinaryUhugeIntOperator {
 	}
 };
 
+struct BinaryFloatOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
+		int64_t input_integer = std::round(input);
+		return BinaryIntegralOperator::Operation<int64_t, string_t>(input_integer, result);
+	}
+};
+
 struct FromHexOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
@@ -531,6 +547,11 @@ ScalarFunctionSet HexFun::GetFunctions() {
 	    ScalarFunction({LogicalType::HUGEINT}, LogicalType::VARCHAR, ToHexFunction<hugeint_t, HexHugeIntOperator>));
 	to_hex.AddFunction(
 	    ScalarFunction({LogicalType::UHUGEINT}, LogicalType::VARCHAR, ToHexFunction<uhugeint_t, HexUhugeIntOperator>));
+	// In MySQL, the hex function with double type parameter will be rounded first
+	to_hex.AddFunction(
+		ScalarFunction({LogicalType::DOUBLE}, LogicalType::VARCHAR, ToHexFunction<double, HexFloatOperator>));
+	to_hex.AddFunction(
+		ScalarFunction({LogicalType::FLOAT}, LogicalType::VARCHAR, ToHexFunction<float, HexFloatOperator>));
 	return to_hex;
 }
 
@@ -555,8 +576,9 @@ ScalarFunctionSet BinFun::GetFunctions() {
 	                                     ToBinaryFunction<hugeint_t, BinaryHugeIntOperator>));
 	to_binary.AddFunction(ScalarFunction({LogicalType::UHUGEINT}, LogicalType::VARCHAR,
 	                                     ToBinaryFunction<uhugeint_t, BinaryUhugeIntOperator>));
-	to_binary.AddFunction(ScalarFunction({LogicalTypeId::DOUBLE}, LogicalTypeId::VARCHAR, ToBinaryFunction<double, BinaryStrOperator>));
-	to_binary.AddFunction(ScalarFunction({LogicalTypeId::FLOAT}, LogicalTypeId::FLOAT, ToBinaryFunction<double, BinaryStrOperator>));
+	// In MySQL, the hex function with double type parameter will be rounded first
+	to_binary.AddFunction(ScalarFunction({LogicalTypeId::DOUBLE}, LogicalTypeId::VARCHAR, ToBinaryFunction<double, BinaryFloatOperator>));
+	to_binary.AddFunction(ScalarFunction({LogicalTypeId::FLOAT}, LogicalTypeId::FLOAT, ToBinaryFunction<float, BinaryFloatOperator>));
 
 	return to_binary;
 }

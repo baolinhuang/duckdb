@@ -60,12 +60,8 @@ bool SubstringStartEnd(int64_t input_size, int64_t offset, int64_t length, int64
 		// negative offset: scan from end (i.e. start = end + offset)
 		start = MaxValue<int64_t>(input_size + offset, 0);
 	} else {
-		// offset = 0: special case, we start 1 character BEHIND the first character
-		start = 0;
-		length--;
-		if (length <= 0) {
-			return false;
-		}
+		// In MySQL, if offset is equal to 0, return empty string
+		return false;
 	}
 	if (length > 0) {
 		// positive length: go forward (i.e. end = start + offset)
@@ -101,6 +97,7 @@ string_t SubstringUnicode(Vector &result, string_t input, int64_t offset, int64_
 
 	AssertInSupportedRange(input_size, offset, length);
 
+	// In MySQL, if offset is equal to 0, return empty string
 	if (length == 0 || offset == 0) {
 		return SubstringEmptyString(result);
 	}
