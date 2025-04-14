@@ -67,6 +67,9 @@ unique_ptr<FunctionData> BindPrintfFunction(ClientContext &context, ScalarFuncti
 
 template <class FORMAT_FUN, class CTX>
 static void PrintfFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	// The semantics of format function is different
+	throw NotImplementedException("Format function is not supported yet.");
+
 	auto &format_string = args.data[0];
 	auto &result_validity = FlatVector::Validity(result);
 	result.SetVectorType(VectorType::CONSTANT_VECTOR);

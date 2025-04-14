@@ -317,6 +317,14 @@ struct OctUhugeIntOperator {
 	}
 };
 
+struct OctFloatOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
+		int64_t input_integer = std::round(input);
+		return OctIntegralOperator::Operation<int64_t, string_t>(input_integer, result);
+	}
+};
+
 struct BinaryStrOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
@@ -576,7 +584,7 @@ ScalarFunctionSet BinFun::GetFunctions() {
 	                                     ToBinaryFunction<hugeint_t, BinaryHugeIntOperator>));
 	to_binary.AddFunction(ScalarFunction({LogicalType::UHUGEINT}, LogicalType::VARCHAR,
 	                                     ToBinaryFunction<uhugeint_t, BinaryUhugeIntOperator>));
-	// In MySQL, the hex function with double type parameter will be rounded first
+	// In MySQL, the bin function with double type parameter will be rounded first
 	to_binary.AddFunction(ScalarFunction({LogicalTypeId::DOUBLE}, LogicalTypeId::VARCHAR, ToBinaryFunction<double, BinaryFloatOperator>));
 	to_binary.AddFunction(ScalarFunction({LogicalTypeId::FLOAT}, LogicalTypeId::FLOAT, ToBinaryFunction<float, BinaryFloatOperator>));
 
@@ -605,6 +613,11 @@ ScalarFunctionSet OctFun::GetFunctions() {
 	    ScalarFunction({LogicalType::HUGEINT}, LogicalType::VARCHAR, ToOctFunction<hugeint_t, OctHugeIntOperator>));
 	to_oct.AddFunction(
 	    ScalarFunction({LogicalType::UHUGEINT}, LogicalType::VARCHAR, ToOctFunction<uhugeint_t, OctUhugeIntOperator>));
+	// In MySQL, the oct function with double type parameter will be rounded first
+	to_oct.AddFunction(
+		ScalarFunction({LogicalType::DOUBLE}, LogicalType::VARCHAR, ToOctFunction<double, OctFloatOperator>));
+	to_oct.AddFunction(
+		ScalarFunction({LogicalType::FLOAT}, LogicalType::VARCHAR, ToOctFunction<float, OctFloatOperator>));
 	return to_oct;
 }
 

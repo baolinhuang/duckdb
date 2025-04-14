@@ -338,6 +338,7 @@ power_of        "**"
 integer_div     "//"
 shift_right		">>"
 shift_left		"<<"
+or_operator		"||"
 
 /* " */
 
@@ -857,6 +858,11 @@ other			.
 {shift_right}	{
 					SET_YYLLOC();
 					return SHIFT_RIGHT;
+				}
+
+{or_operator}	{
+					SET_YYLLOC();
+					return OR;
 				}
 
 {equals_greater} {

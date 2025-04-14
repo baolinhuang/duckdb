@@ -107,6 +107,16 @@ struct BitAndOperation : public BitwiseOperation {
 		state.value &= typename STATE::TYPE(input);
 		;
 	}
+
+	template <class T, class STATE>
+	static void Finalize(STATE &state, T &target, AggregateFinalizeData &finalize_data) {
+		if (!state.is_set) {
+			state.is_set = true;
+			target = T(-1);
+		} else {
+			target = T(state.value);
+		}
+	}
 };
 
 struct BitOrOperation : public BitwiseOperation {

@@ -122,7 +122,6 @@ ScalarFunctionSet UnixTimestampFun::GetFunctions() {
 	unix_timestamp.AddFunction(ScalarFunction({}, LogicalType::DOUBLE, UnixTimestampFunctionNoParam));
 	unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIMESTAMP_TZ}, LogicalType::DOUBLE, UnixTimestampFunction<timestamp_tz_t>));
 	unix_timestamp.AddFunction(ScalarFunction({LogicalType::DATE}, LogicalType::DOUBLE, UnixTimestampFunction<date_t>));
-	unix_timestamp.AddFunction(ScalarFunction({LogicalType::TIME}, LogicalType::DOUBLE, UnixTimestampFunction<time_t>));
 	for (auto &func : unix_timestamp.functions) {
 		func.stability = FunctionStability::CONSISTENT_WITHIN_QUERY;
 	}
