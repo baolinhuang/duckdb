@@ -101,7 +101,7 @@ string_t SubstringUnicode(Vector &result, string_t input, int64_t offset, int64_
 
 	AssertInSupportedRange(input_size, offset, length);
 
-	if (length == 0) {
+	if (length == 0 || offset == 0) {
 		return SubstringEmptyString(result);
 	}
 	// first figure out which direction we need to scan

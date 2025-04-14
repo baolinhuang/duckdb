@@ -1072,7 +1072,7 @@ template <typename Char> class float_writer {
         it = std::fill_n(it, full_exp - num_digits_, static_cast<Char>('0'));
       }
       if (specs_.trailing_zeros) {
-        if (num_digits_ == full_exp) {
+        if (num_digits_ <= full_exp) {
           return it;
         }
         *it++ = decimal_point_;
