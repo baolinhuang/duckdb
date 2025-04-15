@@ -390,6 +390,9 @@ int64_t CastRules::ImplicitCast(const LogicalType &from, const LogicalType &to) 
 		if (to.id() == LogicalTypeId::VARCHAR && to.GetAlias().empty()) {
 			return 1;
 		}
+		if (to.id() == LogicalTypeId::DOUBLE) {
+			return 2;
+		}
 		return 20;
 	}
 	if (from.id() == LogicalTypeId::INTEGER_LITERAL) {

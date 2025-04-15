@@ -22,8 +22,9 @@ static SizeModifiers GetSizeModifiers(duckdb_libpgquery::PGTypeName &type_name, 
 
 	if (base_type == LogicalTypeId::DECIMAL) {
 		// Defaults for DECIMAL
-		result.width = 18;
-		result.scale = 3;
+		// In MySQL, the default is decimal(10, 0)
+		result.width = 10;
+		result.scale = 0;
 	}
 
 	if (type_name.typmods) {

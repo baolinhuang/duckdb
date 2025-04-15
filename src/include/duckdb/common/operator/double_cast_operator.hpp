@@ -31,6 +31,11 @@ static bool TryDoubleCast(const char *buf, idx_t len, T &result, bool strict, ch
 		buf++;
 		len--;
 	}
+	// In MySQL, if there are extra characters at the begin, it will return 0
+	if (!strict && !StringUtil::CharacterIsDigit(buf[0])) {
+		result = 0;
+		return true;
+	}
 	if (strict && len >= 2) {
 		if (buf[0] == '0' && StringUtil::CharacterIsDigit(buf[1])) {
 			// leading zeros are not allowed in strict mode
@@ -44,9 +49,8 @@ static bool TryDoubleCast(const char *buf, idx_t len, T &result, bool strict, ch
 	}
 	auto current_end = parse_result.ptr;
 	if (!strict) {
-		while (current_end < endptr && StringUtil::CharacterIsSpace(*current_end)) {
-			current_end++;
-		}
+		// In MySQL, extra characters at the end are ignored
+		return true;
 	}
 	return current_end == endptr;
 }

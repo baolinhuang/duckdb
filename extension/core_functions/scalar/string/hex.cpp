@@ -572,8 +572,9 @@ ScalarFunction UnhexFun::GetFunction() {
 ScalarFunctionSet BinFun::GetFunctions() {
 	ScalarFunctionSet to_binary;
 
-	to_binary.AddFunction(
-	    ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToBinaryFunction<string_t, BinaryStrOperator>));
+	// In MySQL, there is no Bin(Varchar) function in MySQL. Varchar will be implicitly converted to Double.
+	// to_binary.AddFunction(
+	//     ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToBinaryFunction<string_t, BinaryStrOperator>));
 	to_binary.AddFunction(
 	    ScalarFunction({LogicalType::VARINT}, LogicalType::VARCHAR, ToBinaryFunction<string_t, BinaryStrOperator>));
 	to_binary.AddFunction(ScalarFunction({LogicalType::UBIGINT}, LogicalType::VARCHAR,
@@ -599,8 +600,9 @@ ScalarFunction UnbinFun::GetFunction() {
 
 ScalarFunctionSet OctFun::GetFunctions() {
 	ScalarFunctionSet to_oct;
-	to_oct.AddFunction(
-	    ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
+	// In MySQL, there is no Bin(Varchar) function in MySQL. Varchar will be implicitly converted to Double.
+	// to_oct.AddFunction(
+	//     ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
 	to_oct.AddFunction(
 	    ScalarFunction({LogicalType::VARINT}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
 	to_oct.AddFunction(
