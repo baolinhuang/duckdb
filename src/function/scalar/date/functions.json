@@ -29,8 +29,7 @@
             }
         ],
         "type": "scalar_function_set",
-        "struct": "StrpTimeFun",
-        "aliases": ["str_to_date"]
+        "struct": "StrpTimeFun"
     },
     {
         "name": "try_strptime",
@@ -38,6 +37,7 @@
         "description": "Converts the string text to timestamp according to the format string. Returns NULL on failure.",
         "example": "try_strptime('Wed, 1 January 1992 - 08:38:40 PM', '%a, %-d %B %Y - %I:%M:%S %p')",
         "type": "scalar_function_set",
-        "struct": "TryStrpTimeFun"
+        "struct": "TryStrpTimeFun",
+        "aliases": ["str_to_date"]
     }
 ]

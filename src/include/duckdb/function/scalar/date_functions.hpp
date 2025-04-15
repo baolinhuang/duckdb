@@ -47,12 +47,6 @@ struct StrpTimeFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
-struct StrToDateFun {
-	using ALIAS = StrpTimeFun;
-
-	static constexpr const char *Name = "str_to_date";
-};
-
 struct TryStrpTimeFun {
 	static constexpr const char *Name = "try_strptime";
 	static constexpr const char *Parameters = "text,format";
@@ -61,6 +55,12 @@ struct TryStrpTimeFun {
 	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
+};
+
+struct StrToDateFun {
+	using ALIAS = TryStrpTimeFun;
+
+	static constexpr const char *Name = "str_to_date";
 };
 
 } // namespace duckdb

@@ -143,6 +143,7 @@ public:
 	//! Type-safe parsing argument
 	struct ParseResult {
 		int32_t data[8]; // year, month, day, hour, min, sec, ns, offset
+		bool is_specified[8];
 		string tz;
 		string error_message;
 		optional_idx error_position;

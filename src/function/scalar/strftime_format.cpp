@@ -524,175 +524,143 @@ string StrTimeFormat::ParseFormatSpecifier(const string &format_string, StrTimeF
 				continue;
 			}
 			StrTimeSpecifier specifier;
-			if (format_char == '-' && i + 1 < format_string.size()) {
-				format_char = format_string[++i];
-				switch (format_char) {
-				case 'd':
-					specifier = StrTimeSpecifier::DAY_OF_MONTH;
-					break;
-				case 'm':
-					specifier = StrTimeSpecifier::MONTH_DECIMAL;
-					break;
-				case 'y':
-					specifier = StrTimeSpecifier::YEAR_WITHOUT_CENTURY;
-					break;
-				case 'H':
-					specifier = StrTimeSpecifier::HOUR_24_DECIMAL;
-					break;
-				case 'I':
-					specifier = StrTimeSpecifier::HOUR_12_DECIMAL;
-					break;
-				case 'M':
-					specifier = StrTimeSpecifier::MINUTE_DECIMAL;
-					break;
-				case 'S':
-					specifier = StrTimeSpecifier::SECOND_DECIMAL;
-					break;
-				case 'j':
-					specifier = StrTimeSpecifier::DAY_OF_YEAR_DECIMAL;
-					break;
-				default:
-					return "Unrecognized format for strftime/strptime: %-" + string(1, format_char);
+			// In MySQL, %- StrTimeSpecifier is not supported
+			switch (format_char) {
+			case 'a':
+				specifier = StrTimeSpecifier::ABBREVIATED_WEEKDAY_NAME;
+				break;
+			// case 'A':
+			// 	specifier = StrTimeSpecifier::FULL_WEEKDAY_NAME;
+			// 	break;
+			case 'w':
+				specifier = StrTimeSpecifier::WEEKDAY_DECIMAL;
+				break;
+			// case 'v':
+			// 	specifier = StrTimeSpecifier::WEEKDAY_ISO;
+			// 	break;
+			case 'd':
+				specifier = StrTimeSpecifier::DAY_OF_MONTH_PADDED;
+				break;
+			case 'b':
+				specifier = StrTimeSpecifier::ABBREVIATED_MONTH_NAME;
+				break;
+			// case 'B':
+			// 	specifier = StrTimeSpecifier::FULL_MONTH_NAME;
+			// 	break;
+			case 'm':
+				specifier = StrTimeSpecifier::MONTH_DECIMAL_PADDED;
+				break;
+			case 'y':
+				specifier = StrTimeSpecifier::YEAR_WITHOUT_CENTURY_PADDED;
+				break;
+			case 'Y':
+				specifier = StrTimeSpecifier::YEAR_DECIMAL;
+				break;
+			case 'x':
+				specifier = StrTimeSpecifier::YEAR_ISO;
+				break;
+			case 'H':
+				specifier = StrTimeSpecifier::HOUR_24_PADDED;
+				break;
+			case 'I':
+				specifier = StrTimeSpecifier::HOUR_12_PADDED;
+				break;
+			case 'p':
+				specifier = StrTimeSpecifier::AM_PM;
+				break;
+			case 's':
+			case 'S':
+				specifier = StrTimeSpecifier::SECOND_PADDED;
+				break;
+			// case 'n':
+			// 	specifier = StrTimeSpecifier::NANOSECOND_PADDED;
+			// 	break;
+			case 'f':
+				specifier = StrTimeSpecifier::MICROSECOND_PADDED;
+				break;
+			// case 'g':
+			// 	specifier = StrTimeSpecifier::MILLISECOND_PADDED;
+			// 	break;
+			// case 'z':
+			// 	specifier = StrTimeSpecifier::UTC_OFFSET;
+			// 	break;
+			// case 'Z':
+			// 	specifier = StrTimeSpecifier::TZ_NAME;
+			// 	break;
+			case 'j':
+				specifier = StrTimeSpecifier::DAY_OF_YEAR_PADDED;
+				break;
+			case 'U':
+				specifier = StrTimeSpecifier::WEEK_NUMBER_PADDED_SUN_FIRST;
+				break;
+			case 'W':
+				specifier = StrTimeSpecifier::FULL_WEEKDAY_NAME;
+				break;
+			case 'v':
+				specifier = StrTimeSpecifier::WEEK_NUMBER_ISO;
+				break;
+			case 'c':
+				specifier = StrTimeSpecifier::MONTH_DECIMAL;
+				break;
+			case 'e':
+				specifier = StrTimeSpecifier::DAY_OF_MONTH;
+				break;
+			case 'h':
+				specifier = StrTimeSpecifier::HOUR_12_PADDED;
+				break;
+			case 'i':
+				specifier = StrTimeSpecifier::MINUTE_PADDED;
+				break;
+			case 'k':
+				specifier = StrTimeSpecifier::HOUR_24_DECIMAL;
+				break;
+			case 'l':
+				specifier = StrTimeSpecifier::HOUR_12_DECIMAL;
+				break;
+			case 'M':
+				specifier = StrTimeSpecifier::FULL_MONTH_NAME;
+				break;
+			case 'D':
+				specifier = StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX;
+				break;
+			case 'T': 
+			case 'r': {
+				string subformat;
+				if (format_char == 'c') {
+					// %c: Locale’s appropriate date and time representation.
+					// we push the ISO timestamp representation here
+					subformat = "%Y-%m-%d %H:%i:%S";
+				} else if (format_char == 'x') {
+					// %x - Locale’s appropriate date representation.
+					// we push the ISO date format here
+					subformat = "%Y-%m-%d";
+				} else if (format_char == 'X' || format_char == 'T') {
+					// %X - Locale’s appropriate time representation.
+					// we push the ISO time format here
+					subformat = "%H:%i:%S";
+				} else if (format_char == 'r') {
+					subformat = "%I:%i:%S %p";
 				}
-			} else {
-				switch (format_char) {
-				case 'a':
-					specifier = StrTimeSpecifier::ABBREVIATED_WEEKDAY_NAME;
-					break;
-				case 'A':
-					specifier = StrTimeSpecifier::FULL_WEEKDAY_NAME;
-					break;
-				case 'w':
-					specifier = StrTimeSpecifier::WEEKDAY_DECIMAL;
-					break;
-				case 'u':
-					specifier = StrTimeSpecifier::WEEKDAY_ISO;
-					break;
-				case 'd':
-					specifier = StrTimeSpecifier::DAY_OF_MONTH_PADDED;
-					break;
-				case 'b':
-					specifier = StrTimeSpecifier::ABBREVIATED_MONTH_NAME;
-					break;
-				case 'B':
-					specifier = StrTimeSpecifier::FULL_MONTH_NAME;
-					break;
-				case 'm':
-					specifier = StrTimeSpecifier::MONTH_DECIMAL_PADDED;
-					break;
-				case 'y':
-					specifier = StrTimeSpecifier::YEAR_WITHOUT_CENTURY_PADDED;
-					break;
-				case 'Y':
-					specifier = StrTimeSpecifier::YEAR_DECIMAL;
-					break;
-				case 'G':
-					specifier = StrTimeSpecifier::YEAR_ISO;
-					break;
-				case 'H':
-					specifier = StrTimeSpecifier::HOUR_24_PADDED;
-					break;
-				case 'I':
-					specifier = StrTimeSpecifier::HOUR_12_PADDED;
-					break;
-				case 'p':
-					specifier = StrTimeSpecifier::AM_PM;
-					break;
-				case 's':
-				case 'S':
-					specifier = StrTimeSpecifier::SECOND_PADDED;
-					break;
-				case 'n':
-					specifier = StrTimeSpecifier::NANOSECOND_PADDED;
-					break;
-				case 'f':
-					specifier = StrTimeSpecifier::MICROSECOND_PADDED;
-					break;
-				case 'g':
-					specifier = StrTimeSpecifier::MILLISECOND_PADDED;
-					break;
-				case 'z':
-					specifier = StrTimeSpecifier::UTC_OFFSET;
-					break;
-				case 'Z':
-					specifier = StrTimeSpecifier::TZ_NAME;
-					break;
-				case 'j':
-					specifier = StrTimeSpecifier::DAY_OF_YEAR_PADDED;
-					break;
-				case 'U':
-					specifier = StrTimeSpecifier::WEEK_NUMBER_PADDED_SUN_FIRST;
-					break;
-				case 'W':
-					specifier = StrTimeSpecifier::FULL_WEEKDAY_NAME;
-					break;
-				case 'V':
-					specifier = StrTimeSpecifier::WEEK_NUMBER_ISO;
-					break;
-				case 'c':
-					specifier = StrTimeSpecifier::MONTH_DECIMAL;
-					break;
-				case 'e':
-					specifier = StrTimeSpecifier::DAY_OF_MONTH;
-					break;
-				case 'h':
-					specifier = StrTimeSpecifier::HOUR_12_PADDED;
-					break;
-				case 'i':
-					specifier = StrTimeSpecifier::MINUTE_PADDED;
-					break;
-				case 'k':
-					specifier = StrTimeSpecifier::HOUR_24_DECIMAL;
-					break;
-				case 'l':
-					specifier = StrTimeSpecifier::HOUR_12_DECIMAL;
-					break;
-				case 'M':
-					specifier = StrTimeSpecifier::FULL_MONTH_NAME;
-					break;
-				case 'D':
-					specifier = StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX;
-					break;
-				case 'x':
-				case 'X':
-				case 'T': 
-				case 'r': {
-					string subformat;
-					if (format_char == 'c') {
-						// %c: Locale’s appropriate date and time representation.
-						// we push the ISO timestamp representation here
-						subformat = "%Y-%m-%d %H:%i:%S";
-					} else if (format_char == 'x') {
-						// %x - Locale’s appropriate date representation.
-						// we push the ISO date format here
-						subformat = "%Y-%m-%d";
-					} else if (format_char == 'X' || format_char == 'T') {
-						// %X - Locale’s appropriate time representation.
-						// we push the ISO time format here
-						subformat = "%H:%i:%S";
-					} else if (format_char == 'r') {
-						subformat = "%I:%i:%S %p";
-					}
-					// parse the subformat in a separate format specifier
-					StrfTimeFormat locale_format;
-					string error = StrTimeFormat::ParseFormatSpecifier(subformat, locale_format);
-					if (!error.empty()) {
-						throw InternalException("Failed to bind sub-format specifier \"%s\": %s", subformat, error);
-					}
-					// add the previous literal to the first literal of the subformat
-					locale_format.literals[0] = std::move(current_literal) + locale_format.literals[0];
-					current_literal = "";
-					// now push the subformat into the current format specifier
-					for (idx_t i = 0; i < locale_format.specifiers.size(); i++) {
-						format.AddFormatSpecifier(std::move(locale_format.literals[i]), locale_format.specifiers[i]);
-					}
-					pos = i + 1;
-					continue;
+				// parse the subformat in a separate format specifier
+				StrfTimeFormat locale_format;
+				string error = StrTimeFormat::ParseFormatSpecifier(subformat, locale_format);
+				if (!error.empty()) {
+					throw InternalException("Failed to bind sub-format specifier \"%s\": %s", subformat, error);
 				}
-				default:
-					return "Unrecognized format for strftime/strptime: %" + string(1, format_char);
+				// add the previous literal to the first literal of the subformat
+				locale_format.literals[0] = std::move(current_literal) + locale_format.literals[0];
+				current_literal = "";
+				// now push the subformat into the current format specifier
+				for (idx_t i = 0; i < locale_format.specifiers.size(); i++) {
+					format.AddFormatSpecifier(std::move(locale_format.literals[i]), locale_format.specifiers[i]);
 				}
+				pos = i + 1;
+				continue;
 			}
+			default:
+				return "Unrecognized format for strftime/strptime: %" + string(1, format_char);
+			}
+
 			format.AddFormatSpecifier(std::move(current_literal), specifier);
 			current_literal = "";
 			pos = i + 1;
@@ -888,9 +856,12 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 	auto &result_data = result.data;
 	auto &error_message = result.error_message;
 	auto &error_position = result.error_position;
+	// In MySQL, if a date cannot be determined, return NULL
+	auto &is_specified = result.is_specified;
+	memset(is_specified, 0, sizeof(is_specified));
 
 	// initialize the result
-	result_data[0] = 1900;
+	result_data[0] = 1970;
 	result_data[1] = 1;
 	result_data[2] = 1;
 	result_data[3] = 0;
@@ -898,11 +869,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 	result_data[5] = 0;
 	result_data[6] = 0;
 	result_data[7] = 0;
-	// skip leading spaces
-	while (StringUtil::CharacterIsSpace(*data)) {
-		data++;
-		size--;
-	}
+
 	//	Check for specials
 	//	Precheck for alphas for performance.
 	idx_t pos = 0;
@@ -955,20 +922,12 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 		const auto &literal = literals[i];
 		for (size_t l = 0; l < literal.size();) {
 			// Match runs of spaces to runs of spaces.
+			// In MySQL, spaces are skipped no matter where they appear
 			if (StringUtil::CharacterIsSpace(literal[l])) {
-				if (!StringUtil::CharacterIsSpace(data[pos])) {
-					error_message = "Space does not match, expected " + literals[i];
-					error_position = pos;
-					return false;
-				}
-				for (++pos; pos < size && StringUtil::CharacterIsSpace(data[pos]); ++pos) {
-					continue;
-				}
-				for (++l; l < literal.size() && StringUtil::CharacterIsSpace(literal[l]); ++l) {
-					continue;
-				}
+				l++;
 				continue;
 			}
+			for (; pos < size && StringUtil::CharacterIsSpace(data[pos]); ++pos);
 			// literal does not match
 			if (data[pos++] != literal[l++]) {
 				error_message = "Literal does not match, expected " + literal;
@@ -979,6 +938,8 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 		if (i == specifiers.size()) {
 			break;
 		}
+		// In MySQL, the space after literal should be skipped
+		for (; pos < size && StringUtil::CharacterIsSpace(data[pos]); ++pos);
 		// now parse the specifier
 		if (numeric_width[i] > 0) {
 			// numeric specifier: parse a number
@@ -1008,6 +969,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				}
 				// day of the month
 				result_data[2] = UnsafeNumericCast<int32_t>(number);
+				is_specified[2] = true;
 				offset_specifier = specifiers[i];
 				if (specifiers[i] == StrTimeSpecifier::DAY_OF_MONTH_WITH_SUFFIX) {
 					if (pos + 2 > size) {
@@ -1037,6 +999,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				}
 				// month number
 				result_data[1] = UnsafeNumericCast<int32_t>(number);
+				is_specified[1] = true;
 				offset_specifier = specifiers[i];
 				break;
 			case StrTimeSpecifier::YEAR_WITHOUT_CENTURY_PADDED:
@@ -1068,6 +1031,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				} else {
 					result_data[0] = int32_t(2000 + number);
 				}
+				is_specified[0] = true;
 				break;
 			case StrTimeSpecifier::YEAR_DECIMAL:
 				switch (offset_specifier) {
@@ -1086,6 +1050,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				}
 				// year as full number
 				result_data[0] = UnsafeNumericCast<int32_t>(number);
+				is_specified[0] = true;
 				break;
 			case StrTimeSpecifier::YEAR_ISO:
 				switch (offset_specifier) {
@@ -1135,6 +1100,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				}
 				// hour as full number
 				result_data[3] = UnsafeNumericCast<int32_t>(number);
+				is_specified[3] = true;
 				break;
 			case StrTimeSpecifier::HOUR_12_PADDED:
 			case StrTimeSpecifier::HOUR_12_DECIMAL:
@@ -1145,6 +1111,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				}
 				// 12-hour number: start off by just storing the number
 				result_data[3] = UnsafeNumericCast<int32_t>(number);
+				is_specified[3] = true;
 				break;
 			case StrTimeSpecifier::MINUTE_PADDED:
 			case StrTimeSpecifier::MINUTE_DECIMAL:
@@ -1155,6 +1122,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				}
 				// minutes
 				result_data[4] = UnsafeNumericCast<int32_t>(number);
+				is_specified[4] = true;
 				break;
 			case StrTimeSpecifier::SECOND_PADDED:
 			case StrTimeSpecifier::SECOND_DECIMAL:
@@ -1165,6 +1133,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				}
 				// seconds
 				result_data[5] = UnsafeNumericCast<int32_t>(number);
+				is_specified[5] = true;
 				break;
 			case StrTimeSpecifier::NANOSECOND_PADDED:
 				for (; digits < numeric_width[i]; ++digits) {
@@ -1173,6 +1142,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				D_ASSERT(number < Interval::NANOS_PER_SEC); // enforced by the length of the number
 				// nanoseconds
 				result_data[6] = UnsafeNumericCast<int32_t>(number);
+				is_specified[6] = true;
 				break;
 			case StrTimeSpecifier::MICROSECOND_PADDED:
 				for (; digits < numeric_width[i]; ++digits) {
@@ -1181,6 +1151,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				D_ASSERT(number < Interval::MICROS_PER_SEC); // enforced by the length of the number
 				// nanoseconds
 				result_data[6] = UnsafeNumericCast<int32_t>(number * Interval::NANOS_PER_MICRO);
+				is_specified[6] = true;
 				break;
 			case StrTimeSpecifier::MILLISECOND_PADDED:
 				for (; digits < numeric_width[i]; ++digits) {
@@ -1189,6 +1160,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 				D_ASSERT(number < Interval::MSECS_PER_SEC); // enforced by the length of the number
 				// nanoseconds
 				result_data[6] = UnsafeNumericCast<int32_t>(number * Interval::NANOS_PER_MSEC);
+				is_specified[6] = true;
 				break;
 			case StrTimeSpecifier::WEEK_NUMBER_PADDED_SUN_FIRST:
 			case StrTimeSpecifier::WEEK_NUMBER_PADDED_MON_FIRST:
@@ -1369,6 +1341,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 					return false;
 				}
 				result_data[1] = month + 1;
+				is_specified[1] = true;
 				break;
 			}
 			case StrTimeSpecifier::FULL_MONTH_NAME: {
@@ -1379,6 +1352,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 					return false;
 				}
 				result_data[1] = month + 1;
+				is_specified[1] = true;
 				break;
 			}
 			case StrTimeSpecifier::UTC_OFFSET: {
@@ -1389,6 +1363,7 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 					return false;
 				}
 				result_data[7] = (hh * Interval::MINS_PER_HOUR + mm) * Interval::SECS_PER_MINUTE + ss;
+				is_specified[7] = true;
 				break;
 			}
 			case StrTimeSpecifier::TZ_NAME: {
@@ -1421,11 +1396,12 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 	while (pos < size && StringUtil::CharacterIsSpace(data[pos])) {
 		pos++;
 	}
-	if (pos != size) {
-		error_message = "Full specifier did not match: trailing characters";
-		error_position = pos;
-		return false;
-	}
+	// In MySQL, the extra characters are ignored
+	// if (pos != size) {
+	// 	error_message = "Full specifier did not match: trailing characters";
+	// 	error_position = pos;
+	// 	return false;
+	// }
 	if (ampm != TimeSpecifierAMOrPM::TIME_SPECIFIER_NONE) {
 		if (result_data[3] > 12) {
 			error_message =
@@ -1449,16 +1425,22 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 	case StrTimeSpecifier::YEAR_ISO:
 	case StrTimeSpecifier::WEEK_NUMBER_ISO: {
 		// Default to 1900-01-01
+		if (!has_weekday || iso_year > 9999 || iso_week > 53) {
+			return false;
+		}
 		iso_year = (iso_year > 9999) ? 1900 : iso_year;
 		iso_week = (iso_week > 53) ? 1 : iso_week;
-		iso_weekday = (iso_weekday > 7) ? 1 : iso_weekday;
 		// Gregorian and ISO agree on the year of January 4
 		auto jan4 = Date::FromDate(UnsafeNumericCast<int32_t>(iso_year), 1, 4);
 		// ISO Week 1 starts on the previous Monday
 		auto week1 = Date::GetMondayOfCurrentWeek(jan4);
 		// ISO Week N starts N-1 weeks later
-		auto iso_date = week1 + UnsafeNumericCast<int32_t>((iso_week - 1) * 7 + (iso_weekday - 1));
+		// In MySQL, weekday starts from 0
+		auto iso_date = week1 + UnsafeNumericCast<int32_t>((iso_week - 1) * 7 + ((weekday + 6) % 7));
 		Date::Convert(iso_date, result_data[0], result_data[1], result_data[2]);
+		is_specified[0] = true;
+		is_specified[1] = true;
+		is_specified[2] = true;
 		break;
 	}
 	case StrTimeSpecifier::WEEK_NUMBER_PADDED_SUN_FIRST:
@@ -1477,6 +1459,9 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 		yeardate -= 7 * int(yeardate >= jan1);
 		yeardate += UnsafeNumericCast<int32_t>(weekno * 7 + weekday);
 		Date::Convert(yeardate, result_data[0], result_data[1], result_data[2]);
+		is_specified[0] = true;
+		is_specified[1] = true;
+		is_specified[2] = true;
 		break;
 	}
 	case StrTimeSpecifier::DAY_OF_YEAR_PADDED:
@@ -1484,6 +1469,9 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 		auto yeardate = Date::FromDate(result_data[0], 1, 1);
 		yeardate += UnsafeNumericCast<int32_t>(yearday - 1);
 		Date::Convert(yeardate, result_data[0], result_data[1], result_data[2]);
+		is_specified[0] = true;
+		is_specified[1] = true;
+		is_specified[2] = true;
 		break;
 	}
 	case StrTimeSpecifier::DAY_OF_MONTH_PADDED:
@@ -1501,7 +1489,16 @@ bool StrpTimeFormat::Parse(const char *data, size_t size, ParseResult &result, b
 		break;
 	}
 
-	return true;
+	if (is_specified[0] == is_specified[1] && is_specified[0] == is_specified[2]) {
+		// if (is_specified[0] == false) {
+		// 	result_data[0] = 0;
+		// 	result_data[1] = 1;
+		// 	result_data[2] = 1;
+		// }
+		return true;
+	} else {
+		return false;
+	}
 }
 
 //! Parses a timestamp using the given specifier
