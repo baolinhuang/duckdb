@@ -359,6 +359,37 @@ struct ICUTimestampToDouble : public ICUDateFunc {
 	}
 };
 
+struct ICUDateToTimestamp : public ICUDateFunc {
+
+	static bool CastToTimestamp(Vector &source, Vector &result, idx_t count, CastParameters &parameters) {
+		auto &cast_data = parameters.cast_data->Cast<CastData>();
+		auto &info = cast_data.info->Cast<BindData>();
+		CalendarPtr calendar(info.calendar->clone());
+		UnaryExecutor::Execute<date_t, timestamp_t>(source, result, count, [&](date_t input) {
+			dtime_t time{0};
+			timestamp_t ts = Timestamp::FromDatetime(input, time);
+			return ICUFromNaiveTimestamp::Operation(calendar.get(), ts);
+		});
+		return true;
+	}
+	static BoundCastInfo BindCastToTimestamp(BindCastInput &input, const LogicalType &source, const LogicalType &target) {
+		if (!input.context) {
+			throw InternalException("Missing context for TIME to TIMESTAMPTZ cast.");
+		}
+
+		auto cast_data = make_uniq<CastData>(make_uniq<BindData>(*input.context));
+
+		return BoundCastInfo(CastToTimestamp, std::move(cast_data));
+	}
+
+	static void AddCasts(DatabaseInstance &db) {
+		auto &config = DBConfig::GetConfig(db);
+		auto &casts = config.GetCastFunctions();
+
+		casts.RegisterCastFunction(LogicalType::DATE, LogicalType::TIMESTAMP_TZ, BindCastToTimestamp);
+	}
+};
+
 ICUTimeToTimestamptz::BindData::BindData(ClientContext &context) : ICUDateFunc::BindData(context) {
 	Value ts;
 	if(context.TryGetCurrentSetting("timestamp", ts)) {
@@ -645,6 +676,7 @@ void RegisterICUTimeZoneFunctions(DatabaseInstance &db) {
 	ICUToTimeTZ::AddCasts(db);
 	ICUTimeToTimestamptz::AddCasts(db);
 	ICUTimestampToDouble::AddCasts(db);
+	ICUDateToTimestamp::AddCasts(db);
 }
 
 } // namespace duckdb
