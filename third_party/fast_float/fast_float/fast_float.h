@@ -509,6 +509,8 @@ parsed_number_string parse_number_string(const char *p, const char *pend, const 
   answer.valid = false;
   answer.too_many_digits = false;
   answer.negative = (*p == '-');
+  // In MySQL, can't skip one underscore
+  bool skip_one_underscore = false;
   if (*p == '-') { // C++17 20.19.3.(7.1) explicitly forbids '+' sign here
     ++p;
     if (p == pend) {
@@ -529,7 +531,7 @@ parsed_number_string parse_number_string(const char *p, const char *pend, const 
       i = 10 * i +
           uint64_t(*p - '0'); // might overflow, we will handle the overflow later
       ++p;
-	  if(p != pend && *p == '_') {
+	  if(p != pend && *p == '_' && skip_one_underscore) {
 	    if (strict) {
 	      answer.valid = false;
 	      return answer;
@@ -568,7 +570,7 @@ parsed_number_string parse_number_string(const char *p, const char *pend, const 
         ++p;
         i = i * 10 + digit; // in rare cases, this will overflow, but that's ok
 
-		if(p != pend && *p == '_') {
+		if(p != pend && *p == '_' && skip_one_underscore) {
 		  if (strict) {
 	      answer.valid = false;
 	      return answer;
@@ -618,7 +620,7 @@ parsed_number_string parse_number_string(const char *p, const char *pend, const 
           }
           ++p;
 
-		  if(p != pend && *p == '_') {
+		  if(p != pend && *p == '_' && skip_one_underscore) {
 		    if (strict) {
 	      answer.valid = false;
 	      return answer;
@@ -670,7 +672,7 @@ parsed_number_string parse_number_string(const char *p, const char *pend, const 
           i = i * 10 + uint64_t(*p - '0');
           ++p;
 
-		  if(p != pend && *p == '_') {
+		  if(p != pend && *p == '_' && skip_one_underscore) {
 		    if (strict) {
 	      answer.valid = false;
 	      return answer;
@@ -698,7 +700,7 @@ parsed_number_string parse_number_string(const char *p, const char *pend, const 
               i = i * 10 + uint64_t(*p - '0');
               ++p;
 
-			  if(p != pend && *p == '_') {
+			  if(p != pend && *p == '_' && skip_one_underscore) {
 				// skip 1 underscore if it is not the last character and followed by a digit
 				++p;
 				++skipped_underscores;
