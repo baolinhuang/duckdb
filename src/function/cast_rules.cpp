@@ -174,6 +174,7 @@ static int64_t ImplicitCastFloat(const LogicalType &to) {
 	switch (to.id()) {
 	case LogicalTypeId::DOUBLE:
 	case LogicalTypeId::VARCHAR:
+	case LogicalTypeId::BIGINT:
 		return TargetTypeCost(to);
 	default:
 		return -1;
@@ -183,6 +184,7 @@ static int64_t ImplicitCastFloat(const LogicalType &to) {
 static int64_t ImplicitCastDouble(const LogicalType &to) {
 	switch (to.id()) {
 	case LogicalTypeId::VARCHAR:
+	case LogicalTypeId::BIGINT:
 		return TargetTypeCost(to);
 	default:
 		return -1;
