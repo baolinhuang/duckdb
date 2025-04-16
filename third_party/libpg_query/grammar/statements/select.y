@@ -3304,6 +3304,10 @@ func_expr_common_subexpr:
 				{
 					$$ = (PGNode *) makeFuncCall(SystemFuncName("date_add"), list_make2($7, makeIntervalNode($5, @5, $3)), @1);
 				}
+			| MOD '(' a_expr, ',' a_expr ')'
+				{
+					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $3, $5, @1);
+				}
 		;
 
 list_comprehension:
