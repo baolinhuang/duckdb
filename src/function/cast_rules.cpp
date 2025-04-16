@@ -231,6 +231,7 @@ static int64_t ImplicitCastDate(const LogicalType &to) {
 	case LogicalTypeId::TIMESTAMP_MS:
 	case LogicalTypeId::TIMESTAMP_NS:
 	case LogicalTypeId::TIMESTAMP_SEC:
+	case LogicalTypeId::VARCHAR:
 		return TargetTypeCost(to);
 	case LogicalTypeId::DOUBLE:
 		return 200;
@@ -285,6 +286,8 @@ static int64_t ImplicitCastTimestamp(const LogicalType &to) {
 		return TargetTypeCost(to);
 	case LogicalTypeId::TIMESTAMP_TZ:
 		return TargetTypeCost(to);
+	case LogicalTypeId::VARCHAR:
+		return TargetTypeCost(to);
 	case LogicalTypeId::DOUBLE:
 		return 200;
 	default:
@@ -304,6 +307,8 @@ static int64_t ImplicitCastVarint(const LogicalType &to) {
 static int64_t ImplicitCastTime(const LogicalType &to) {
 	switch (to.id())
 	{
+	case LogicalTypeId::VARCHAR:
+		return TargetTypeCost(to);
 	case LogicalTypeId::DOUBLE:
 		return 200;
 	default:

@@ -1,6 +1,7 @@
 #include "duckdb/common/bit_utils.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/numeric_utils.hpp"
+#include "duckdb/common/operator/double_cast_operator.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types/blob.hpp"
 #include "duckdb/common/vector_operations/unary_executor.hpp"
@@ -222,17 +223,6 @@ static void ToHexFunction(DataChunk &args, ExpressionState &state, Vector &resul
 	UnaryExecutor::ExecuteString<INPUT, string_t, OP>(input, result, count);
 }
 
-struct OctStrOperator {
-	template <class INPUT_TYPE, class RESULT_TYPE>
-	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
-		auto target = StringVector::EmptyString(result, 1);
-		auto output = target.GetDataWriteable();
-		*output = '0';
-		target.Finalize();
-		return target;
-	}
-};
-
 struct OctIntegralOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
@@ -325,14 +315,20 @@ struct OctFloatOperator {
 	}
 };
 
-struct BinaryStrOperator {
+struct OctStrOperator {
 	template <class INPUT_TYPE, class RESULT_TYPE>
 	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
-		auto target = StringVector::EmptyString(result, 1);
-		auto output = target.GetDataWriteable();
-		*output = '0';
-		target.Finalize();
-		return target;
+		double d;
+		bool success = TryDoubleCast<double>(input.GetData(), input.GetSize(), d, false);
+		if (!success) {
+			auto target = StringVector::EmptyString(result, 1);
+			auto output = target.GetDataWriteable();
+			*output = '0';
+			target.Finalize();
+			return target;
+		} else {
+			return OctFloatOperator::Operation<double, RESULT_TYPE>(d, result);
+		}
 	}
 };
 
@@ -421,6 +417,23 @@ struct BinaryFloatOperator {
 	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
 		int64_t input_integer = std::round(input);
 		return BinaryIntegralOperator::Operation<int64_t, string_t>(input_integer, result);
+	}
+};
+
+struct BinaryStrOperator {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static RESULT_TYPE Operation(INPUT_TYPE input, Vector &result) {
+		double d;
+		bool success = TryDoubleCast<double>(input.GetData(), input.GetSize(), d, false);
+		if (!success) {
+			auto target = StringVector::EmptyString(result, 1);
+			auto output = target.GetDataWriteable();
+			*output = '0';
+			target.Finalize();
+			return target;
+		} else {
+			return BinaryFloatOperator::Operation<double, RESULT_TYPE>(d, result);
+		}
 	}
 };
 
@@ -572,9 +585,9 @@ ScalarFunction UnhexFun::GetFunction() {
 ScalarFunctionSet BinFun::GetFunctions() {
 	ScalarFunctionSet to_binary;
 
-	// In MySQL, there is no Bin(Varchar) function in MySQL. Varchar will be implicitly converted to Double.
-	// to_binary.AddFunction(
-	//     ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToBinaryFunction<string_t, BinaryStrOperator>));
+	// In MySQL, varchar will be implicitly converted to Double in bin().
+	to_binary.AddFunction(
+	    ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToBinaryFunction<string_t, BinaryStrOperator>));
 	to_binary.AddFunction(
 	    ScalarFunction({LogicalType::VARINT}, LogicalType::VARCHAR, ToBinaryFunction<string_t, BinaryStrOperator>));
 	to_binary.AddFunction(ScalarFunction({LogicalType::UBIGINT}, LogicalType::VARCHAR,
@@ -600,9 +613,9 @@ ScalarFunction UnbinFun::GetFunction() {
 
 ScalarFunctionSet OctFun::GetFunctions() {
 	ScalarFunctionSet to_oct;
-	// In MySQL, there is no Bin(Varchar) function in MySQL. Varchar will be implicitly converted to Double.
-	// to_oct.AddFunction(
-	//     ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
+	// In MySQL, varchar will be implicitly converted to Double in oct().
+	to_oct.AddFunction(
+	    ScalarFunction({LogicalType::VARCHAR}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
 	to_oct.AddFunction(
 	    ScalarFunction({LogicalType::VARINT}, LogicalType::VARCHAR, ToOctFunction<string_t, OctStrOperator>));
 	to_oct.AddFunction(

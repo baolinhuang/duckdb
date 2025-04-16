@@ -539,7 +539,8 @@ struct ICUStrftime : public ICUDateFunc {
 		auto &config = DBConfig::GetConfig(db);
 		auto &casts = config.GetCastFunctions();
 
-		casts.RegisterCastFunction(LogicalType::TIMESTAMP_TZ, LogicalType::VARCHAR, BindCastToVarchar);
+		// Adjust cost to ensure cast timestamptz to varchar first
+		casts.RegisterCastFunction(LogicalType::TIMESTAMP_TZ, LogicalType::VARCHAR, BindCastToVarchar, 149);
 	}
 };
 

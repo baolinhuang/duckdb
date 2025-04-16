@@ -9,6 +9,7 @@
 #include "include/icu-datefunc.hpp"
 #include "duckdb/transaction/meta_transaction.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/operator/string_cast.hpp"
 #include "duckdb/common/vector_operations/unary_executor.hpp"
 
 #include "duckdb/mysql/timestamp_context_state.hpp"

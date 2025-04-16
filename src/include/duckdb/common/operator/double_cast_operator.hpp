@@ -21,6 +21,10 @@ static bool TryDoubleCast(const char *buf, idx_t len, T &result, bool strict, ch
 		len--;
 	}
 	if (len == 0) {
+		if (!strict) {
+			result = 0;
+			return true;
+		}
 		return false;
 	}
 	if (*buf == '+') {
