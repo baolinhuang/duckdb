@@ -204,7 +204,7 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "find_in_set", {"str", "strlist", nullptr}, {{nullptr, nullptr}}, "ifnull((select n from (select row_number() over () as n, unnest from unnest(split(strlist, ',')))d where d.unnest = str), 0)"},
 	{DEFAULT_SCHEMA, "locate", {"substr", "str", nullptr}, {{nullptr, nullptr}}, "position(substr IN str)"},
 	{DEFAULT_SCHEMA, "locate", {"substr", "str", "pos", nullptr}, {{nullptr, nullptr}}, "position(substr IN str[pos:]) + if(position(substr IN str[pos:]), pos - 1, 0)"},
-	{DEFAULT_SCHEMA, "strcmp", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "if(isnull(expr1) or isnull(expr2), null, if(expr1 >= expr2, if(expr1 = expr2, 0, 1), -1))"},
+	{DEFAULT_SCHEMA, "strcmp", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "if(expr1 is null or expr2 is null, null, if(expr1 >= expr2, if(expr1 = expr2, 0, 1), -1))"},
 	{DEFAULT_SCHEMA, "substring_index", {"expr1", "sep", "index", nullptr}, {{nullptr, nullptr}}, "if(expr1 is null or sep is null or index is null, null, if(index != 0, if((index > 0), list_reduce((split(expr1, sep)[:index]), (ret, x)->concat_ws('.', ret, x)), list_reduce((split(expr1, sep)[index:]), (ret, x)->concat_ws('.', ret, x))), ''))"},
 	{DEFAULT_SCHEMA, "space", {"num", nullptr}, {{nullptr, nullptr}}, "repeat(' ', num)"},
 	{DEFAULT_SCHEMA, "insert", {"str", "pos", "len", "newstr", nullptr}, {{nullptr, nullptr}}, "if(pos between 1 and length(str), str[:pos - 1] || if(len between 1 and length(newstr), newstr[:length(str)-pos] || str[pos+len:], newstr[:length(str)-pos]), str)"},
