@@ -517,6 +517,12 @@ parsed_number_string parse_number_string(const char *p, const char *pend, const 
       return answer;
     }
     if (!is_integer(*p) && (*p != decimal_separator)) { // a  sign must be followed by an integer or the dot
+      // In MySQL, return 0.
+      answer.valid = true;
+      answer.mantissa = 0;
+      answer.exponent = 0;
+      answer.too_many_digits = false;
+      answer.negative = false;
       return answer;
     }
   }

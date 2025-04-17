@@ -16,6 +16,7 @@ namespace duckdb {
 template <class T>
 static bool TryDoubleCast(const char *buf, idx_t len, T &result, bool strict, char decimal_separator = '.') {
 	// skip any spaces at the start
+	bool has_sign = false;
 	while (len > 0 && StringUtil::CharacterIsSpace(*buf)) {
 		buf++;
 		len--;
@@ -28,6 +29,7 @@ static bool TryDoubleCast(const char *buf, idx_t len, T &result, bool strict, ch
 		return false;
 	}
 	if (*buf == '+') {
+		has_sign = true;
 		if (strict) {
 			// plus is not allowed in strict mode
 			return false;
@@ -36,9 +38,17 @@ static bool TryDoubleCast(const char *buf, idx_t len, T &result, bool strict, ch
 		len--;
 	}
 	// In MySQL, if there are extra characters at the begin, it will return 0
-	if (!strict && !StringUtil::CharacterIsDigit(buf[0])) {
-		result = 0;
-		return true;
+	if (!strict) {
+		// If there is already a positive sign, the next character
+		// must be digit, otherwise it returns 0.
+		if (has_sign && !StringUtil::CharacterIsDigit(buf[0])) {
+			result = 0;
+			return true;
+		}
+		if (!has_sign && (!StringUtil::CharacterIsDigit(buf[0]) && *buf != '-')) {
+			result = 0;
+			return true;
+		}
 	}
 	if (strict && len >= 2) {
 		if (buf[0] == '0' && StringUtil::CharacterIsDigit(buf[1])) {
