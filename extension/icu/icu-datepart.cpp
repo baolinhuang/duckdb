@@ -224,7 +224,7 @@ struct ICUDatePart : public ICUDateFunc {
 	}
 
 	static int64_t ExtractMicrosecond(icu::Calendar *calendar, const uint64_t micros) {
-		return ExtractMillisecond(calendar, micros) * Interval::MICROS_PER_MSEC + micros;
+		return ExtractField(calendar, UCAL_MILLISECOND) * Interval::MICROS_PER_MSEC + micros;
 	}
 
 	static double ExtractEpoch(icu::Calendar *calendar, const uint64_t micros) {
