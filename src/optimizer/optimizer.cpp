@@ -186,10 +186,16 @@ void Optimizer::RunBuiltInOptimizers() {
 	});
 
 	// Remove duplicate groups from aggregates
-	RunOptimizer(OptimizerType::DUPLICATE_GROUPS, [&]() {
-		RemoveDuplicateGroups remove;
-		remove.VisitOperator(*plan);
-	});
+	// This optimization will cause the following SQL results to be incorrect:
+	// create table t1(col1 int, col2 int);
+	// create table t2(col3 int);
+	// insert into t1 values (1, 1);
+	// insert into t2 values (1);
+	// select col1, col2, col3 from t1 join t2 on t1.col1 = t2.col3 group by col1, col2, col3 with rollup order by 1, 2 ,3;
+	// RunOptimizer(OptimizerType::DUPLICATE_GROUPS, [&]() {
+	// 	RemoveDuplicateGroups remove;
+	// 	remove.VisitOperator(*plan);
+	// });
 
 	// then we extract common subexpressions inside the different operators
 	RunOptimizer(OptimizerType::COMMON_SUBEXPRESSIONS, [&]() {

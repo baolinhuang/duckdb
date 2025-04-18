@@ -3298,7 +3298,7 @@ func_expr_common_subexpr:
 				}
 			| TIMESTAMPDIFF '(' extract_arg ',' a_expr ',' a_expr ')'
 				{
-					$$ = (PGNode *) makeFuncCall(SystemFuncName("date_diff"), list_make3(makeStringConst($3, @1), $5, $7), @1);
+					$$ = (PGNode *) makeFuncCall(SystemFuncName("datesub"), list_make3(makeStringConst($3, @1), $5, $7), @1);
 				}
 			| TIMESTAMPADD '(' opt_interval ',' a_expr ',' a_expr ')'
 				{
@@ -3307,6 +3307,14 @@ func_expr_common_subexpr:
 			| MOD '(' a_expr, ',' a_expr ')'
 				{
 					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OP, "%", $3, $5, @1);
+				}
+			| ISNULL '(' a_expr, ')'
+				{
+					PGNullTest *n = makeNode(PGNullTest);
+					n->arg = (PGExpr *) $3;
+					n->nulltesttype = PG_IS_NULL;
+					n->location = @1;
+					$$ = (PGNode *)n;
 				}
 		;
 

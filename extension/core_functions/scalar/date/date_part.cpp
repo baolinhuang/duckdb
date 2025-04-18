@@ -1255,19 +1255,19 @@ int64_t DatePart::MicrosecondsOperator::Operation(timestamp_t input) {
 	D_ASSERT(Timestamp::IsFinite(input));
 	auto time = Timestamp::GetTime(input);
 	// remove everything but the second & microsecond part
-	return time.micros % Interval::MICROS_PER_MINUTE;
+	return time.micros % Interval::MICROS_PER_SEC;
 }
 
 template <>
 int64_t DatePart::MicrosecondsOperator::Operation(interval_t input) {
 	// remove everything but the second & microsecond part
-	return input.micros % Interval::MICROS_PER_MINUTE;
+	return input.micros % Interval::MICROS_PER_SEC;
 }
 
 template <>
 int64_t DatePart::MicrosecondsOperator::Operation(dtime_t input) {
 	// remove everything but the second & microsecond part
-	return input.micros % Interval::MICROS_PER_MINUTE;
+	return input.micros % Interval::MICROS_PER_SEC;
 }
 
 template <>

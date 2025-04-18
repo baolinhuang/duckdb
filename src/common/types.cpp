@@ -983,11 +983,17 @@ static bool CombineUnequalTypes(const LogicalType &left, const LogicalType &righ
 	}
 
 	// for everything but enums - string literals also take the other type
-	if (left.id() == LogicalTypeId::STRING_LITERAL) {
-		result = LogicalType::NormalizeType(right);
-		return true;
-	} else if (right.id() == LogicalTypeId::STRING_LITERAL) {
-		result = LogicalType::NormalizeType(left);
+	// if (left.id() == LogicalTypeId::STRING_LITERAL) {
+	// 	result = LogicalType::NormalizeType(right);
+	// 	return true;
+	// } else if (right.id() == LogicalTypeId::STRING_LITERAL) {
+	// 	result = LogicalType::NormalizeType(left);
+	// 	return true;
+	// }
+
+	// TODO: In MySQL, it is more reasonable to convert all to VARCHAR if there is STRING_LITERAL
+	if (left.id() == LogicalTypeId::STRING_LITERAL || right.id() == LogicalTypeId::STRING_LITERAL) {
+		result = LogicalType::VARCHAR;
 		return true;
 	}
 

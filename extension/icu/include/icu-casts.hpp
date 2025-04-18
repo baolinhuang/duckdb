@@ -36,4 +36,15 @@ struct ICUToTimeTZ : public ICUDateFunc {
 	static void AddCasts(DatabaseInstance &db);
 };
 
+struct ICUToTime : public ICUDateFunc {
+
+	static bool ToTime(icu::Calendar *calendar, timestamp_t instant, dtime_t &result);
+
+	static bool CastToTime(Vector &source, Vector &result, idx_t count, CastParameters &parameters);
+
+	static BoundCastInfo BindCastToTime(BindCastInput &input, const LogicalType &source, const LogicalType &target);
+
+	static void AddCasts(DatabaseInstance &db);
+};
+
 } // namespace duckdb

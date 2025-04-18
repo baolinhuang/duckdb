@@ -35,6 +35,9 @@ static string_t LeftScalarFunction(Vector &result, const string_t str, int64_t p
 	if (pos >= 0) {
 		return OP::Substring(result, str, 1, pos);
 	}
+	if (pos < 0) {
+		return OP::Substring(result, str, 0, 0);
+	}
 
 	int64_t num_characters = OP::template Operation<string_t, int64_t>(str);
 	pos = MaxValue<int64_t>(0, num_characters + pos);
@@ -69,7 +72,10 @@ static string_t RightScalarFunction(Vector &result, const string_t str, int64_t 
 		int64_t start = num_characters - len + 1;
 		return OP::Substring(result, str, start, len);
 	}
-
+	// In MySQL, right() will return '' if pos < 0;
+	if (pos < 0) {
+		return OP::Substring(result, str, 0, 0);
+	}
 	int64_t len = 0;
 	if (pos != std::numeric_limits<int64_t>::min()) {
 		len = num_characters - MinValue<int64_t>(num_characters, -pos);

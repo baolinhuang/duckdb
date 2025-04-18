@@ -549,6 +549,8 @@ void RegisterICUStrptimeFunctions(DatabaseInstance &db) {
 	ICUStrptime::AddBinaryTimestampFunction("try_strptime", db);
 
 	ICUStrftime::AddBinaryTimestampFunction("strftime", db);
+	ICUStrftime::AddBinaryTimestampFunction("date_format", db);
+	ICUStrftime::AddBinaryTimestampFunction("time_format", db);
 
 	// Add string casts
 	ICUStrptime::AddCasts(db);

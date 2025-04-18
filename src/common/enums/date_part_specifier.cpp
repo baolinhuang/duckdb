@@ -37,11 +37,11 @@ bool TryGetDatePartSpecifier(const string &specifier_p, DatePartSpecifier &resul
 	} else if (specifier == "epoch") {
 		// seconds since 1970-01-01
 		result = DatePartSpecifier::EPOCH;
-	} else if (specifier == "dow" || specifier == "dayofweek" || specifier == "weekday") {
-		// day of the week (Sunday = 0, Saturday = 6)
+	} else if (specifier == "dow" || specifier == "dayofweek") {
+		// In MySQL, day of the week (Sunday = 1, Saturday = 7)
 		result = DatePartSpecifier::DOW;
-	} else if (specifier == "isodow") {
-		// isodow (Monday = 1, Sunday = 7)
+	} else if (specifier == "isodow" || specifier == "weekday") {
+		// In MySQL, isodow (Monday = 0, Sunday = 6)
 		result = DatePartSpecifier::ISODOW;
 	} else if (specifier == "week" || specifier == "weeks" || specifier == "w" || specifier == "weekofyear") {
 		// ISO week number

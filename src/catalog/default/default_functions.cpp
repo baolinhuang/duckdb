@@ -184,7 +184,7 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "to_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast(expr1 as date) - DATE '0000-01-01'"},
 	{DEFAULT_SCHEMA, "to_seconds", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(expr1 - TIMESTAMP '0000-01-01')"},
 	{DEFAULT_SCHEMA, "timediff", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 - expr2 + TIME '00:00:00'"},
-	{DEFAULT_SCHEMA, "time_to_sec", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(expr1)"},
+	{DEFAULT_SCHEMA, "time_to_sec", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(cast(expr1 as time))"},
 	{DEFAULT_SCHEMA, "subtime", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 - to_days_duckdb(if(split_part(expr2, ' ', -2)=='', 0, cast(split_part(expr2, ' ', -2) as int))) - to_seconds_duckdb(epoch(cast(split_part(expr2, ' ', -1) as TIME)))"},
 	{DEFAULT_SCHEMA, "sec_to_time", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast((TIME '00:00:00' + to_seconds_duckdb(expr1)) AS TIME)"},
 	{DEFAULT_SCHEMA, "from_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "DATE '0000-01-01' + to_days_duckdb(cast(expr1 as int))"},

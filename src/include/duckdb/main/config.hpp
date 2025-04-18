@@ -179,7 +179,7 @@ struct DBConfigOptions {
 	//! The order type used when none is specified (default: ASC)
 	OrderType default_order_type = OrderType::ASCENDING;
 	//! NULL ordering used when none is specified (default: NULLS LAST)
-	DefaultOrderByNullType default_null_order = DefaultOrderByNullType::NULLS_FIRST;
+	DefaultOrderByNullType default_null_order = DefaultOrderByNullType::NULLS_FIRST_ON_ASC_LAST_ON_DESC;
 	//! enable COPY and related commands
 	bool enable_external_access = true;
 	//! Whether or not the global http metadata cache is used

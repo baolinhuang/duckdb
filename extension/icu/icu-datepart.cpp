@@ -174,13 +174,13 @@ struct ICUDatePart : public ICUDateFunc {
 	}
 
 	static int64_t ExtractDayOfWeek(icu::Calendar *calendar, const uint64_t micros) {
-		// [Sun(0), Sat(6)]
-		return ExtractField(calendar, UCAL_DAY_OF_WEEK) - UCAL_SUNDAY;
+		// In MySQL, [Sun(1), Sat(7)]
+		return ExtractField(calendar, UCAL_DAY_OF_WEEK) - UCAL_SUNDAY + 1;
 	}
 
 	static int64_t ExtractISODayOfWeek(icu::Calendar *calendar, const uint64_t micros) {
-		// [Mon(1), Sun(7)]
-		return 1 + (ExtractField(calendar, UCAL_DAY_OF_WEEK) + 7 - UCAL_MONDAY) % 7;
+		// In MySQL, [Mon(0), Sun(6)]
+		return (ExtractField(calendar, UCAL_DAY_OF_WEEK) + 7 - UCAL_MONDAY) % 7;
 	}
 
 	static int64_t ExtractWeek(icu::Calendar *calendar, const uint64_t micros) {
