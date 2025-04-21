@@ -224,6 +224,11 @@ struct ICUDatePart : public ICUDateFunc {
 	}
 
 	static int64_t ExtractMicrosecond(icu::Calendar *calendar, const uint64_t micros) {
+		return ExtractMillisecond(calendar, micros) * Interval::MICROS_PER_MSEC + micros;
+	}
+
+	// In MySQL, the microsecond of time 12:12:12.345678 is 345678, but it in DuckDB is 12345678
+	static int64_t ExtractMicrosecondMysql(icu::Calendar *calendar, const uint64_t micros) {
 		return ExtractField(calendar, UCAL_MILLISECOND) * Interval::MICROS_PER_MSEC + micros;
 	}
 
@@ -284,7 +289,7 @@ struct ICUDatePart : public ICUDateFunc {
 		case DatePartSpecifier::MILLENNIUM:
 			return ExtractMillenium;
 		case DatePartSpecifier::MICROSECONDS:
-			return ExtractMicrosecond;
+			return ExtractMicrosecondMysql;
 		case DatePartSpecifier::MILLISECONDS:
 			return ExtractMillisecond;
 		case DatePartSpecifier::SECOND:

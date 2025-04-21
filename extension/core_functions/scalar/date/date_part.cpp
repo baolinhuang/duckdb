@@ -543,6 +543,18 @@ struct DatePart {
 		}
 	};
 
+	struct MicrosecondsMysqlOperator {
+		template <class TA, class TR>
+		static inline TR Operation(TA input) {
+			return 0;
+		}
+
+		template <class T>
+		static unique_ptr<BaseStatistics> PropagateStatistics(ClientContext &context, FunctionStatisticsInput &input) {
+			return PropagateSimpleDatePartStatistics<0, 999999>(input.child_stats);
+		}
+	};
+
 	struct MillisecondsOperator {
 		template <class TA, class TR>
 		static inline TR Operation(TA input) {
@@ -1255,24 +1267,49 @@ int64_t DatePart::MicrosecondsOperator::Operation(timestamp_t input) {
 	D_ASSERT(Timestamp::IsFinite(input));
 	auto time = Timestamp::GetTime(input);
 	// remove everything but the second & microsecond part
-	return time.micros % Interval::MICROS_PER_SEC;
+	return time.micros % Interval::MICROS_PER_MINUTE;
 }
 
 template <>
 int64_t DatePart::MicrosecondsOperator::Operation(interval_t input) {
 	// remove everything but the second & microsecond part
-	return input.micros % Interval::MICROS_PER_SEC;
+	return input.micros % Interval::MICROS_PER_MINUTE;
 }
 
 template <>
 int64_t DatePart::MicrosecondsOperator::Operation(dtime_t input) {
 	// remove everything but the second & microsecond part
-	return input.micros % Interval::MICROS_PER_SEC;
+	return input.micros % Interval::MICROS_PER_MINUTE;
 }
 
 template <>
 int64_t DatePart::MicrosecondsOperator::Operation(dtime_tz_t input) {
 	return DatePart::MicrosecondsOperator::Operation<dtime_t, int64_t>(input.time());
+}
+
+template <>
+int64_t DatePart::MicrosecondsMysqlOperator::Operation(timestamp_t input) {
+	D_ASSERT(Timestamp::IsFinite(input));
+	auto time = Timestamp::GetTime(input);
+	// remove everything but the second & microsecond part
+	return time.micros % Interval::MICROS_PER_SEC;
+}
+
+template <>
+int64_t DatePart::MicrosecondsMysqlOperator::Operation(interval_t input) {
+	// remove everything but the second & microsecond part
+	return input.micros % Interval::MICROS_PER_SEC;
+}
+
+template <>
+int64_t DatePart::MicrosecondsMysqlOperator::Operation(dtime_t input) {
+	// remove everything but the second & microsecond part
+	return input.micros % Interval::MICROS_PER_SEC;
+}
+
+template <>
+int64_t DatePart::MicrosecondsMysqlOperator::Operation(dtime_tz_t input) {
+	return DatePart::MicrosecondsMysqlOperator::Operation<dtime_t, int64_t>(input.time());
 }
 
 template <>
@@ -2370,7 +2407,7 @@ ScalarFunctionSet NanosecondsFun::GetFunctions() {
 }
 
 ScalarFunctionSet MicrosecondsFun::GetFunctions() {
-	return GetTimePartFunction<DatePart::MicrosecondsOperator>();
+	return GetTimePartFunction<DatePart::MicrosecondsMysqlOperator>();
 }
 
 ScalarFunctionSet MillisecondsFun::GetFunctions() {

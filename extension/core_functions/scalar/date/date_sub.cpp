@@ -440,8 +440,8 @@ static void DateSubFunction(DataChunk &args, ExpressionState &state, Vector &res
 	}
 }
 
-ScalarFunctionSet DateSubFun::GetFunctions() {
-	ScalarFunctionSet date_sub("date_sub");
+ScalarFunctionSet DatesubFun::GetFunctions() {
+	ScalarFunctionSet date_sub("datesub");
 	date_sub.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::DATE, LogicalType::DATE},
 	                                    LogicalType::BIGINT, DateSubFunction<date_t>));
 	date_sub.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::TIMESTAMP, LogicalType::TIMESTAMP},

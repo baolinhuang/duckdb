@@ -30,12 +30,11 @@
         "aliases": ["datepart"]
     },
     {
-        "name": "date_sub",
+        "name": "datesub",
         "parameters": "part,startdate,enddate",
         "description": "The number of complete partitions between the timestamps",
-        "example": "date_sub('hour', TIMESTAMPTZ '1992-09-30 23:59:59', TIMESTAMPTZ '1992-10-01 01:58:00')",
-        "type": "scalar_function_set",
-        "aliases": ["datesub"]
+        "example": "datesub('hour', TIMESTAMPTZ '1992-09-30 23:59:59', TIMESTAMPTZ '1992-10-01 01:58:00')",
+        "type": "scalar_function_set"
     },
     {
         "name": "date_trunc",
