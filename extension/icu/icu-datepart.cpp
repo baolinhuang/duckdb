@@ -32,7 +32,7 @@ static void ICUDateMysqlFunction(DataChunk &args, ExpressionState &state, Vector
 																[&](timestamp_t input, ValidityMask &mask, idx_t idx) {
 																	if (Timestamp::IsFinite(input)) {
 																		date_t date = ICUMakeDate::Operation(calendar, input);
-																		OP::Operation(date, format);
+																		return OP::Operation(date, format);
 																	} else {
 																		mask.SetInvalid(idx);
 																		return int64_t(0);
@@ -44,7 +44,7 @@ static void ICUDateMysqlFunction(DataChunk &args, ExpressionState &state, Vector
 																[&](timestamp_t input, int64_t format, ValidityMask &mask, idx_t idx) {
 																	if (Timestamp::IsFinite(input)) {
 																		date_t date = ICUMakeDate::Operation(calendar, input);
-																		OP::Operation(date, format);
+																		return OP::Operation(date, format);
 																	} else {
 																		mask.SetInvalid(idx);
 																		return int64_t(0);
@@ -129,7 +129,6 @@ struct ICUYearWeekMysqlFunc : public ICUDateFunc {
 		set.AddFunction(ScalarFunction({LogicalTypeId::TIMESTAMP_TZ, LogicalTypeId::BIGINT}, LogicalTypeId::BIGINT, ICUDateMysqlFunction<ICUYearWeekMysqlFunc>, Bind));
 		ExtensionUtil::RegisterFunction(db, set);
 	}
-
 };
 
 struct ICUDatePart : public ICUDateFunc {
