@@ -2,6 +2,7 @@
 #include "duckdb/common/limits.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
 #include "duckdb/common/types/decimal.hpp"
+#include "duckdb/function/scalar/string_common.hpp"
 #include "duckdb/parser/expression/cast_expression.hpp"
 #include "duckdb/parser/expression/constant_expression.hpp"
 #include "duckdb/parser/expression/function_expression.hpp"
@@ -15,8 +16,48 @@ unique_ptr<ConstantExpression> Transformer::TransformValue(duckdb_libpgquery::PG
 		D_ASSERT(val.val.ival <= NumericLimits<int32_t>::Maximum());
 		return make_uniq<ConstantExpression>(Value::INTEGER((int32_t)val.val.ival));
 	case duckdb_libpgquery::T_PGBitString: // FIXME: this should actually convert to BLOB
-	case duckdb_libpgquery::T_PGString:
-		return make_uniq<ConstantExpression>(Value(string(val.val.str)));
+	case duckdb_libpgquery::T_PGString: {
+		std::string unescape_string;
+		char *c = val.val.str;
+		while (*c) {
+			if (*c++ == '\\') {
+				switch(char tmp = *c++) {
+					case 'n':
+						unescape_string.push_back('\n');
+						break;
+					case 't':
+						unescape_string.push_back('\t');
+						break;
+					case 'r':
+						unescape_string.push_back('\r');
+						break;
+					case 'b':
+						unescape_string.push_back('\b');
+						break;
+					case '0':
+						unescape_string.push_back('\0');
+						break;
+					case 'Z':
+						unescape_string.push_back('\032');
+						break;
+					case '_':
+					case '%':
+						unescape_string.push_back('\\');
+						unescape_string.push_back(tmp);
+						break;
+					case '\\':
+						unescape_string.push_back('\\');
+						break;
+					default:
+						unescape_string.push_back(tmp);
+						while (!IsCharacter(*c)) c++;
+				}
+			} else {
+				unescape_string.push_back(*c++);
+			}
+		}
+		return make_uniq<ConstantExpression>(Value(unescape_string));
+	}
 	case duckdb_libpgquery::T_PGFloat: {
 		string_t str_val(val.val.str);
 		bool try_cast_as_integer = true;

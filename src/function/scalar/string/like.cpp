@@ -214,7 +214,7 @@ static unique_ptr<FunctionData> LikeBindFunction(ClientContext &context, ScalarF
 	}
 	if (arguments[1]->IsFoldable()) {
 		Value pattern_str = ExpressionExecutor::EvaluateScalar(context, *arguments[1]);
-		return LikeMatcher::CreateLikeMatcher(pattern_str.ToString());
+		return LikeMatcher::CreateLikeMatcher(pattern_str.ToString(), '\\');
 	}
 	return nullptr;
 }
@@ -224,7 +224,7 @@ bool LikeOperatorFunction(const char *s, idx_t slen, const char *pattern, idx_t 
 }
 
 bool LikeOperatorFunction(const char *s, idx_t slen, const char *pattern, idx_t plen) {
-	return TemplatedLikeOperator<'%', '_', false>(s, slen, pattern, plen, '\0');
+	return TemplatedLikeOperator<'%', '_', true>(s, slen, pattern, plen, '\\');
 }
 
 bool LikeOperatorFunction(string_t &s, string_t &pat) {
