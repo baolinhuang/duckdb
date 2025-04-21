@@ -19,9 +19,10 @@ unique_ptr<ConstantExpression> Transformer::TransformValue(duckdb_libpgquery::PG
 	case duckdb_libpgquery::T_PGString: {
 		std::string unescape_string;
 		char *c = val.val.str;
-		while (*c) {
+		char tmp;
+		while (tmp = *c) {
 			if (*c++ == '\\') {
-				switch(char tmp = *c++) {
+				switch(tmp = *c++) {
 					case 'n':
 						unescape_string.push_back('\n');
 						break;
@@ -50,10 +51,12 @@ unique_ptr<ConstantExpression> Transformer::TransformValue(duckdb_libpgquery::PG
 						break;
 					default:
 						unescape_string.push_back(tmp);
-						while (!IsCharacter(*c)) c++;
+						while (!IsCharacter(*c)) {
+							unescape_string.push_back(*c++);
+						}
 				}
 			} else {
-				unescape_string.push_back(*c++);
+				unescape_string.push_back(tmp);
 			}
 		}
 		return make_uniq<ConstantExpression>(Value(unescape_string));
