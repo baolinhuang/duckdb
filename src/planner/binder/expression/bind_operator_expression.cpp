@@ -41,6 +41,13 @@ LogicalType ExpressionBinder::ResolveCoalesceType(OperatorExpression &op, vector
 			}
 		} else {
 			// If it's COALESCE operator, don't do extra adjustment.
+			// In MySQL, COALESCE(NUMERIC, STRING_LITERAL) should be converted to COALESCE(VARCHAR, VARCHAR)
+			if (child_return == LogicalTypeId::STRING_LITERAL) {
+				child_return = LogicalTypeId::VARCHAR;
+			}
+			if (max_type == LogicalTypeId::STRING_LITERAL) {
+				child_return = LogicalTypeId::VARCHAR;
+			}
 			if (!LogicalType::TryGetMaxLogicalType(context, max_type, child_return, max_type)) {
 				throw BinderException(
 				    op, "Cannot mix values of type %s and %s in COALESCE operator - an explicit cast is required",
