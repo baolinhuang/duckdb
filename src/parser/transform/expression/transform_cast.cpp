@@ -24,6 +24,7 @@ unique_ptr<ParsedExpression> Transformer::TransformTypeCast(duckdb_libpgquery::P
 			return make_uniq<ConstantExpression>(Value::BLOB_RAW(blob_data));
 		}
 	}
+
 	// transform the expression node
 	auto expression = TransformExpression(root.arg);
 	bool try_cast = root.tryCast;
@@ -31,6 +32,16 @@ unique_ptr<ParsedExpression> Transformer::TransformTypeCast(duckdb_libpgquery::P
 	// now create a cast operation
 	auto result = make_uniq<CastExpression>(target_type, std::move(expression), try_cast);
 	SetQueryLocation(*result, root.location);
+	if (target_type == LogicalTypeId::VARCHAR) {
+		if (type_name->typmods) {
+			std::vector<unique_ptr<ParsedExpression>> children;
+			auto &const_val = *Transformer::PGPointerCast<duckdb_libpgquery::PGAConst>(type_name->typmods->head->data.ptr_value);
+			children.push_back(std::move(result));
+			children.push_back(std::move(make_uniq<ConstantExpression>(Value::BIGINT(const_val.val.val.ival)) ));
+			auto function = make_uniq<FunctionExpression>("left", std::move(children));
+			return std::move(function);
+		}
+	}
 	return std::move(result);
 }
 

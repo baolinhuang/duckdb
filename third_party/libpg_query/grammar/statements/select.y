@@ -2140,7 +2140,7 @@ CharacterWithoutLength:	 character
 					$$ = SystemTypeName($1);
 					/* char defaults to char(1), varchar to no limit */
 					if (strcmp($1, "bpchar") == 0)
-						$$->typmods = list_make1(makeIntConst(1, -1));
+						$$->typmods = NIL;
 					$$->location = @1;
 				}
 		;

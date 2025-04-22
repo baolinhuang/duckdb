@@ -26824,7 +26824,7 @@ yyreduce:
 					(yyval.typnam) = SystemTypeName((yyvsp[0].conststr));
 					/* char defaults to char(1), varchar to no limit */
 					if (strcmp((yyvsp[0].conststr), "bpchar") == 0)
-						(yyval.typnam)->typmods = list_make1(makeIntConst(1, -1));
+						(yyval.typnam)->typmods = NIL;
 					(yyval.typnam)->location = (yylsp[0]);
 				}
 #line 26831 "third_party/libpg_query/grammar/grammar_out.cpp"
