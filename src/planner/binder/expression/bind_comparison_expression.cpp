@@ -177,6 +177,13 @@ BindResult ExpressionBinder::BindExpression(ComparisonExpression &expr, idx_t de
 		                                  "Cannot compare values of type %s and type %s - an explicit cast is required",
 		                                  left_sql_type.ToString(), right_sql_type.ToString()));
 	}
+
+	// Aone 65335969
+	if ((left_sql_type.id() == LogicalTypeId::DATE && right_sql_type.id() == LogicalTypeId::STRING_LITERAL) ||
+		(left_sql_type.id() == LogicalTypeId::STRING_LITERAL && right_sql_type.id() == LogicalTypeId::DATE)) {
+		input_type = LogicalTypeId::TIMESTAMP;
+	}
+
 	// add casts (if necessary)
 	left = BoundCastExpression::AddCastToType(context, std::move(left), input_type,
 	                                          input_type.id() == LogicalTypeId::ENUM);
