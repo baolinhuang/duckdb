@@ -288,29 +288,29 @@ void FunctionBinder::CastToFunctionArguments(SimpleFunction &function, vector<un
 
 	// In MySQL, whether it is case sensitive depends on the collation of the first child
 	if (function.name == "position" || function.name == "instr") {
-		for (idx_t i = 0; i < children.size(); i++) {
-			LogicalType target_type;
-			if (i == 1) {
-				target_type = (children[0]->return_type.id() == LogicalTypeId::VARCHAR
-							|| children[0]->return_type.id() == LogicalTypeId::STRING_LITERAL) ?
-							children[0]->return_type : function.arguments[0];
-				if (target_type.AuxInfo()) {
-					auto type_info = target_type.GetAuxInfoShrPtr()->Cast<StringTypeInfo>();
-					if (type_info.collation.find("nocase") != std::string::npos) {
-						type_info.collation = "nocase";
-					} else {
-						target_type = function.arguments[0];
-					}
-				}
-			} else {
-				target_type = function.arguments[i];
+		auto target_type = (children[0]->return_type.id() == LogicalTypeId::VARCHAR
+								|| children[0]->return_type.id() == LogicalTypeId::STRING_LITERAL) ?
+								children[0]->return_type : function.arguments[0];
+		if (target_type.AuxInfo()) {
+			auto type_info = target_type.GetAuxInfoShrPtr()->Cast<StringTypeInfo>();
+			if (type_info.collation.find("nocase") != std::string::npos) {
+				type_info.collation = "nocase";
 			}
+		}
+		target_type.Verify();
+
+		auto &collation_binding = CollationBinding::Get(context);
+		children[0] = BoundCastExpression::AddCastToType(context, std::move(children[0]), target_type);
+		collation_binding.PushCollation(context, children[0], target_type, CollationType::ALL_COLLATIONS);
+		children[1] = BoundCastExpression::AddCastToType(context, std::move(children[1]), target_type);
+		collation_binding.PushCollation(context, children[1], target_type, CollationType::ALL_COLLATIONS);
+
+		if (children.size() == 3) {
+			target_type = function.arguments[2];
 			target_type.Verify();
-			auto cast_result = RequiresCast(children[i]->return_type, target_type);
-			if (i == 1 || cast_result == LogicalTypeComparisonResult::DIFFERENT_TYPES) {
-				children[i] = BoundCastExpression::AddCastToType(context, std::move(children[i]), target_type);
-				auto &collation_binding = CollationBinding::Get(context);
-				collation_binding.PushCollation(context, children[i], target_type, CollationType::ALL_COLLATIONS);
+			auto cast_result = RequiresCast(children[2]->return_type, target_type);
+			if (cast_result == LogicalTypeComparisonResult::DIFFERENT_TYPES) {
+				children[2] = BoundCastExpression::AddCastToType(context, std::move(children[2]), target_type);
 			}
 		}
 		return;
