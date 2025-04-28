@@ -233,6 +233,7 @@ unique_ptr<BoundQueryNode> Binder::BindNode(SetOperationNode &statement) {
 	} else {
 		// figure out the types of the setop result by picking the max of both
 		for (idx_t i = 0; i < result->left->types.size(); i++) {
+			// DuckDB always use the collation of right expr.
 			if (result->left->types[i] == LogicalTypeId::VARCHAR && result->right->types[i] == LogicalTypeId::VARCHAR) {
 				auto left_collation = StringType::GetCollation(result->left->types[i]);
 				auto right_collation = StringType::GetCollation(result->right->types[i]);
@@ -245,6 +246,9 @@ unique_ptr<BoundQueryNode> Binder::BindNode(SetOperationNode &statement) {
 						result_collation.push_back('.');
 					}
 					result_collation.append("noaccent");
+				}
+				if (result_collation.empty()) {
+					result_collation.append("binary");
 				}
 				result->types.push_back(LogicalType::VARCHAR_COLLATION(result_collation));
 				continue;
