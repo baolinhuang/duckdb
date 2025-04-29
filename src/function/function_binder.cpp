@@ -294,7 +294,9 @@ void FunctionBinder::CastToFunctionArguments(SimpleFunction &function, vector<un
 		if (target_type.AuxInfo()) {
 			auto type_info = target_type.GetAuxInfoShrPtr()->Cast<StringTypeInfo>();
 			if (type_info.collation.find("nocase") != std::string::npos) {
-				type_info.collation = "nocase";
+				target_type = LogicalType::VARCHAR_COLLATION("nocase");
+			} else {
+				target_type = LogicalType::VARCHAR_COLLATION("binary");
 			}
 		}
 		target_type.Verify();
