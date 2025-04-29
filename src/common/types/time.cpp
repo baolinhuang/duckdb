@@ -132,6 +132,124 @@ bool Time::TryConvertInternal(const char *buf, idx_t len, idx_t &pos, dtime_t &r
 	return true;
 }
 
+bool Time::TryConvertInternalMysql(const char *buf, idx_t len, idx_t &pos, dtime_t &result, bool strict,
+                              	   optional_ptr<int32_t> nanos) {
+	int32_t hour = -1, min = -1, sec = -1, micros = -1;
+	pos = 0;
+
+	if (len == 0) {
+		return false;
+	}
+
+	int sep;
+
+	// skip leading spaces
+	while (pos < len && StringUtil::CharacterIsSpace(buf[pos])) {
+		pos++;
+	}
+
+	if (pos >= len) {
+		return false;
+	}
+
+	if (!StringUtil::CharacterIsDigit(buf[pos])) {
+		return false;
+	}
+
+	// Allow up to 9 digit hours to support intervals
+	hour = 0;
+	for (int32_t digits = 9; pos < len && StringUtil::CharacterIsDigit(buf[pos]); ++pos) {
+		if (digits-- > 0) {
+			hour = hour * 10 + (buf[pos] - '0');
+		} else {
+			return false;
+		}
+	}
+
+	// fetch the separator
+	idx_t sep_pos;
+	if (pos >= len || buf[pos + 1] != ':') {
+		// In MySQL, HHMMSS is supported
+		sec = hour % 100;
+		min = hour / 100 % 100;
+		hour = hour / 10000;
+		if (min < 0 || min >= 60 || sec < 0 || sec >= 60) {
+			return false;
+		}
+		goto fractional;
+	}
+	sep = buf[pos++];
+	sep_pos = pos;
+	if (pos == len && !strict) {
+		min = 0;
+	} else {
+		if (!Date::ParseDoubleDigit(buf, len, pos, min)) {
+			return false;
+		}
+		if (min < 0 || min >= 60) {
+			return false;
+		}
+	}
+
+	if (pos > len) {
+		return false;
+	}
+	if (pos == len && (!strict || sep_pos + 2 == pos)) {
+		sec = 0;
+	} else {
+		if (buf[pos++] != sep) {
+			return false;
+		}
+
+		if (pos == len && !strict) {
+			sec = 0;
+		} else {
+			if (!Date::ParseDoubleDigit(buf, len, pos, sec)) {
+				return false;
+			}
+			if (sec < 0 || sec >= 60) {
+				return false;
+			}
+		}
+	}
+
+fractional:
+	micros = 0;
+	if (pos < len && buf[pos] == '.') {
+		pos++;
+		// we expect some microseconds
+		int32_t mult = 100000;
+		if (nanos) {
+			// do we expect nanoseconds?
+			mult *= Interval::NANOS_PER_MICRO;
+		}
+		for (; pos < len && StringUtil::CharacterIsDigit(buf[pos]); pos++, mult /= 10) {
+			if (mult > 0) {
+				micros += (buf[pos] - '0') * mult;
+			}
+		}
+		if (nanos) {
+			*nanos = UnsafeNumericCast<int32_t>(micros % Interval::NANOS_PER_MICRO);
+			micros /= Interval::NANOS_PER_MICRO;
+		}
+	}
+
+	// in strict mode, check remaining string for non-space characters
+	if (strict) {
+		// skip trailing spaces
+		while (pos < len && StringUtil::CharacterIsSpace(buf[pos])) {
+			pos++;
+		}
+		// check position. if end was not reached, non-space chars remaining
+		if (pos < len) {
+			return false;
+		}
+	}
+
+	result = Time::FromTime(hour, min, sec, micros);
+	return true;
+}
+
 bool Time::TryConvertInterval(const char *buf, idx_t len, idx_t &pos, dtime_t &result, bool strict,
                               optional_ptr<int32_t> nanos) {
 	return Time::TryConvertInternal(buf, len, pos, result, strict, nanos);
@@ -151,6 +269,24 @@ bool Time::TryConvertTime(const char *buf, idx_t len, idx_t &pos, dtime_t &resul
 				return true;
 			}
 		}
+		return false;
+	}
+	return result.micros <= Interval::MICROS_PER_DAY;
+}
+
+bool Time::TryConvertTimeMysql(const char *buf, idx_t len, idx_t &pos, dtime_t &result, bool strict,
+                          optional_ptr<int32_t> nanos) {
+	if (!strict && len >= 12) {
+		timestamp_t timestamp;
+		if (Timestamp::TryConvertTimestamp(buf, len, timestamp, nanos) == TimestampCastResult::SUCCESS) {
+			if (!Timestamp::IsFinite(timestamp)) {
+				return false;
+			}
+			result = Timestamp::GetTime(timestamp);
+			return true;
+		}
+	}
+	if (!Time::TryConvertInternalMysql(buf, len, pos, result, strict, nanos)) {
 		return false;
 	}
 	return result.micros <= Interval::MICROS_PER_DAY;

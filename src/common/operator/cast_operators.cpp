@@ -1578,7 +1578,7 @@ bool TryCastErrorMessage::Operation(string_t input, dtime_t &result, CastParamet
 template <>
 bool TryCast::Operation(string_t input, dtime_t &result, bool strict) {
 	idx_t pos;
-	return Time::TryConvertTime(input.GetData(), input.GetSize(), pos, result, strict);
+	return Time::TryConvertTimeMysql(input.GetData(), input.GetSize(), pos, result, strict);
 }
 
 template <>

@@ -27,13 +27,15 @@ public:
 	                                      optional_ptr<int32_t> nanos = nullptr);
 	DUCKDB_API static bool TryConvertTime(const char *buf, idx_t len, idx_t &pos, dtime_t &result, bool strict = false,
 	                                      optional_ptr<int32_t> nanos = nullptr);
+	DUCKDB_API static bool TryConvertTimeMysql(const char *buf, idx_t len, idx_t &pos, dtime_t &result, bool strict = false,
+											   optional_ptr<int32_t> nanos = nullptr);
 	DUCKDB_API static bool TryConvertTimeTZ(const char *buf, idx_t len, idx_t &pos, dtime_tz_t &result,
 	                                        bool &has_offset, bool strict = false,
 	                                        optional_ptr<int32_t> nanos = nullptr);
 	// No hour limit
 	DUCKDB_API static bool TryConvertInterval(const char *buf, idx_t len, idx_t &pos, dtime_t &result,
 	                                          bool strict = false, optional_ptr<int32_t> nanos = nullptr);
-
+	
 	//! Convert a time object to a string in the format "hh:mm:ss"
 	DUCKDB_API static string ToString(dtime_t time);
 	//! Convert a UTC offset to ±HH[:MM]
@@ -60,6 +62,8 @@ public:
 private:
 	static bool TryConvertInternal(const char *buf, idx_t len, idx_t &pos, dtime_t &result, bool strict,
 	                               optional_ptr<int32_t> nanos = nullptr);
+	static bool TryConvertInternalMysql(const char *buf, idx_t len, idx_t &pos, dtime_t &result, bool strict,
+								        optional_ptr<int32_t> nanos = nullptr);
 };
 
 } // namespace duckdb
