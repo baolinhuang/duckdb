@@ -168,7 +168,7 @@ bool Time::TryConvertInternalMysql(const char *buf, idx_t len, idx_t &pos, dtime
 
 	// fetch the separator
 	idx_t sep_pos;
-	if (pos >= len || buf[pos + 1] != ':') {
+	if (pos >= len || buf[pos] != ':') {
 		// In MySQL, HHMMSS is supported
 		sec = hour % 100;
 		min = hour / 100 % 100;
