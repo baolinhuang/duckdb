@@ -238,10 +238,12 @@ unique_ptr<BoundQueryNode> Binder::BindNode(SetOperationNode &statement) {
 				auto left_collation = StringType::GetCollation(result->left->types[i]);
 				auto right_collation = StringType::GetCollation(result->right->types[i]);
 				std::string result_collation;
-				if (left_collation.find("nocase") != std::string::npos && right_collation.find("nocase") != std::string::npos) {
+				if (StringUtil::Lower(left_collation).find("nocase") != std::string::npos && 
+					StringUtil::Lower(right_collation).find("nocase") != std::string::npos) {
 					result_collation.append("nocase");
 				}
-				if (left_collation.find("noaccent") != std::string::npos && right_collation.find("noaccent") != std::string::npos) {
+				if (StringUtil::Lower(left_collation).find("noaccent") != std::string::npos && 
+					StringUtil::Lower(right_collation).find("noaccent") != std::string::npos) {
 					if (result_collation.size() > 0) {
 						result_collation.push_back('.');
 					}
