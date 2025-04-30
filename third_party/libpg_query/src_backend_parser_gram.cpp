@@ -734,7 +734,7 @@ enum yysymbol_kind_t
   YYSYMBOL_SQL_BIG_RESULT = 410,           /* SQL_BIG_RESULT  */
   YYSYMBOL_SQL_BUFFER_RESULT = 411,        /* SQL_BUFFER_RESULT  */
   YYSYMBOL_SQL_CALC_FOUND_ROWS = 412,      /* SQL_CALC_FOUND_ROWS  */
-  YYSYMBOL_SQL_NO_CACHE_SYM = 413,         /* SQL_NO_CACHE_SYM  */
+  YYSYMBOL_SQL_NO_CACHE = 413,             /* SQL_NO_CACHE  */
   YYSYMBOL_SQL_SMALL_RESULT = 414,         /* SQL_SMALL_RESULT  */
   YYSYMBOL_STABLE = 415,                   /* STABLE  */
   YYSYMBOL_STANDALONE_P = 416,             /* STANDALONE_P  */
@@ -2131,7 +2131,7 @@ static const char *const yytname[] =
   "SEQUENCE", "SEQUENCES", "SERIALIZABLE", "SERVER", "SESSION", "SET",
   "SETOF", "SETS", "SHARE", "SHOW", "SIMILAR", "SIMPLE", "SKIP",
   "SMALLINT", "SNAPSHOT", "SOME", "SORTED", "SQL_P", "SQL_BIG_RESULT",
-  "SQL_BUFFER_RESULT", "SQL_CALC_FOUND_ROWS", "SQL_NO_CACHE_SYM",
+  "SQL_BUFFER_RESULT", "SQL_CALC_FOUND_ROWS", "SQL_NO_CACHE",
   "SQL_SMALL_RESULT", "STABLE", "STANDALONE_P", "START", "STATEMENT",
   "STATISTICS", "STDIN", "STDOUT", "STORAGE", "STORED", "STRAIGHT_JOIN",
   "STRICT_P", "STRIP_P", "STRUCT", "SUBSCRIPTION", "SUBSTRING",
@@ -24460,7 +24460,7 @@ yyreduce:
 #line 24461 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
-  case 471: /* select_option: SQL_NO_CACHE_SYM  */
+  case 471: /* select_option: SQL_NO_CACHE  */
 #line 592 "third_party/libpg_query/grammar/statements/select.y"
                                           { (yyval.list) = NULL; }
 #line 24467 "third_party/libpg_query/grammar/grammar_out.cpp"

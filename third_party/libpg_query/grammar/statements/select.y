@@ -589,7 +589,7 @@ select_option:
         | SQL_BIG_RESULT      { $$ = NULL; }
         | SQL_BUFFER_RESULT   { $$ = NULL; }
         | SQL_CALC_FOUND_ROWS { $$ = NULL; }
-		| SQL_NO_CACHE_SYM	  { $$ = NULL; }
+		| SQL_NO_CACHE	  	  { $$ = NULL; }
         | ALL                 { $$ = NULL; }
         ;
 

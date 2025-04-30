@@ -34,11 +34,6 @@ double UnixTimestampOperator::Operation(date_t input) {
 	return static_cast<double>(end) / Interval::MICROS_PER_SEC;
 }
 
-template<>
-double UnixTimestampOperator::Operation(time_t input) {
-	return 0;
-}
-
 static timestamp_t GetTransactionTimestamp(ExpressionState &state) {
 	return MetaTransaction::Get(state.GetContext()).start_timestamp;
 }

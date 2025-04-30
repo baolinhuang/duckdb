@@ -71,7 +71,7 @@ struct DatesubFun {
 	static constexpr const char *Name = "datesub";
 	static constexpr const char *Parameters = "part,startdate,enddate";
 	static constexpr const char *Description = "The number of complete partitions between the timestamps";
-	static constexpr const char *Example = "date_sub('hour', TIMESTAMPTZ '1992-09-30 23:59:59', TIMESTAMPTZ '1992-10-01 01:58:00')";
+	static constexpr const char *Example = "datesub('hour', TIMESTAMPTZ '1992-09-30 23:59:59', TIMESTAMPTZ '1992-10-01 01:58:00')";
 	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();

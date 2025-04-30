@@ -464,7 +464,7 @@ extern int base_yydebug;
     SQL_BIG_RESULT = 665,          /* SQL_BIG_RESULT  */
     SQL_BUFFER_RESULT = 666,       /* SQL_BUFFER_RESULT  */
     SQL_CALC_FOUND_ROWS = 667,     /* SQL_CALC_FOUND_ROWS  */
-    SQL_NO_CACHE_SYM = 668,        /* SQL_NO_CACHE_SYM  */
+    SQL_NO_CACHE = 668,            /* SQL_NO_CACHE  */
     SQL_SMALL_RESULT = 669,        /* SQL_SMALL_RESULT  */
     STABLE = 670,                  /* STABLE  */
     STANDALONE_P = 671,            /* STANDALONE_P  */
