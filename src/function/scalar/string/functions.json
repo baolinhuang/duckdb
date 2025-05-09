@@ -118,7 +118,7 @@
         "description": "Number of characters in `string`.",
         "example": "length('Hello🦆')",
         "type": "scalar_function_set",
-        "aliases": ["len", "char_length", "character_length"]
+        "aliases": ["len", "character_length"]
     },
     {
         "name": "length",

@@ -224,8 +224,6 @@ ScalarFunctionSet CharLengthFun::GetFunctions() {
 	                                  nullptr, LengthPropagateStats));
 	length.AddFunction(ScalarFunction({LogicalType::BIT}, LogicalType::BIGINT,
 	                                  ScalarFunction::UnaryFunction<string_t, int64_t, BitStringLenOperator>));
-	length.AddFunction(
-	    ScalarFunction({LogicalType::LIST(LogicalType::ANY)}, LogicalType::BIGINT, nullptr, ArrayOrListLengthBind));
 	return (length);
 }
 
@@ -255,6 +253,8 @@ ScalarFunctionSet LengthFun::GetFunctions() {
 									ScalarFunction::UnaryFunction<string_t, int64_t, StrLenOperator>));
 	set.AddFunction(ScalarFunction({LogicalType::BLOB}, LogicalType::BIGINT,
 	                                ScalarFunction::UnaryFunction<string_t, int64_t, StrLenOperator>));
+	set.AddFunction(
+		ScalarFunction({LogicalType::LIST(LogicalType::ANY)}, LogicalType::BIGINT, nullptr, ArrayOrListLengthBind));
 	return set;
 }
 

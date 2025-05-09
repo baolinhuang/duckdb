@@ -171,6 +171,12 @@ struct CharLengthFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
+struct LenFun {
+	using ALIAS = CharLengthFun;
+
+	static constexpr const char *Name = "len";
+};
+
 struct CharacterLengthFun {
 	using ALIAS = CharLengthFun;
 
