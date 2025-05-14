@@ -7,7 +7,7 @@ import re
 import sys
 from python_helpers import open_utf8
 
-bison_location = "/home/tianjingqi.tjq/jingqi.tjq/bison-3.7.91/src/bison"
+bison_location = "bison"
 base_dir = 'third_party/libpg_query/grammar'
 pg_dir = 'third_party/libpg_query'
 namespace = 'duckdb_libpgquery'
