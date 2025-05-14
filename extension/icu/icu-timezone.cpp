@@ -480,12 +480,34 @@ struct ICULocalTimeFunc : public ICUDateFunc {
 	}
 };
 
-struct ICUSysdateFunc : ICULocalTimestampFunc{
-	struct BindDataNow : public ICULocalTimestampFunc::BindDataNow {
-		explicit BindDataNow(ClientContext &context) : ICULocalTimestampFunc::BindDataNow(context) {
-			now = Timestamp::GetCurrentTimestamp();
-		}
-	};
+struct ICUSysdateFunc : ICUDateFunc{
+	static timestamp_t GetLocalTimestamp(ExpressionState &state) {
+		auto &func_expr = state.expr.Cast<BoundFunctionExpression>();
+		auto &info = func_expr.bind_info->Cast<BindData>();
+		CalendarPtr calendar_ptr(info.calendar->clone());
+		auto calendar = calendar_ptr.get();
+
+		const auto now = Timestamp::GetCurrentTimestamp();;
+		return ICUToNaiveTimestamp::Operation(calendar, now);
+	}
+
+	static void Execute(DataChunk &input, ExpressionState &state, Vector &result) {
+		D_ASSERT(input.ColumnCount() == 0 || input.ColumnCount() == 1);
+		result.SetVectorType(VectorType::CONSTANT_VECTOR);
+		auto rdata = ConstantVector::GetData<timestamp_t>(result);
+		rdata[0] = GetLocalTimestamp(state);
+	}
+
+	static void AddFunction(const string &name, DatabaseInstance &db) {
+		ScalarFunctionSet set(name);
+		ScalarFunction sys_date({}, LogicalType::TIMESTAMP, Execute, Bind);
+		sys_date.stability = FunctionStability::VOLATILE;
+		ScalarFunction sys_date_fsp({LogicalTypeId::INTEGER}, LogicalType::TIMESTAMP, Execute, Bind);
+		sys_date_fsp.stability = FunctionStability::VOLATILE;
+		set.AddFunction(sys_date);
+		set.AddFunction(sys_date_fsp);
+		ExtensionUtil::RegisterFunction(db, set);
+	}
 };
 
 dtime_tz_t ICUToTimeTZ::Operation(icu::Calendar *calendar, dtime_tz_t timetz) {
