@@ -298,7 +298,8 @@ unique_ptr<FunctionData> NopDecimalBind(ClientContext &context, ScalarFunction &
 }
 
 ScalarFunction AddFunction::GetFunction(const LogicalType &type) {
-	D_ASSERT(type.IsNumeric());
+	// Remove Assert
+	// D_ASSERT(type.IsNumeric());
 	if (type.id() == LogicalTypeId::DECIMAL) {
 		return ScalarFunction("+", {type}, type, ScalarFunction::NopFunction, NopDecimalBind);
 	} else {
@@ -438,10 +439,12 @@ ScalarFunction AddFunction::GetFunction(const LogicalType &left_type, const Logi
 ScalarFunctionSet OperatorAddFun::GetFunctions() {
 	ScalarFunctionSet add("+");
 	for (auto &type : LogicalType::Numeric()) {
-		// unary add function is a nop, but only exists for numeric types
-		add.AddFunction(AddFunction::GetFunction(type));
 		// binary add function adds two numbers together
 		add.AddFunction(AddFunction::GetFunction(type, type));
+	}
+	// In MySQL, unary add function is a nop and exists for all types
+	for (auto &type : LogicalType::AllTypes()) {
+		add.AddFunction(AddFunction::GetFunction(type));
 	}
 	// we can add integers to dates
 	add.AddFunction(AddFunction::GetFunction(LogicalType::DATE, LogicalType::INTEGER));
