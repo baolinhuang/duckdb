@@ -946,12 +946,7 @@ SourceResultType RadixPartitionedHashTable::GetData(ExecutionContext &context, D
 	}
 
 	if (sink.count_before_combining == 0) {
-		if (grouping_set.empty()) {
-			// Special case hack to sort out aggregating from empty intermediates for aggregations without groups
-			D_ASSERT(chunk.ColumnCount() == null_groups.size() + op.aggregates.size() + op.grouping_functions.size());
-			// For each column in the aggregates, set to initial state
-			chunk.SetCardinality(0);
-		}
+		// If the count_before_combining is zero, MySQL will return empty set.
 		gstate.finished = true;
 		return SourceResultType::FINISHED;
 	}
