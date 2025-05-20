@@ -79,7 +79,7 @@
 %token <str>	IDENT FCONST SCONST BCONST XCONST Op
 %token <ival>	ICONST PARAM
 %token			TYPECAST DOT_DOT COLON_EQUALS EQUALS_GREATER INTEGER_DIVISION POWER_OF SINGLE_ARROW DOUBLE_ARROW SHIFT_RIGHT SHIFT_LEFT
-%token			LESS_EQUALS GREATER_EQUALS NOT_EQUALS
+%token			LESS_EQUALS GREATER_EQUALS NOT_EQUALS NOT_DISTINCT_FROM
 
 /*
  * If you want to make any keyword changes, update the keyword table in
@@ -114,7 +114,7 @@
 %left		OR
 %left		AND
 %right		NOT
-%nonassoc	IS ISNULL NOTNULL	/* IS sets precedence for IS NULL, etc */
+%nonassoc	IS ISNULL NOTNULL NOT_DISTINCT_FROM	/* IS sets precedence for IS NULL, etc */
 %nonassoc	'<' '>' '=' LESS_EQUALS GREATER_EQUALS NOT_EQUALS
 %nonassoc	BETWEEN IN_P GLOB LIKE ILIKE SIMILAR NOT_LA
 %nonassoc	ESCAPE			/* ESCAPE must be just above LIKE/ILIKE/SIMILAR */

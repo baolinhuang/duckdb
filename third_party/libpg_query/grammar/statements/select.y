@@ -2674,6 +2674,10 @@ a_expr:		c_expr									{ $$ = $1; }
 				{
 					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_NOT_DISTINCT, "=", $1, $6, @2);
 				}
+			| a_expr NOT_DISTINCT_FROM a_expr			%prec IS
+				{
+					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_NOT_DISTINCT, "=", $1, $3, @2);
+				}
 			| a_expr IS OF '(' type_list ')'			%prec IS
 				{
 					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_OF, "=", $1, (PGNode *) $5, @2);
@@ -2904,6 +2908,10 @@ b_expr:		c_expr
 			| b_expr IS NOT DISTINCT FROM b_expr	%prec IS
 				{
 					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_NOT_DISTINCT, "=", $1, $6, @2);
+				}
+			| b_expr NOT_DISTINCT_FROM b_expr		%prec IS
+				{
+					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_NOT_DISTINCT, "=", $1, $3, @2);
 				}
 			| b_expr IS OF '(' type_list ')'		%prec IS
 				{

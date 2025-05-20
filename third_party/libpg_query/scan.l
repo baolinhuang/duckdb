@@ -339,6 +339,8 @@ integer_div     "//"
 shift_right		">>"
 shift_left		"<<"
 or_operator		"||"
+and_operator	"&&"
+not_operator	"!"
 
 /* " */
 
@@ -355,6 +357,7 @@ less_equals		"<="
 greater_equals	">="
 less_greater	"<>"
 not_equals		"!="
+not_distinct_from	"<=>"
 
 /*
  * "self" is the set of chars that should be returned as single-character
@@ -865,6 +868,16 @@ other			.
 					return OR;
 				}
 
+{and_operator}	{
+					SET_YYLLOC();
+					return AND;
+				}
+
+{not_operator}	{
+					SET_YYLLOC();
+					return NOT;
+				}
+
 {equals_greater} {
 					SET_YYLLOC();
 					return EQUALS_GREATER;
@@ -891,6 +904,12 @@ other			.
 					SET_YYLLOC();
 					return NOT_EQUALS;
 				}
+
+{not_distinct_from}	{
+						/* We accept both "<>" and "!=" as meaning NOT_EQUALS */
+						SET_YYLLOC();
+						return NOT_DISTINCT_FROM;
+					}
 
 {self}			{
 					SET_YYLLOC();

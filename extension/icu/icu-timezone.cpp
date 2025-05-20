@@ -274,7 +274,7 @@ struct ICUToNaiveTimestamp : public ICUDateFunc {
 };
 
 
-struct ICUTimeToTimestamptz : public ICUDateFunc {
+struct ICUTimeToTimestamp : public ICUDateFunc {
 	static inline timestamp_t Operation(icu::Calendar *calendar, timestamp_t instant, dtime_t time) {
 		date_t date = ICUMakeDate::Operation(calendar, instant);
 		return Timestamp::FromDatetime(date, time);
@@ -311,6 +311,46 @@ struct ICUTimeToTimestamptz : public ICUDateFunc {
 		auto &casts = config.GetCastFunctions();
 
 		casts.RegisterCastFunction(LogicalType::TIME, LogicalType::TIMESTAMP, BindCastToTimestamp, 100);
+	}
+};
+
+struct ICUTimeToTimestamptz : public ICUDateFunc {
+	static inline timestamp_t Operation(icu::Calendar *calendar, timestamp_t instant, dtime_t time) {
+		date_t date = ICUMakeDate::Operation(calendar, instant);
+		return ICUFromNaiveTimestamp::Operation(calendar, Timestamp::FromDatetime(date, time));
+	}
+
+	static bool CastToTimestamp(Vector &source, Vector &result, idx_t count, CastParameters &parameters) {
+		auto &cast_data = parameters.cast_data->Cast<CastData>();
+		auto &info = cast_data.info->Cast<BindData>();
+		CalendarPtr calendar(info.calendar->clone());
+		auto instant = info.start_timestamp;
+		UnaryExecutor::Execute<dtime_t, timestamp_t>(source, result, count, [&](dtime_t input) {
+			return Operation(calendar.get(), instant, input);
+		});
+		return true;
+	}
+
+	struct BindData : ICUDateFunc::BindData {
+		explicit BindData(ClientContext &context);
+		timestamp_t start_timestamp;
+	};
+
+	static BoundCastInfo BindCastToTimestamp(BindCastInput &input, const LogicalType &source, const LogicalType &target) {
+		if (!input.context) {
+			throw InternalException("Missing context for TIME to TIMESTAMPTZ cast.");
+		}
+
+		auto cast_data = make_uniq<CastData>(make_uniq<BindData>(*input.context));
+
+		return BoundCastInfo(CastToTimestamp, std::move(cast_data));
+	}
+
+	static void AddCasts(DatabaseInstance &db) {
+		auto &config = DBConfig::GetConfig(db);
+		auto &casts = config.GetCastFunctions();
+
+		casts.RegisterCastFunction(LogicalType::TIME, LogicalType::TIMESTAMP_TZ, BindCastToTimestamp, 199);
 	}
 };
 
