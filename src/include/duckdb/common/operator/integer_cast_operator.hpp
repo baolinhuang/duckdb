@@ -210,7 +210,7 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 		if (*buf == '+') {
 			if (strict) {
 				// leading plus is not allowed in strict mode
-				return mysql_format;
+				return false;
 			}
 			start_pos = 1;
 		} else {
@@ -223,8 +223,7 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 			// not a digit!
 			if (buf[pos] == decimal_separator) {
 				if (strict) {
-					OP::template Finalize<T, NEGATIVE>(result);
-					return mysql_format;
+					return false;
 				}
 				bool number_before_period = pos > start_pos;
 				// decimal point: we accept decimal values for integers as well
@@ -238,8 +237,7 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 					}
 					if (!OP::template HandleDecimal<T, NEGATIVE, ALLOW_EXPONENT>(
 					        result, UnsafeNumericCast<uint8_t>(buf[pos] - '0'))) {
-						OP::template Finalize<T, NEGATIVE>(result);
-						return mysql_format;
+						return false;
 					}
 					pos++;
 
@@ -254,8 +252,7 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 				// make sure there is either (1) one number after the period, or (2) one number before the period
 				// i.e. we accept "1." and ".1" as valid numbers, but not "."
 				if (!(number_before_period || pos > start_digit)) {
-					OP::template Finalize<T, NEGATIVE>(result);
-					return mysql_format;
+					return false;
 				}
 				if (pos >= len) {
 					break;
@@ -265,8 +262,7 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 				// skip any trailing spaces
 				while (++pos < len) {
 					if (!StringUtil::CharacterIsSpace(buf[pos])) {
-						OP::template Finalize<T, NEGATIVE>(result);
-						return mysql_format;
+						return false;
 					}
 				}
 				break;
@@ -274,17 +270,14 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 			if (ALLOW_EXPONENT) {
 				if (buf[pos] == 'e' || buf[pos] == 'E') {
 					if (strict) {
-						OP::template Finalize<T, NEGATIVE>(result);
-						return mysql_format;
+						return false;
 					}
 					if (pos == start_pos) {
-						OP::template Finalize<T, NEGATIVE>(result);
-						return mysql_format;
+						return false;
 					}
 					pos++;
 					if (pos >= len) {
-						OP::template Finalize<T, NEGATIVE>(result);
-						return mysql_format;
+						return false;
 					}
 					using ExponentData = IntegerCastData<int16_t>;
 					ExponentData exponent {};
@@ -292,25 +285,22 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 					if (negative) {
 						if (!IntegerCastLoop<ExponentData, true, false, IntegerCastOperation, decimal_separator>(
 						        buf + pos, len - pos, exponent, strict)) {
-							return mysql_format;
+							return false;
 						}
 					} else {
 						if (!IntegerCastLoop<ExponentData, false, false, IntegerCastOperation, decimal_separator>(
 						        buf + pos, len - pos, exponent, strict)) {
-							return mysql_format;
+							return false;
 						}
 					}
 					return OP::template HandleExponent<T, NEGATIVE>(result, exponent.result);
 				}
 			}
-			// In MySQL, the function should return true
-			OP::template Finalize<T, NEGATIVE>(result);
-			return mysql_format;
+			return false;
 		}
 		auto digit = UnsafeNumericCast<uint8_t>(buf[pos++] - '0');
 		if (!OP::template HandleDigit<T, NEGATIVE>(result, digit)) {
-			OP::template Finalize<T, NEGATIVE>(result);
-			return mysql_format;
+			return false;
 		}
 
 		if (pos != len && buf[pos] == '_' && !strict && !mysql_format) {
@@ -322,7 +312,7 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 		}
 	}
 	if (!OP::template Finalize<T, NEGATIVE>(result)) {
-		return mysql_format;
+		return false;
 	}
 	return pos > start_pos;
 }
