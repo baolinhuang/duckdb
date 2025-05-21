@@ -186,8 +186,25 @@ simple_select:
 					n->sampleOptions = $11;
 					$$ = (PGNode *)n;
 				}
-			|
-			FROM from_list SELECT select_options target_list_opt_comma
+			| FROM from_list
+			into_clause where_clause
+			group_clause having_clause window_clause qualify_clause sample_clause
+				{
+					PGSelectStmt *n = makeNode(PGSelectStmt);
+					PGAStar *star = makeNode(PGAStar);
+					n->targetList = list_make1(star);
+					n->fromClause = $2;
+					n->intoClause = $3;
+					n->whereClause = $4;
+					n->groupClause = $5;
+					n->havingClause = $6;
+					n->windowClause = $7;
+					n->qualifyClause = $8;
+					n->sampleOptions = $9;
+					n->from_first = true;
+					$$ = (PGNode *)n;
+				}
+			| FROM from_list SELECT select_options opt_target_list_opt_comma
 			into_clause where_clause
 			group_clause having_clause window_clause qualify_clause sample_clause
 				{
