@@ -184,6 +184,16 @@ BindResult ExpressionBinder::BindExpression(ComparisonExpression &expr, idx_t de
 		input_type = LogicalTypeId::TIMESTAMP;
 	}
 
+	// Aone 66336888. The rules for comparing time and timestamp(tz) in MySQL is amguity, so we do not allow comparisons.
+	if ((left_sql_type.id() == LogicalTypeId::TIME && 
+			(right_sql_type.id() == LogicalTypeId::TIMESTAMP || right_sql_type.id() == LogicalTypeId::TIMESTAMP_TZ)) ||
+		((right_sql_type.id() == LogicalTypeId::TIME) &&
+			(left_sql_type.id() == LogicalTypeId::TIMESTAMP || left_sql_type.id() == LogicalTypeId::TIMESTAMP_TZ))) {
+		return BindResult(BinderException(expr,
+											"Cannot compare values of type %s and type %s - an explicit cast is required",
+											left_sql_type.ToString(), right_sql_type.ToString()));
+	}
+
 	// add casts (if necessary)
 	left = BoundCastExpression::AddCastToType(context, std::move(left), input_type,
 	                                          input_type.id() == LogicalTypeId::ENUM);

@@ -340,7 +340,6 @@ shift_right		">>"
 shift_left		"<<"
 or_operator		"||"
 and_operator	"&&"
-not_operator	"!"
 
 /* " */
 
@@ -871,11 +870,6 @@ other			.
 {and_operator}	{
 					SET_YYLLOC();
 					return AND;
-				}
-
-{not_operator}	{
-					SET_YYLLOC();
-					return NOT;
 				}
 
 {equals_greater} {
