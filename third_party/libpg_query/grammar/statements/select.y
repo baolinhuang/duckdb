@@ -602,6 +602,7 @@ select_option_list:
 select_option:
         HIGH_PRIORITY       { $$ = NULL; }
         | DISTINCT            { $$ = list_make1(NIL); }
+		| DISTINCTROW		  { $$ = list_make1(NIL); }
         | SQL_SMALL_RESULT    { $$ = NULL; }
         | SQL_BIG_RESULT      { $$ = NULL; }
         | SQL_BUFFER_RESULT   { $$ = NULL; }
@@ -1390,16 +1391,39 @@ joined_table:
 				{
 					$$ = $2;
 				}
-			| table_ref CROSS JOIN table_ref
+			| table_ref CROSS JOIN table_ref	%prec CONDITIONLESS_JOIN
 				{
 					/* CROSS JOIN is same as unqualified inner join */
 					PGJoinExpr *n = makeNode(PGJoinExpr);
 					n->jointype = PG_JOIN_INNER;
 					n->joinreftype = PG_JOIN_REGULAR;
 					n->larg = $1;
-					n->rarg = $4;
 					n->usingClause = NIL;
 					n->quals = NULL;
+					n->location = @2;
+
+					if (IsA($4, PGJoinExpr)) {
+						n->rarg = ((PGJoinExpr *)$4)->larg;
+						PGJoinExpr *tmp = (PGJoinExpr *)$4;
+						tmp->larg = (PGNode *)n;
+						$$ = tmp;
+					} else {
+						n->rarg = $4;
+						$$ = n;
+					}
+				}
+			| table_ref CROSS JOIN table_ref join_qual
+				{
+					/* MySQL Syntax, CROSS JOIN with on_clause. */
+					PGJoinExpr *n = makeNode(PGJoinExpr);
+					n->jointype = PG_JOIN_INNER;
+					n->joinreftype = PG_JOIN_REGULAR;
+					n->larg = $1;
+					n->rarg = $4;
+					if ($5 != NULL && IsA($5, PGList))
+						n->usingClause = (PGList *) $5; /* USING clause */
+					else
+						n->quals = $5; /* ON clause */
 					n->location = @2;
 					$$ = n;
 				}
@@ -1407,6 +1431,20 @@ joined_table:
 				{
 					PGJoinExpr *n = makeNode(PGJoinExpr);
 					n->jointype = $2;
+					n->joinreftype = PG_JOIN_REGULAR;
+					n->larg = $1;
+					n->rarg = $4;
+					if ($5 != NULL && IsA($5, PGList))
+						n->usingClause = (PGList *) $5; /* USING clause */
+					else
+						n->quals = $5; /* ON clause */
+					n->location = @2;
+					$$ = n;
+				}
+			| table_ref INNER_P JOIN table_ref join_qual
+				{
+					PGJoinExpr *n = makeNode(PGJoinExpr);
+					n->jointype = PG_JOIN_INNER;
 					n->joinreftype = PG_JOIN_REGULAR;
 					n->larg = $1;
 					n->rarg = $4;
@@ -1551,11 +1589,19 @@ joined_table:
 					n->jointype = PG_JOIN_INNER;
 					n->joinreftype = PG_JOIN_REGULAR;
 					n->larg = $1;
-					n->rarg = $3;
 					n->usingClause = NIL;
 					n->quals = NULL;
 					n->location = @2;
-					$$ = n;
+
+					if (IsA($3, PGJoinExpr)) {
+						n->rarg = ((PGJoinExpr *)$3)->larg;
+						PGJoinExpr *tmp = (PGJoinExpr *)$3;
+						tmp->larg = (PGNode *)n;
+						$$ = tmp;
+					} else {
+						n->rarg = $3;
+						$$ = n;
+					}
 				}
 			| table_ref STRAIGHT_JOIN table_ref %prec CONDITIONLESS_JOIN
 				{
@@ -1564,11 +1610,40 @@ joined_table:
 					n->jointype = PG_JOIN_INNER;
 					n->joinreftype = PG_JOIN_REGULAR;
 					n->larg = $1;
-					n->rarg = $3;
 					n->usingClause = NIL;
 					n->quals = NULL;
 					n->location = @2;
-					$$ = n;
+
+					if (IsA($3, PGJoinExpr)) {
+						n->rarg = ((PGJoinExpr *)$3)->larg;
+						PGJoinExpr *tmp = (PGJoinExpr *)$3;
+						tmp->larg = (PGNode *)n;
+						$$ = tmp;
+					} else {
+						n->rarg = $3;
+						$$ = n;
+					}
+				}
+			| table_ref INNER_P JOIN table_ref %prec CONDITIONLESS_JOIN
+				{
+					/* MySQL Syntax, INNER JOIN without on_clause. */
+					PGJoinExpr *n = makeNode(PGJoinExpr);
+					n->jointype = PG_JOIN_INNER;
+					n->joinreftype = PG_JOIN_REGULAR;
+					n->larg = $1;
+					n->usingClause = NIL;
+					n->quals = NULL;
+					n->location = @2;
+
+					if (IsA($4, PGJoinExpr)) {
+						n->rarg = ((PGJoinExpr *)$4)->larg;
+						PGJoinExpr *tmp = (PGJoinExpr *)$4;
+						tmp->larg = (PGNode *)n;
+						$$ = tmp;
+					} else {
+						n->rarg = $4;
+						$$ = n;
+					}
 				}
 		;
 
@@ -1637,7 +1712,6 @@ join_type:	FULL join_outer							{ $$ = PG_JOIN_FULL; }
 			| RIGHT join_outer						{ $$ = PG_JOIN_RIGHT; }
 			| SEMI          						{ $$ = PG_JOIN_SEMI; }
 			| ANTI          						{ $$ = PG_JOIN_ANTI; }
-			| INNER_P								{ $$ = PG_JOIN_INNER; }
 		;
 
 /* OUTER is just noise... */

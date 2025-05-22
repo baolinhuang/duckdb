@@ -310,7 +310,7 @@ struct ICUTimeToTimestamp : public ICUDateFunc {
 		auto &config = DBConfig::GetConfig(db);
 		auto &casts = config.GetCastFunctions();
 
-		casts.RegisterCastFunction(LogicalType::TIME, LogicalType::TIMESTAMP, BindCastToTimestamp, 100);
+		casts.RegisterCastFunction(LogicalType::TIME, LogicalType::TIMESTAMP, BindCastToTimestamp, 198);
 	}
 };
 
@@ -426,9 +426,20 @@ struct ICUDateToTimestamp : public ICUDateFunc {
 		auto &config = DBConfig::GetConfig(db);
 		auto &casts = config.GetCastFunctions();
 
-		casts.RegisterCastFunction(LogicalType::DATE, LogicalType::TIMESTAMP_TZ, BindCastToTimestamp);
+		casts.RegisterCastFunction(LogicalType::DATE, LogicalType::TIMESTAMP_TZ, BindCastToTimestamp, 199);
 	}
 };
+
+ICUTimeToTimestamp::BindData::BindData(ClientContext &context) : ICUDateFunc::BindData(context) {
+	Value ts;
+	if(context.TryGetCurrentSetting("timestamp", ts)) {
+		if (BigIntValue::Get(ts) != -1) {
+			start_timestamp = timestamp_t(BigIntValue::Get(ts));
+			return;
+		}
+	}
+	start_timestamp = context.registered_state->Get<TimestampContextState>("start_timestamp")->start_timestamp;
+}
 
 ICUTimeToTimestamptz::BindData::BindData(ClientContext &context) : ICUDateFunc::BindData(context) {
 	Value ts;
@@ -793,6 +804,7 @@ void RegisterICUTimeZoneFunctions(DatabaseInstance &db) {
 	ICUFromNaiveTimestamp::AddCasts(db);
 	ICUToNaiveTimestamp::AddCasts(db);
 	ICUToTimeTZ::AddCasts(db);
+	ICUTimeToTimestamp::AddCasts(db);
 	ICUTimeToTimestamptz::AddCasts(db);
 	ICUTimestampToDouble::AddCasts(db);
 	ICUDateToTimestamp::AddCasts(db);

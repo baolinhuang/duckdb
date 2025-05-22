@@ -301,6 +301,21 @@ static int64_t ImplicitCastTimestamp(const LogicalType &to) {
 	}
 }
 
+static int64_t ImplicitCastTimestamptz(const LogicalType &to) {
+	switch (to.id()) {
+	case LogicalTypeId::TIMESTAMP_NS:
+		return TargetTypeCost(to);
+	case LogicalTypeId::TIMESTAMP:
+		return TargetTypeCost(to);
+	case LogicalTypeId::VARCHAR:
+		return TargetTypeCost(to);
+	case LogicalTypeId::DOUBLE:
+		return 200;
+	default:
+		return -1;
+	}
+}
+
 static int64_t ImplicitCastVarint(const LogicalType &to) {
 	switch (to.id()) {
 	case LogicalTypeId::DOUBLE:
@@ -634,6 +649,9 @@ int64_t CastRules::ImplicitCast(const LogicalType &from, const LogicalType &to) 
 		return ImplicitCastTime(to);
 	case LogicalTypeId::VARCHAR:
 		return ImplicitCastVarchar(to);
+	// unequal comparison between timestamp_tz and varchar
+	case LogicalTypeId::TIMESTAMP_TZ:
+		return ImplicitCastTimestamptz(to);
 	default:
 		return -1;
 	}

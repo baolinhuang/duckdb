@@ -204,6 +204,7 @@ template <class T, bool NEGATIVE, bool ALLOW_EXPONENT, class OP = IntegerCastOpe
 static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) {
 	idx_t start_pos;
 	bool mysql_format = true;
+
 	if (NEGATIVE) {
 		start_pos = 1;
 	} else {
@@ -402,7 +403,8 @@ static bool TryIntegerCast(const char *buf, idx_t len, T &result, bool strict) {
 		len--;
 	}
 	if (len == 0) {
-		return false;
+		memset(&result, 0, sizeof(T));
+		return true;
 	}
 	if (ZERO_INITIALIZE) {
 		memset(&result, 0, sizeof(T));
