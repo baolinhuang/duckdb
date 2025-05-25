@@ -209,7 +209,7 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "strcmp", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "if(expr1 is null or expr2 is null, null, if(cast(expr1 as char) >= cast(expr2 as char), if(cast(expr1 as char) = cast(expr2 as char), 0, 1), -1))"},
 	{DEFAULT_SCHEMA, "substring_index", {"expr1", "sep", "index", nullptr}, {{nullptr, nullptr}}, "if(expr1 is null or sep is null or index is null, null, if(index != 0, if((index > 0), list_reduce((split(expr1, sep)[:index]), (ret, x)->concat_ws(sep, ret, x)), list_reduce((split(expr1, sep)[index:]), (ret, x)->concat_ws(sep, ret, x))), ''))"},
 	{DEFAULT_SCHEMA, "space", {"num", nullptr}, {{nullptr, nullptr}}, "repeat(' ', cast(num as double))"},
-	{DEFAULT_SCHEMA, "insert", {"str", "pos", "len", "newstr", nullptr}, {{nullptr, nullptr}}, "if(pos between 1 and length(str), concat(cast(str as varchar)[:pos - 1], if(len between 1 and length(newstr), concat(cast(newstr as varchar)[:length(str)-pos], cast(str as varchar)[pos+len:]), cast(newstr as varchar)[:length(str)-pos])), str)"},
+	{DEFAULT_SCHEMA, "insert", {"str", "pos", "len", "newstr", nullptr}, {{nullptr, nullptr}}, "if(pos between 1 and length(str), concat(cast(str as varchar)[:pos - 1], if((pos + len) between 1 and length(str), concat(cast(newstr as varchar)[:len], cast(str as varchar)[pos+len:]), cast(newstr as varchar))), str)"},
 
 	// mysql numeric function
 	{DEFAULT_SCHEMA, "rand", {nullptr}, {{nullptr, nullptr}}, "random()"},
