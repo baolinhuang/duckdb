@@ -242,7 +242,10 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 					}
 					pos++;
 
-					if (pos != len && buf[pos] == '_' && !mysql_format) {
+					if (pos != len && buf[pos] == '_') {
+						if (mysql_format) {
+							return OP::template Finalize<T, NEGATIVE>(result);
+						}
 						// Skip one underscore if it is not the last character and followed by a digit
 						pos++;
 						if (pos == len || !StringUtil::CharacterIsDigit(buf[pos])) {
@@ -304,8 +307,11 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 			return false;
 		}
 
-		if (pos != len && buf[pos] == '_' && !strict && !mysql_format) {
+		if (pos != len && buf[pos] == '_' && !strict) {
 			// Skip one underscore if it is not the last character and followed by a digit
+			if (mysql_format) {
+				return OP::template Finalize<T, NEGATIVE>(result);
+			}
 			pos++;
 			if (pos == len || !StringUtil::CharacterIsDigit(buf[pos])) {
 				return false;

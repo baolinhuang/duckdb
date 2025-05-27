@@ -48,6 +48,10 @@ template <>
 timestamp_t AddOperator::Operation(timestamp_t left, interval_t right);
 template <>
 timestamp_t AddOperator::Operation(interval_t left, timestamp_t right);
+template <>
+timestamp_t AddOperator::Operation(timestamp_t left, int32_t right);
+template <>
+timestamp_t AddOperator::Operation(int32_t left, timestamp_t right);
 
 struct TryAddOperator {
 	template <class TA, class TB, class TR>

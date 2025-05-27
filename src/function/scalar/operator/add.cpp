@@ -112,6 +112,16 @@ timestamp_t AddOperator::Operation(interval_t left, timestamp_t right) {
 	return AddOperator::Operation<timestamp_t, interval_t, timestamp_t>(right, left);
 }
 
+template <>
+timestamp_t AddOperator::Operation(timestamp_t left, int32_t right) {
+	return AddOperator::Operation<timestamp_t, interval_t, timestamp_t>(left, interval_t{0, right, 0});
+}
+
+template <>
+timestamp_t AddOperator::Operation(int32_t left, timestamp_t right) {
+	return AddOperator::Operation<timestamp_t, interval_t, timestamp_t>(right, interval_t{0, left, 0});
+}
+
 //===--------------------------------------------------------------------===//
 // + [add] with overflow check
 //===--------------------------------------------------------------------===//

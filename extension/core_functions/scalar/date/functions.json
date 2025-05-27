@@ -1,5 +1,12 @@
 [
     {
+        "name": "adddate",
+        "parameters": "date,interval",
+        "description": "The adddate function in MySQL",
+        "example": "adddate(date '2021-08-03', intervel 1 day),adddate(date '2021-08-03', 1)",
+        "type": "scalar_function_set"
+    },
+    {
         "name": "age",
         "parameters": "timestamp,timestamp",
         "description": "Subtract arguments, resulting in the time difference between the two timestamps",
@@ -289,6 +296,13 @@
         "parameters": "ts",
         "description": "Extract the second component from a date or timestamp",
         "example": "second(timestamp '2021-08-03 11:59:44.123456')",
+        "type": "scalar_function_set"
+    },
+    {
+        "name": "subdate",
+        "parameters": "date,interval",
+        "description": "The subdate function in MySQL",
+        "example": "subdate(date '2021-08-03', intervel 1 day),adddate(date '2021-08-03', 1)",
         "type": "scalar_function_set"
     },
     {

@@ -73,6 +73,11 @@ timestamp_t SubtractOperator::Operation(timestamp_t left, interval_t right) {
 }
 
 template <>
+timestamp_t SubtractOperator::Operation(timestamp_t left, int32_t right) {
+	return AddOperator::Operation<timestamp_t, interval_t, timestamp_t>(left, Interval::Invert(interval_t{0, right, 0}));
+}
+
+template <>
 interval_t SubtractOperator::Operation(timestamp_t left, timestamp_t right) {
 	return Interval::GetDifference(left, right);
 }

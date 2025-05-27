@@ -194,7 +194,7 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "period_diff", {"p1", "p2", nullptr}, {{nullptr, nullptr}}, "date_diff('month', CASE  WHEN length(CAST(p2 AS VARCHAR)) <= 4 THEN strptime(CONCAT(CASE  WHEN substring(LPAD(CAST(p2 AS char), 4, '0'), 1, 2) >= '70' THEN '19' ELSE '20' END, LPAD(CAST(p2 AS char), 4, '0')), '%Y%m') ELSE strptime(LPAD(CAST(p2 AS char), 6, '0'), '%Y%m') END, CASE  WHEN length(CAST(p1 AS VARCHAR)) = 4 THEN strptime(concat(CASE  WHEN substring(LPAD(CAST(p1 AS char), 4, '0'), 1, 2) >= '70' THEN '19' ELSE '20' END, LPAD(CAST(p1 AS char), 4, '0')), '%Y%m') ELSE strptime(LPAD(CAST(p1 AS char), 6, '0'), '%Y%m') END)"},
 	{DEFAULT_SCHEMA, "maketime", {"h", "m", "s", nullptr}, {{nullptr, nullptr}}, "make_time(h, m, s)"},
 	// The same resaon as subdate
-	{DEFAULT_SCHEMA, "adddate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "cast(date as timestamp) + interval"},
+	// {DEFAULT_SCHEMA, "adddate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "cast(date as timestamp) + interval"},
 	{DEFAULT_SCHEMA, "current_time", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
 	{DEFAULT_SCHEMA, "current_time", {"fsp", nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
 	{DEFAULT_SCHEMA, "curtime", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
@@ -209,7 +209,7 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "strcmp", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "if(expr1 is null or expr2 is null, null, if(cast(expr1 as char) >= cast(expr2 as char), if(cast(expr1 as char) = cast(expr2 as char), 0, 1), -1))"},
 	{DEFAULT_SCHEMA, "substring_index", {"expr1", "sep", "index", nullptr}, {{nullptr, nullptr}}, "if(expr1 is null or sep is null or index is null, null, if(index != 0, if((index > 0), list_reduce((split(expr1, sep)[:index]), (ret, x)->concat_ws(sep, ret, x)), list_reduce((split(expr1, sep)[index:]), (ret, x)->concat_ws(sep, ret, x))), ''))"},
 	{DEFAULT_SCHEMA, "space", {"num", nullptr}, {{nullptr, nullptr}}, "repeat(' ', cast(num as double))"},
-	{DEFAULT_SCHEMA, "insert", {"str", "pos", "len", "newstr", nullptr}, {{nullptr, nullptr}}, "if(str is null or pos is null or len is null or newstr is null, null, if(pos between 1 and length(str), concat(cast(str as varchar)[:pos - 1], if((pos + len) between 1 and length(str), concat(cast(newstr as varchar)[:len], cast(str as varchar)[pos+len:]), cast(newstr as varchar))), str))"},
+	{DEFAULT_SCHEMA, "insert", {"str", "pos", "len", "newstr", nullptr}, {{nullptr, nullptr}}, "if(str is null or pos is null or len is null or newstr is null, null, if(pos between 1 and length(str), concat(cast(str as varchar)[:pos - 1], cast(newstr as varchar), cast(str as varchar)[pos+len:]), str))"},
 
 	// mysql numeric function
 	{DEFAULT_SCHEMA, "rand", {nullptr}, {{nullptr, nullptr}}, "random()"},

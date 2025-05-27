@@ -2,6 +2,7 @@ add_library_unity(
   duckdb_core_functions_date
   OBJECT
   current.cpp
+  adddate.cpp
   age.cpp
   date_diff.cpp
   date_sub.cpp

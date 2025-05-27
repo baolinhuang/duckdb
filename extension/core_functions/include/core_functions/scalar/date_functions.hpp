@@ -15,6 +15,15 @@
 
 namespace duckdb {
 
+struct AdddateFun {
+	static constexpr const char *Name = "adddate";
+	static constexpr const char *Parameters = "date,interval";
+	static constexpr const char *Description = "The adddate function in MySQL";
+	static constexpr const char *Example = "adddate(date '2021-08-03', intervel 1 day),adddate(date '2021-08-03', 1)";
+
+	static ScalarFunctionSet GetFunctions();
+};
+
 struct AgeFun {
 	static constexpr const char *Name = "age";
 	static constexpr const char *Parameters = "timestamp,timestamp";
@@ -411,6 +420,15 @@ struct SecondsFun {
 	static constexpr const char *Description = "Extract the second component from a date or timestamp";
 	static constexpr const char *Example = "second(timestamp '2021-08-03 11:59:44.123456')";
 	static constexpr const char *Categories = "";
+
+	static ScalarFunctionSet GetFunctions();
+};
+
+struct SubdateFun {
+	static constexpr const char *Name = "subdate";
+	static constexpr const char *Parameters = "date,interval";
+	static constexpr const char *Description = "The subdate function in MySQL";
+	static constexpr const char *Example = "subdate(date '2021-08-03', intervel 1 day),adddate(date '2021-08-03', 1)";
 
 	static ScalarFunctionSet GetFunctions();
 };
