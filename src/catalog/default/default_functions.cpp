@@ -177,14 +177,13 @@ static const DefaultMacro internal_macros[] = {
 	// mysql date function
 	{DEFAULT_SCHEMA, "convert_tz", {"timestamp", "tz1", "tz2", nullptr}, {{nullptr, nullptr}}, "timezone(tz2, timezone(tz1, timestamp))"},
 	{DEFAULT_SCHEMA, "datediff", {"date1", "date2", nullptr}, {{nullptr, nullptr}}, "date_diff('day', date2, date1)"},
-	// In MySQL, SUBDATE(date,INTERVAL expr unit) and SUBDATE(expr,days) are both allowed, so this function should be implemented by defining a new function.
-	// {DEFAULT_SCHEMA, "subdate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date_add(cast(date as timestamp), -interval)"},
 	{DEFAULT_SCHEMA, "date_sub", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date_add(cast(date as timestamp), -interval)"},
 	{DEFAULT_SCHEMA, "date", {"expr", nullptr}, {{nullptr, nullptr}}, "cast(expr as DATE)"},
 	{DEFAULT_SCHEMA, "addtime", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 + to_days_duckdb(if(split_part(expr2, ' ', -2)=='', 0, cast(split_part(expr2, ' ', -2) as int))) + to_seconds_duckdb(epoch(cast(split_part(expr2, ' ', -1) as TIME)))"},
 	{DEFAULT_SCHEMA, "to_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast(expr1 as date) - DATE '0000-01-01'"},
 	{DEFAULT_SCHEMA, "to_seconds", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(cast(expr1 as timestamp) - TIMESTAMP '0000-01-01')"},
-	{DEFAULT_SCHEMA, "timediff", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "cast(expr1 as time) - cast(expr2 as time) + TIME '00:00:00'"},
+	// The function timediff will return incorrect result due to the different domain, so remove it.
+	// {DEFAULT_SCHEMA, "timediff", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 - expr2 + TIMESTAMP '1970-01-01 00:00:00'"},
 	{DEFAULT_SCHEMA, "time_to_sec", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(cast(expr1 as time))"},
 	{DEFAULT_SCHEMA, "subtime", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 - to_days_duckdb(if(split_part(expr2, ' ', -2)=='', 0, cast(split_part(expr2, ' ', -2) as int))) - to_seconds_duckdb(epoch(cast(split_part(expr2, ' ', -1) as TIME)))"},
 	{DEFAULT_SCHEMA, "sec_to_time", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast((TIME '00:00:00' + to_seconds_duckdb(expr1)) AS TIME)"},
@@ -193,8 +192,6 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "period_add", {"p", "m", nullptr}, {{nullptr, nullptr}}, "strftime(CASE  WHEN length(CAST(p AS char)) <= 4 THEN  CASE  WHEN substring(LPAD(CAST(p AS char), 4, '0'), 1, 2) >= '70' THEN strptime(concat('19', LPAD(CAST(p AS char), 4, '0')), '%Y%m') ELSE strptime(concat('20', LPAD(CAST(p AS char), 4, '0')), '%Y%m') END ELSE strptime(LPAD(CAST(p AS char), 6, '0'), '%Y%m') END + to_months(m), '%Y%m')"},
 	{DEFAULT_SCHEMA, "period_diff", {"p1", "p2", nullptr}, {{nullptr, nullptr}}, "date_diff('month', CASE  WHEN length(CAST(p2 AS VARCHAR)) <= 4 THEN strptime(CONCAT(CASE  WHEN substring(LPAD(CAST(p2 AS char), 4, '0'), 1, 2) >= '70' THEN '19' ELSE '20' END, LPAD(CAST(p2 AS char), 4, '0')), '%Y%m') ELSE strptime(LPAD(CAST(p2 AS char), 6, '0'), '%Y%m') END, CASE  WHEN length(CAST(p1 AS VARCHAR)) = 4 THEN strptime(concat(CASE  WHEN substring(LPAD(CAST(p1 AS char), 4, '0'), 1, 2) >= '70' THEN '19' ELSE '20' END, LPAD(CAST(p1 AS char), 4, '0')), '%Y%m') ELSE strptime(LPAD(CAST(p1 AS char), 6, '0'), '%Y%m') END)"},
 	{DEFAULT_SCHEMA, "maketime", {"h", "m", "s", nullptr}, {{nullptr, nullptr}}, "make_time(h, m, s)"},
-	// The same resaon as subdate
-	// {DEFAULT_SCHEMA, "adddate", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "cast(date as timestamp) + interval"},
 	{DEFAULT_SCHEMA, "current_time", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
 	{DEFAULT_SCHEMA, "current_time", {"fsp", nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
 	{DEFAULT_SCHEMA, "curtime", {nullptr}, {{nullptr, nullptr}}, "cast(get_current_time() AS time)"},
