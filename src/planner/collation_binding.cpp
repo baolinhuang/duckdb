@@ -2,9 +2,10 @@
 #include "duckdb/catalog/catalog_entry/collate_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/scalar_function_catalog_entry.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/main/config.hpp"
+#include "duckdb/main/client_config.hpp"
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/function/function_binder.hpp"
+#include "duckdb/main/settings.hpp"
 
 namespace duckdb {
 
@@ -14,11 +15,14 @@ bool PushVarcharCollation(ClientContext &context, unique_ptr<Expression> &source
 		// only VARCHAR columns require collation
 		return false;
 	}
+	if (ClientConfig::GetConfig(context).GetSetting<ForceNoCollationSetting>(context)) {
+		return false;
+	}
 	// replace default collation with system collation
 	auto str_collation = StringType::GetCollation(sql_type);
 	string collation;
 	if (str_collation.empty()) {
-		collation = DBConfig::GetConfig(context).options.collation;
+		collation = ClientConfig::GetConfig(context).GetSetting<DefaultCollationSetting>(context);
 	} else {
 		collation = str_collation;
 	}

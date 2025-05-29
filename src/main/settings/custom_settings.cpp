@@ -478,31 +478,21 @@ Value DefaultBlockSizeSetting::GetSetting(const ClientContext &context) {
 //===----------------------------------------------------------------------===//
 // Default Collation
 //===----------------------------------------------------------------------===//
-void DefaultCollationSetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
-	auto parameter = StringUtil::Lower(input.ToString());
-	config.options.collation = parameter;
-}
-
-void DefaultCollationSetting::ResetGlobal(DatabaseInstance *db, DBConfig &config) {
-	config.options.collation = DBConfig().options.collation;
-}
-
 void DefaultCollationSetting::SetLocal(ClientContext &context, const Value &input) {
 	auto parameter = input.ToString();
-	// bind the collation to verify that it exists
 	ExpressionBinder::TestCollation(context, parameter);
-	auto &config = DBConfig::GetConfig(context);
-	config.options.collation = parameter;
+	auto &config = ClientConfig::GetConfig(context);
+	config.collation = parameter;
 }
 
 void DefaultCollationSetting::ResetLocal(ClientContext &context) {
-	auto &config = DBConfig::GetConfig(context);
-	config.options.collation = DBConfig().options.collation;
+	auto &config = ClientConfig::GetConfig(context);
+	config.collation = ClientConfig().collation;
 }
 
 Value DefaultCollationSetting::GetSetting(const ClientContext &context) {
-	auto &config = DBConfig::GetConfig(context);
-	return Value(config.options.collation);
+	auto &config = ClientConfig::GetConfig(context);
+	return Value(config.collation);
 }
 
 //===----------------------------------------------------------------------===//

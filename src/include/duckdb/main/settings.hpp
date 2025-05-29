@@ -414,8 +414,6 @@ struct DefaultCollationSetting {
 	static constexpr const char *Name = "default_collation";
 	static constexpr const char *Description = "The collation setting used when none is specified";
 	static constexpr const char *InputType = "VARCHAR";
-	static void SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &parameter);
-	static void ResetGlobal(DatabaseInstance *db, DBConfig &config);
 	static void SetLocal(ClientContext &context, const Value &parameter);
 	static void ResetLocal(ClientContext &context);
 	static Value GetSetting(const ClientContext &context);
@@ -724,6 +722,16 @@ struct ForceBitpackingModeSetting {
 	static void SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &parameter);
 	static void ResetGlobal(DatabaseInstance *db, DBConfig &config);
 	static Value GetSetting(const ClientContext &context);
+};
+
+struct ForceNoCollationSetting {
+    using RETURN_TYPE = bool;
+    static constexpr const char *Name = "force_no_collation";
+    static constexpr const char *Description = "Force disable push collation";
+    static constexpr const char *InputType = "BOOLEAN";
+    static void SetLocal(ClientContext &context, const Value &parameter);
+    static void ResetLocal(ClientContext &context);
+    static Value GetSetting(const ClientContext &context);
 };
 
 struct ForceCompressionSetting {

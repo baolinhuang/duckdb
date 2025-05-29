@@ -650,6 +650,23 @@ Value ExternalThreadsSetting::GetSetting(const ClientContext &context) {
 }
 
 //===----------------------------------------------------------------------===//
+// Force No Collation
+//===----------------------------------------------------------------------===//
+void ForceNoCollationSetting::SetLocal(ClientContext &context, const Value &input) {
+	auto &config = ClientConfig::GetConfig(context);
+	config.force_no_collation = input.GetValue<bool>();
+}
+
+void ForceNoCollationSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).force_no_collation = ClientConfig().force_no_collation;
+}
+
+Value ForceNoCollationSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::BOOLEAN(config.force_no_collation);
+}
+
+//===----------------------------------------------------------------------===//
 // Home Directory
 //===----------------------------------------------------------------------===//
 void HomeDirectorySetting::ResetLocal(ClientContext &context) {
@@ -956,8 +973,8 @@ void PartitionedWriteFlushThresholdSetting::SetLocal(ClientContext &context, con
 }
 
 void PartitionedWriteFlushThresholdSetting::ResetLocal(ClientContext &context) {
-	ClientConfig::GetConfig(context).partitioned_write_flush_threshold =
-	    ClientConfig().partitioned_write_flush_threshold;
+	ClientConfig::GetConfig(context).partitioned_write_flush_threshold
+		= ClientConfig().partitioned_write_flush_threshold;
 }
 
 Value PartitionedWriteFlushThresholdSetting::GetSetting(const ClientContext &context) {
@@ -1099,7 +1116,7 @@ void ScalarSubqueryErrorOnMultipleRowsSetting::SetLocal(ClientContext &context, 
 
 void ScalarSubqueryErrorOnMultipleRowsSetting::ResetLocal(ClientContext &context) {
 	ClientConfig::GetConfig(context).scalar_subquery_error_on_multiple_rows =
-	    ClientConfig().scalar_subquery_error_on_multiple_rows;
+		ClientConfig().scalar_subquery_error_on_multiple_rows;
 }
 
 Value ScalarSubqueryErrorOnMultipleRowsSetting::GetSetting(const ClientContext &context) {

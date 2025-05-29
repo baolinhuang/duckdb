@@ -159,6 +159,12 @@ struct ClientConfig {
 	//! (empty = output to the DuckDB logger)
 	string http_logging_output;
 
+	//! The collation type of the database
+	string collation = string();
+
+	//! Force disable push collation
+	bool force_no_collation = false;
+
 public:
 	static ClientConfig &GetConfig(ClientContext &context);
 	static const ClientConfig &GetConfig(const ClientContext &context);

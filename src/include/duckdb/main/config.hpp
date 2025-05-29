@@ -174,8 +174,6 @@ struct DBConfigOptions {
 	bool buffer_manager_track_eviction_timestamps = false;
 	//! Whether or not to allow printing unredacted secrets
 	bool allow_unredacted_secrets = false;
-	//! The collation type of the database
-	string collation = string();
 	//! The order type used when none is specified (default: ASC)
 	OrderType default_order_type = OrderType::ASCENDING;
 	//! NULL ordering used when none is specified (default: NULLS LAST)

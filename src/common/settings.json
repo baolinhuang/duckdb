@@ -255,7 +255,7 @@
         "name": "default_collation",
         "description": "The collation setting used when none is specified",
         "type": "VARCHAR",
-        "scope": "global_local",
+        "scope": "local",
         "custom_implementation": true
     },
     {
@@ -489,6 +489,13 @@
         "type": "VARCHAR",
         "scope": "global",
         "custom_implementation": true
+    },
+    {
+        "name": "force_no_collation",
+        "description": "Force disable push collation",
+        "type": "BOOLEAN",
+        "scope": "local",
+        "internal_setting": "force_no_collation"
     },
     {
         "name": "home_directory",
