@@ -68,7 +68,7 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 			for (idx_t i = 0; i < args.size(); i++) {
 				auto idx = vdata.sel->get_index(i);
 				if (!vdata.validity.RowIsValid(idx)) {
-					input_has_null[idx] = true;
+					input_has_null[i] = true;
 					continue;
 				}
 				result_lengths[i] += input_data[idx].GetSize();
