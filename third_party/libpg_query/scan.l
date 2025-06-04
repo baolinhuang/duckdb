@@ -141,7 +141,7 @@ extern void core_yyset_column(int column_no, yyscan_t yyscanner);
  * Exclusive states:
  *  <xb> bit string literal
  *  <xc> extended C-style comments
- *  <xd> delimited identifiers (double-quoted identifiers)
+ *  <xd> delimited identifiers (backtick-quoted identifiers)
  *  <xh> hexadecimal numeric string
  *  <xq> standard quoted strings
  *  <xe> extended quoted strings (support backslash escape sequences)
@@ -168,6 +168,7 @@ extern void core_yyset_column(int column_no, yyscan_t yyscanner);
 %x xus
 %x xusend
 %x xeu
+%x xdq
 
 /*
  * In order to make the world safe for Windows and Mac clients as well as
@@ -273,12 +274,13 @@ dolqinside		[^$]+
 
 /* Double quote
  * Allows embedded spaces and other special characters into identifiers.
+ * In MySQL, double quote should be replaced into backtick.
  */
-dquote			\"
-xdstart			{dquote}
-xdstop			{dquote}
-xddouble		{dquote}{dquote}
-xdinside		[^"]+
+backtick		\`
+xdstart			{backtick}
+xdstop			{backtick}
+xddouble		{backtick}{backtick}
+xdinside		[^`]+
 
 /* Unicode escapes */
 uescape			[uU][eE][sS][cC][aA][pP][eE]{whitespace}*{quote}[^']{quote}
@@ -286,7 +288,7 @@ uescape			[uU][eE][sS][cC][aA][pP][eE]{whitespace}*{quote}[^']{quote}
 uescapefail		[uU][eE][sS][cC][aA][pP][eE]{whitespace}*"-"|[uU][eE][sS][cC][aA][pP][eE]{whitespace}*{quote}[^']|[uU][eE][sS][cC][aA][pP][eE]{whitespace}*{quote}|[uU][eE][sS][cC][aA][pP][eE]{whitespace}*|[uU][eE][sS][cC][aA][pP]|[uU][eE][sS][cC][aA]|[uU][eE][sS][cC]|[uU][eE][sS]|[uU][eE]|[uU]
 
 /* Quoted identifier with Unicode escapes */
-xuistart		[uU]&{dquote}
+xuistart		[uU]&{backtick}
 
 /* Quoted string with Unicode escapes */
 xusstart		[uU]&{quote}
@@ -297,6 +299,16 @@ xustop2		{uescape}
 
 /* error rule to avoid backup */
 xufailed		[uU]&
+
+dquote			\"
+dquotestop		{dquote}{whitespace}*
+/* dquotecontinue	{dquote}{whitespace_with_newline}{dquote} */
+dquotefail		{dquote}{whitespace}*"-"
+
+xdqstart		{dquote}
+xdqdouble		{dquote}{dquote}
+xdqinside		[^"]+
+
 
 
 /* C-style comments
@@ -553,6 +565,16 @@ other			.
 					BEGIN(xus);
 					startlit();
 				}
+{xdqstart}		{
+					yyextra->warn_on_first_escape = true;
+					yyextra->saw_non_ascii = false;
+					SET_YYLLOC();
+					if (yyextra->standard_conforming_strings)
+						BEGIN(xdq);
+					else
+						BEGIN(xe);
+					startlit();
+				}
 <xq,xe>{quotestop}	|
 <xq,xe>{quotefail} {
 					yyless(1);
@@ -577,6 +599,34 @@ other			.
 				}
 <xusend>{whitespace} {
 					/* stay in xusend state over whitespace */
+				}
+<xdq>{dquotestop} {
+					yyless(1);
+					BEGIN(INITIAL);
+					/*
+					 * check that the data remains valid if it might have been
+					 * made invalid by unescaping any chars.
+					 */
+					if (yyextra->saw_non_ascii)
+						pg_verifymbstr(yyextra->literalbuf,
+									   yyextra->literallen,
+									   false);
+					yylval->str = litbufdup(yyscanner);
+					return SCONST;
+				}
+<xdq>{dquotefail} {
+					yyless(1);
+					BEGIN(INITIAL);
+					/*
+					 * check that the data remains valid if it might have been
+					 * made invalid by unescaping any chars.
+					 */
+					if (yyextra->saw_non_ascii)
+						pg_verifymbstr(yyextra->literalbuf,
+									   yyextra->literallen,
+									   false);
+					yylval->str = litbufdup(yyscanner);
+					return SCONST;
 				}
 <xusend><<EOF>> |
 <xusend>{other} |
@@ -603,7 +653,13 @@ other			.
 <xq,xe,xus>{xqdouble} {
 					addlitchar('\'', yyscanner);
 				}
+<xdq>{xdqdouble} 	{
+					addlitchar('\"', yyscanner);
+				}
 <xq,xus>{xqinside}  {
+					addlit(yytext, yyleng, yyscanner);
+				}
+<xdq>{xdqinside}  	{
 					addlit(yytext, yyleng, yyscanner);
 				}
 <xe>{xeinside}  {
@@ -752,7 +808,7 @@ other			.
 					yylval->str = ident;
 					return IDENT;
 				}
-<xui>{dquote} {
+<xui>{backtick} {
 					yyless(1);
 					/* xuiend state looks for possible UESCAPE */
 					BEGIN(xuiend);
@@ -793,7 +849,7 @@ other			.
 					return IDENT;
 				}
 <xd,xui>{xddouble}	{
-					addlitchar('"', yyscanner);
+					addlitchar('`', yyscanner);
 				}
 <xd,xui>{xdinside}	{
 					addlit(yytext, yyleng, yyscanner);
