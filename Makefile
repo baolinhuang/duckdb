@@ -15,7 +15,7 @@ DISABLE_UBSAN = 1
 EXTENSION_CONFIGS = ""
 OVERRIDE_GIT_DESCRIBE="v1.1.1"
 CMAKE_VARS = "-DBUILD_SHELL=0 -DBUILD_PYTHON=0 -DBUILD_UNITTESTS=0"
-GEN = ninja
+GEN = cmake
 EXTENSION_STATIC_BUILD = 1
 
 GENERATOR ?=
@@ -347,7 +347,7 @@ debug: ${EXTENSION_CONFIG_STEP}
 	cd build/debug && \
 	echo ${DUCKDB_EXTENSION_SUBSTRAIT_PATH} && \
 	cmake --trace-expand $(GENERATOR) $(FORCE_COLOR) ${WARNINGS_AS_ERRORS} ${FORCE_32_BIT_FLAG} ${DISABLE_UNITY_FLAG} ${DISABLE_SANITIZER_FLAG} ${STATIC_LIBCPP} ${CMAKE_VARS} -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-11/root/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-11/root/bin/gcc ${CMAKE_VARS_BUILD} -DDEBUG_MOVE=1 -DCMAKE_BUILD_TYPE=Debug ../.. && \
-	cmake --build . --config Debug
+	cmake --build . --config Debug -j 32
 
 #debug: ${EXTENSION_CONFIG_STEP}
 #	mkdir -p ./build/debug && \
@@ -360,7 +360,7 @@ release: ${EXTENSION_CONFIG_STEP}
 	mkdir -p ./build/release && \
 	cd build/release && \
 	cmake $(GENERATOR) $(FORCE_COLOR) ${WARNINGS_AS_ERRORS} ${FORCE_WARN_UNUSED_FLAG} ${FORCE_32_BIT_FLAG} ${DISABLE_UNITY_FLAG} ${DISABLE_SANITIZER_FLAG} ${STATIC_LIBCPP} ${CMAKE_VARS} ${CMAKE_VARS_BUILD} -DCMAKE_BUILD_TYPE=Release ../.. && \
-	cmake --build . --config Release
+	cmake --build . --config Release -j 32
 
 wasm_mvp: ${EXTENSION_CONFIG_STEP}
 	mkdir -p ./build/wasm_mvp && \
