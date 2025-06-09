@@ -22,25 +22,25 @@ string PragmaTableInfo(ClientContext &context, const FunctionParameters &paramet
 string PragmaShowTables() {
 	// clang-format off
 	return R"EOF(
-	with "tables" as
+	with `tables` as
 	(
-		SELECT table_name as "name"
+		SELECT table_name as `name`
 		FROM duckdb_tables
 		where in_search_path(database_name, schema_name)
-	), "views" as
+	), `views` as
 	(
-		SELECT view_name as "name"
+		SELECT view_name as `name`
 		FROM duckdb_views
 		where in_search_path(database_name, schema_name)
 	), db_objects as
 	(
-		SELECT "name" FROM "tables"
+		SELECT `name` FROM `tables`
 		UNION ALL
-		SELECT "name" FROM "views"
+		SELECT `name` FROM `views`
 	)
-	SELECT "name"
+	SELECT `name`
 	FROM db_objects
-	ORDER BY "name";)EOF";
+	ORDER BY `name`;)EOF";
 	// clang-format on
 }
 
