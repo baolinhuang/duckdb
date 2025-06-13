@@ -137,6 +137,7 @@ static const StaticFunctionDefinition function[] = {
 	DUCKDB_SCALAR_FUNCTION(NotIlikeEscapeFun),
 	DUCKDB_SCALAR_FUNCTION(NotLikeEscapeFun),
 	DUCKDB_SCALAR_FUNCTION_SET_ALIAS(OctetLengthFun),
+	DUCKDB_SCALAR_FUNCTION(ParseLogMessage),
 	DUCKDB_SCALAR_FUNCTION(PrefixFun),
 	DUCKDB_SCALAR_FUNCTION(RegexpEscapeFun),
 	DUCKDB_SCALAR_FUNCTION_SET(RegexpExtractFun),

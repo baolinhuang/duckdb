@@ -24529,19 +24529,19 @@ yyreduce:
 
   case 494: /* select_limit: limit_clause  */
 #line 680 "third_party/libpg_query/grammar/statements/select.y"
-                                                                                { (yyval.list) = ist_make3(NULL, (yyvsp[0].node), NULL); }
+                                                                                { (yyval.list) = list_make3(NULL, (yyvsp[0].node), NULL); }
 #line 24534 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 495: /* select_limit: offset_clause  */
 #line 681 "third_party/libpg_query/grammar/statements/select.y"
-                                                                                { (yyval.list) = ist_make3((yyvsp[0].node), NULL, (yyvsp[0].node)); }
+                                                                                { (yyval.list) = list_make3((yyvsp[0].node), NULL, (yyvsp[0].node)); }
 #line 24540 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 496: /* select_limit: LIMIT select_limit_value ',' select_offset_value  */
 #line 682 "third_party/libpg_query/grammar/statements/select.y"
-                                                                           { (yyval.list) = list_make2((yyvsp[0].node), (yyvsp[-2].node), (yyvsp[0].node)); }
+                                                                           { (yyval.list) = list_make3((yyvsp[0].node), (yyvsp[-2].node), (yyvsp[0].node)); }
 #line 24546 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 

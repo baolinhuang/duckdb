@@ -268,6 +268,7 @@ struct OctFun {
 	static constexpr const char *Parameters = "integer";
 	static constexpr const char *Description = "Returns a string representation of the octal value of N";
 	static constexpr const char *Example = "oct(123)";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -277,6 +278,7 @@ struct OrdFun {
 	static constexpr const char *Parameters = "string";
 	static constexpr const char *Description = "ORD function in MySQL";
 	static constexpr const char *Example = "ord('hello')";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunction GetFunction();
 };

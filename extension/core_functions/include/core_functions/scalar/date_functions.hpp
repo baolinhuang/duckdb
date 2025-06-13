@@ -20,6 +20,7 @@ struct AdddateFun {
 	static constexpr const char *Parameters = "date,interval";
 	static constexpr const char *Description = "The adddate function in MySQL";
 	static constexpr const char *Example = "adddate(date '2021-08-03', intervel 1 day),adddate(date '2021-08-03', 1)";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -429,6 +430,7 @@ struct SubdateFun {
 	static constexpr const char *Parameters = "date,interval";
 	static constexpr const char *Description = "The subdate function in MySQL";
 	static constexpr const char *Example = "subdate(date '2021-08-03', intervel 1 day),adddate(date '2021-08-03', 1)";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -498,6 +500,7 @@ struct ToDaysDuckdbFun {
 	static constexpr const char *Parameters = "integer";
 	static constexpr const char *Description = "Construct a day interval";
 	static constexpr const char *Example = "to_days_duckdb(5)";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -587,6 +590,7 @@ struct ToSecondsDuckdbFun {
 	static constexpr const char *Parameters = "double";
 	static constexpr const char *Description = "Construct a second interval";
 	static constexpr const char *Example = "to_seconds_duckdb(5.5)";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunction GetFunction();
 };
@@ -626,6 +630,7 @@ struct UtcDateFun {
 	static constexpr const char *Parameters = "";
 	static constexpr const char *Description = "Returns the current utc date";
 	static constexpr const char *Example = "utc_date()";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunction GetFunction();
 };
@@ -635,6 +640,7 @@ struct UtcTimeFun {
 	static constexpr const char *Parameters = "";
 	static constexpr const char *Description = "Returns the current utc time";
 	static constexpr const char *Example = "utc_time()";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -644,6 +650,7 @@ struct UtcTimestampFun {
 	static constexpr const char *Parameters = "";
 	static constexpr const char *Description = "Returns the current utc timestamp";
 	static constexpr const char *Example = "utc_timestamp()";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };
@@ -653,6 +660,7 @@ struct UnixTimestampFun {
 	static constexpr const char *Parameters = "";
 	static constexpr const char *Description = "Returns the unix timestamp";
 	static constexpr const char *Example = "unix_timestamp(), unix_timestamp('2020-01-01')";
+	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
 };

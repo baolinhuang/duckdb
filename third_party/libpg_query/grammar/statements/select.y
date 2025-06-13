@@ -677,9 +677,9 @@ opt_nulls_order: NULLS_LA FIRST_P			{ $$ = PG_SORTBY_NULLS_FIRST; }
 select_limit:
 			limit_clause offset_clause			{ $$ = list_make3($2, $1, NULL); }
 			| offset_clause limit_clause		{ $$ = list_make3($1, $2, $1); }
-			| limit_clause						{ $$ = ist_make3(NULL, $1, NULL); }
-			| offset_clause						{ $$ = ist_make3($1, NULL, $1); }
-			| LIMIT select_limit_value ',' select_offset_value { $$ = list_make2($4, $2, $4); }
+			| limit_clause						{ $$ = list_make3(NULL, $1, NULL); }
+			| offset_clause						{ $$ = list_make3($1, NULL, $1); }
+			| LIMIT select_limit_value ',' select_offset_value { $$ = list_make3($4, $2, $4); }
 		;
 
 opt_select_limit:

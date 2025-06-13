@@ -164,8 +164,8 @@ struct NFCNormalizeFun {
 struct CharLengthFun {
 	static constexpr const char *Name = "char_length";
 	static constexpr const char *Parameters = "string";
-	static constexpr const char *Description = "Number of characters in string.";
-	static constexpr const char *Example = "char_length('Hello🦆')";
+	static constexpr const char *Description = "Number of characters in `string`.";
+	static constexpr const char *Example = "length('Hello🦆')";
 	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();

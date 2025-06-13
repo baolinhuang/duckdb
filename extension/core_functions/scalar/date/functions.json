@@ -353,7 +353,7 @@
         "parameters": "integer",
         "description": "Construct a day interval",
         "example": "to_days_duckdb(5)",
-        "type": "scalar_function"
+        "type": "scalar_function_set"
     },
     {
         "name": "to_decades",
