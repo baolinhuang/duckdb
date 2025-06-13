@@ -679,7 +679,7 @@ select_limit:
 			| offset_clause limit_clause		{ $$ = list_make3($1, $2, $1); }
 			| limit_clause						{ $$ = list_make3(NULL, $1, NULL); }
 			| offset_clause						{ $$ = list_make3($1, NULL, $1); }
-			| LIMIT select_limit_value ',' select_offset_value { $$ = list_make3($4, $2, $4); }
+			| LIMIT select_offset_value ',' select_limit_value { $$ = list_make3($2, $4, $2); }
 		;
 
 opt_select_limit:
