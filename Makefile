@@ -430,7 +430,7 @@ reldebug: ${EXTENSION_CONFIG_STEP}
 	mkdir -p ./build/reldebug && \
 	cd build/reldebug && \
 	cmake $(GENERATOR) $(FORCE_COLOR) ${WARNINGS_AS_ERRORS} ${FORCE_32_BIT_FLAG} ${DISABLE_UNITY_FLAG} ${DISABLE_SANITIZER_FLAG} ${STATIC_LIBCPP} ${CMAKE_VARS} ${CMAKE_VARS_BUILD} -DCMAKE_BUILD_TYPE=RelWithDebInfo ../.. && \
-	cmake --build . --config RelWithDebInfo
+	cmake --build . --config RelWithDebInfo -j 32
 
 relassert: ${EXTENSION_CONFIG_STEP}
 	mkdir -p ./build/relassert && \
@@ -556,6 +556,24 @@ bundle-library-obj: bundle-setup
 
 bundle-library: release
 	make bundle-library-o
+
+bundle-setup-debug:
+	cd build/debug && \
+	rm -rf bundle && \
+	mkdir -p bundle && \
+	cp src/libduckdb_static.a bundle/. && \
+	cp third_party/*/libduckdb_*.a bundle/. && \
+	cp extension/*/lib*_extension.a bundle/. && \
+	cd bundle && \
+	find . -name '*.a' -exec mkdir -p {}.objects \; -exec mv {} {}.objects \; && \
+	find . -name '*.a' -execdir ${AR} -x {} \;
+
+bundle-library-o-debug: bundle-setup-debug
+	cd build/debug/bundle && \
+	echo ./*/*.o | xargs ${AR} cr ../libduckdb_bundle.a
+
+bundle-library-debug: debug
+	make bundle-library-o-debug
 
 gather-libs: release
 	cd build/release && \
