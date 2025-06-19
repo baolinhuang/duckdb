@@ -245,13 +245,17 @@ idx_t Bit::OctetLength(bitstring_t bits) {
 	return bits.GetSize() - 1;
 }
 
-idx_t Bit::BitCount(bitstring_t bits) {
+idx_t Bit::BitCount(bitstring_t bits, bool has_pad) {
 	idx_t count = 0;
 	const char *buf = bits.GetData();
-	for (idx_t byte_idx = 1; byte_idx < OctetLength(bits) + 1; byte_idx++) {
+	idx_t byte_idx = has_pad ? 1 : 0;
+	for (; byte_idx < OctetLength(bits) + 1; byte_idx++) {
 		for (idx_t bit_idx = 0; bit_idx < 8; bit_idx++) {
 			count += (buf[byte_idx] & (1 << bit_idx)) ? 1 : 0;
 		}
+	}
+	if (!has_pad) {
+		return count;
 	}
 	return count - GetBitPadding(bits);
 }

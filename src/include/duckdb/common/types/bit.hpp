@@ -24,8 +24,8 @@ class Bit {
 public:
 	//! Returns the number of bits in the bit string
 	DUCKDB_API static idx_t BitLength(bitstring_t bits);
-	//! Returns the number of set bits in the bit string
-	DUCKDB_API static idx_t BitCount(bitstring_t bits);
+	//! Returns the number of set bits in the bit string or blob
+	DUCKDB_API static idx_t BitCount(bitstring_t bits, bool has_pad = true);
 	//! Returns the number of bytes in the bit string
 	DUCKDB_API static idx_t OctetLength(bitstring_t bits);
 	//! Extracts the nth bit from bit string; the first (leftmost) bit is indexed 0

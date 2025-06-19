@@ -235,7 +235,15 @@ struct HugeIntBitCntOperator {
 struct BitStringBitCntOperator {
 	template <class TA, class TR>
 	static inline TR Operation(TA input) {
-		TR count = Bit::BitCount(input);
+		TR count = Bit::BitCount(input, true);
+		return count;
+	}
+};
+
+struct BitStringBitCntNoPadOperator {
+	template <class TA, class TR>
+	static inline TR Operation(TA input) {
+		TR count = Bit::BitCount(input, false);
 		return count;
 	}
 };
@@ -254,6 +262,9 @@ ScalarFunctionSet BitCountFun::GetFunctions() {
 	                                     ScalarFunction::UnaryFunction<hugeint_t, int8_t, HugeIntBitCntOperator>));
 	functions.AddFunction(ScalarFunction({LogicalType::BIT}, LogicalType::BIGINT,
 	                                     ScalarFunction::UnaryFunction<string_t, idx_t, BitStringBitCntOperator>));
+	// MySQL supports bit_count(blob)
+	functions.AddFunction(ScalarFunction({LogicalType::BLOB}, LogicalType::BIGINT,
+										 ScalarFunction::UnaryFunction<string_t, idx_t, BitStringBitCntNoPadOperator>));
 	return functions;
 }
 
