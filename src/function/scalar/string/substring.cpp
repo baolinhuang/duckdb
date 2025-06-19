@@ -97,8 +97,9 @@ string_t SubstringUnicode(Vector &result, string_t input, int64_t offset, int64_
 
 	AssertInSupportedRange(input_size, offset, length);
 
-	// In MySQL, if offset is equal to 0, return empty string
-	if (length == 0 || offset == 0) {
+	// In MySQL, if offset is equal to 0, return empty string.
+	// If length <= 0, return empty string.
+	if (length <= 0 || offset == 0) {
 		return SubstringEmptyString(result);
 	}
 	// first figure out which direction we need to scan
@@ -136,6 +137,10 @@ string_t SubstringUnicode(Vector &result, string_t input, int64_t offset, int64_
 					end_pos = i;
 				}
 			}
+		}
+		// In MySQL, substring('aaa', -4, 4) will return empty string.
+		if (current_character != start) {
+			return SubstringEmptyString(result);
 		}
 		while (!IsCharacter(input_data[start_pos])) {
 			start_pos++;
@@ -247,6 +252,28 @@ string_t SubstringGrapheme(Vector &result, string_t input, int64_t offset, int64
 	                      UnsafeNumericCast<int64_t>(end_pos - start_pos));
 }
 
+string_t SubstringBlob(Vector &result, string_t input, int64_t offset, int64_t length) {
+	auto input_data = input.GetData();
+	auto input_size = input.GetSize();
+
+	AssertInSupportedRange(input_size, offset, length);
+
+	// In MySQL, if offset is equal to 0, return empty string
+	if (length <= 0 || offset == 0) {
+		return SubstringEmptyString(result);
+	}
+
+	if (offset < 0 && (static_cast<uint64_t>(-offset) > input_size)) {
+		return SubstringEmptyString(result);
+	}
+
+	int64_t start, end;
+	if (!SubstringStartEnd(UnsafeNumericCast<int64_t>(input_size), offset, length, start, end)) {
+		return SubstringEmptyString(result);
+	}
+	return SubstringSlice(result, input_data, start, UnsafeNumericCast<int64_t>(end - start));
+}
+
 struct SubstringUnicodeOp {
 	static string_t Substring(Vector &result, string_t input, int64_t offset, int64_t length) {
 		return SubstringUnicode(result, input, offset, length);
@@ -256,6 +283,12 @@ struct SubstringUnicodeOp {
 struct SubstringGraphemeOp {
 	static string_t Substring(Vector &result, string_t input, int64_t offset, int64_t length) {
 		return SubstringGrapheme(result, input, offset, length);
+	}
+};
+
+struct SubstringBlobOp {
+	static string_t Substring(Vector &result, string_t input, int64_t offset, int64_t length) {
+		return SubstringBlob(result, input, offset, length);
 	}
 };
 
@@ -317,6 +350,10 @@ ScalarFunctionSet SubstringFun::GetFunctions() {
 	substr.AddFunction(ScalarFunction({LogicalType::VARCHAR, LogicalType::BIGINT}, LogicalType::VARCHAR,
 	                                  SubstringFunction<SubstringUnicodeOp>, nullptr, nullptr,
 	                                  SubstringPropagateStats));
+	substr.AddFunction(ScalarFunction({LogicalType::BLOB, LogicalType::BIGINT, LogicalType::BIGINT},
+									   LogicalType::BLOB, SubstringFunction<SubstringBlobOp>, nullptr, nullptr));
+	substr.AddFunction(ScalarFunction({LogicalType::BLOB, LogicalType::BIGINT}, LogicalType::BLOB,
+									   SubstringFunction<SubstringBlobOp>, nullptr, nullptr));
 	return (substr);
 }
 
