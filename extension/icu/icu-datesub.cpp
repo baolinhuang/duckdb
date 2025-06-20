@@ -288,7 +288,7 @@ void RegisterICUDateSubFunctions(DatabaseInstance &db) {
 	ICUCalendarSub::AddFunctions("datesub", db);
 
 	ICUCalendarDiff::AddFunctions("date_diff", db);
-	ICUCalendarDiff::AddFunctions("datediff", db);
+	// ICUCalendarDiff::AddFunctions("datediff", db);
 }
 
 } // namespace duckdb

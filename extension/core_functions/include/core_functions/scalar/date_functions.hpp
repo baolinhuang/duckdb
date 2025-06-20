@@ -55,12 +55,6 @@ struct DateDiffFun {
 	static ScalarFunctionSet GetFunctions();
 };
 
-struct DatediffFun {
-	using ALIAS = DateDiffFun;
-
-	static constexpr const char *Name = "datediff";
-};
-
 struct DatePartFun {
 	static constexpr const char *Name = "date_part";
 	static constexpr const char *Parameters = "ts";
