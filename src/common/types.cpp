@@ -808,53 +808,53 @@ bool LogicalType::SupportsRegularUpdate() const {
 bool LogicalType::GetDecimalProperties(uint8_t &width, uint8_t &scale) const {
 	switch (id_) {
 	case LogicalTypeId::SQLNULL:
-		width = 0;
-		scale = 0;
-		break;
+		// width = 0;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::BOOLEAN:
-		width = 1;
-		scale = 0;
-		break;
+		// width = 1;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::TINYINT:
 		// tinyint: [-127, 127] = DECIMAL(3,0)
-		width = 3;
-		scale = 0;
-		break;
+		// width = 3;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::SMALLINT:
 		// smallint: [-32767, 32767] = DECIMAL(5,0)
-		width = 5;
-		scale = 0;
-		break;
+		// width = 5;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::INTEGER:
 		// integer: [-2147483647, 2147483647] = DECIMAL(10,0)
-		width = 10;
-		scale = 0;
-		break;
+		// width = 10;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::BIGINT:
 		// bigint: [-9223372036854775807, 9223372036854775807] = DECIMAL(19,0)
-		width = 19;
-		scale = 0;
-		break;
+		// width = 19;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::UTINYINT:
 		// UInt8 — [0 : 255]
-		width = 3;
-		scale = 0;
-		break;
+		// width = 3;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::USMALLINT:
 		// UInt16 — [0 : 65535]
-		width = 5;
-		scale = 0;
-		break;
+		// width = 5;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::UINTEGER:
 		// UInt32 — [0 : 4294967295]
-		width = 10;
-		scale = 0;
-		break;
+		// width = 10;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::UBIGINT:
 		// UInt64 — [0 : 18446744073709551615]
-		width = 20;
-		scale = 0;
-		break;
+		// width = 20;
+		// scale = 0;
+		// break;
 	case LogicalTypeId::HUGEINT:
 		// hugeint: max size decimal (38, 0)
 		// note that a hugeint is not guaranteed to fit in this
