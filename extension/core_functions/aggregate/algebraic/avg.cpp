@@ -288,16 +288,17 @@ AggregateFunctionSet AvgFun::GetFunctions() {
 	avg.AddFunction(GetAverageAggregate(PhysicalType::INTERVAL));
 	avg.AddFunction(AggregateFunction::UnaryAggregate<AvgState<double>, double, double, NumericAverageOperation>(
 	    LogicalType::DOUBLE, LogicalType::DOUBLE));
-
-	avg.AddFunction(AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, int64_t, int64_t, DiscreteAverageOperation>(
-	    LogicalType::TIMESTAMP, LogicalType::TIMESTAMP));
-	avg.AddFunction(AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, int64_t, int64_t, DiscreteAverageOperation>(
-	    LogicalType::TIMESTAMP_TZ, LogicalType::TIMESTAMP_TZ));
-	avg.AddFunction(AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, int64_t, int64_t, DiscreteAverageOperation>(
-	    LogicalType::TIME, LogicalType::TIME));
-	avg.AddFunction(
-	    AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, dtime_tz_t, dtime_tz_t, TimeTZAverageOperation>(
-	        LogicalType::TIME_TZ, LogicalType::TIME_TZ));
+	
+	// In MySQL, avg(timestamp) is avg(cast(timestamp as double))
+	// avg.AddFunction(AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, int64_t, int64_t, DiscreteAverageOperation>(
+	//     LogicalType::TIMESTAMP, LogicalType::TIMESTAMP));
+	// avg.AddFunction(AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, int64_t, int64_t, DiscreteAverageOperation>(
+	//     LogicalType::TIMESTAMP_TZ, LogicalType::TIMESTAMP_TZ));
+	// avg.AddFunction(AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, int64_t, int64_t, DiscreteAverageOperation>(
+	//     LogicalType::TIME, LogicalType::TIME));
+	// avg.AddFunction(
+	//     AggregateFunction::UnaryAggregate<AvgState<hugeint_t>, dtime_tz_t, dtime_tz_t, TimeTZAverageOperation>(
+	//         LogicalType::TIME_TZ, LogicalType::TIME_TZ));
 
 	return avg;
 }
