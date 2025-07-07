@@ -107,6 +107,8 @@ endif()
 
 if (DUCKDB_EXPLICIT_PLATFORM)
     add_definitions(-DDUCKDB_CUSTOM_PLATFORM=${DUCKDB_EXPLICIT_PLATFORM})
+else()
+    add_definitions(-DDUCKDB_CUSTOM_PLATFORM="linux")
 endif()
 
 option (BUILD_COMPLETE_EXTENSION_SET "Whether we need to actually build the complete set" TRUE)
