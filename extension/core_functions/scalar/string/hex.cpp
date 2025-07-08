@@ -577,7 +577,7 @@ ScalarFunctionSet HexFun::GetFunctions() {
 }
 
 ScalarFunction UnhexFun::GetFunction() {
-	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::VARCHAR, FromHexFunction);
+	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::BLOB, FromHexFunction);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
