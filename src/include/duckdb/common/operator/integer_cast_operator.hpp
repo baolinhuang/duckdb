@@ -300,6 +300,9 @@ static bool IntegerCastLoop(const char *buf, idx_t len, T &result, bool strict) 
 					return OP::template HandleExponent<T, NEGATIVE>(result, exponent.result);
 				}
 			}
+			if (mysql_format) {
+				return OP::template Finalize<T, NEGATIVE>(result);
+			}
 			return false;
 		}
 		auto digit = UnsafeNumericCast<uint8_t>(buf[pos++] - '0');
