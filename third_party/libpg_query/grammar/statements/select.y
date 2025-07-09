@@ -600,16 +600,18 @@ select_option_list:
         ;
 
 select_option:
-        HIGH_PRIORITY       { $$ = NULL; }
-        | DISTINCT            { $$ = list_make1(NIL); }
-		| DISTINCTROW		  { $$ = list_make1(NIL); }
-        | SQL_SMALL_RESULT    { $$ = NULL; }
-        | SQL_BIG_RESULT      { $$ = NULL; }
-        | SQL_BUFFER_RESULT   { $$ = NULL; }
-        | SQL_CALC_FOUND_ROWS { $$ = NULL; }
-		| SQL_NO_CACHE	  	  { $$ = NULL; }
-        | ALL                 { $$ = NULL; }
-        ;
+			STRAIGHT_JOIN		  { $$ = NULL; }
+			| HIGH_PRIORITY       { $$ = NULL; }
+			| DISTINCT            { $$ = list_make1(NIL); }
+			| DISTINCTROW		  { $$ = list_make1(NIL); }
+			| SQL_SMALL_RESULT    { $$ = NULL; }
+			| SQL_BIG_RESULT      { $$ = NULL; }
+			| SQL_BUFFER_RESULT   { $$ = NULL; }
+			| SQL_CALC_FOUND_ROWS { $$ = NULL; }
+			| SQL_NO_CACHE	  	  { $$ = NULL; }
+			| SQL_CACHE	  	  	  { $$ = NULL; }
+			| ALL                 { $$ = NULL; }
+			;
 
 opt_ignore_nulls:
 			IGNORE_P NULLS_P						{ $$ = PG_IGNORE_NULLS;}
