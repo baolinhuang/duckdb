@@ -194,6 +194,35 @@ BindResult ExpressionBinder::BindExpression(ComparisonExpression &expr, idx_t de
 											left_sql_type.ToString(), right_sql_type.ToString()));
 	}
 
+	// When comparing varchar and json, we add double quotes.
+	if (left_sql_type.id() == LogicalTypeId::VARCHAR && left_sql_type.GetAlias() == "JSON" &&
+	    (right_sql_type.id() == LogicalTypeId::STRING_LITERAL || right_sql_type.id() == LogicalTypeId::VARCHAR)) {
+		vector<unique_ptr<Expression>> children;
+		LogicalType return_type = right->return_type;
+		children.push_back(std::move(make_uniq<BoundConstantExpression>(Value(std::string("\"")))));
+		children.push_back(std::move(right));
+		children.push_back(std::move(make_uniq<BoundConstantExpression>(Value(std::string("\"")))));
+		auto concat_func = ConcatFun::GetFunction();
+		auto concat_bind_info = concat_func.bind(context, concat_func, children);
+		auto result = make_uniq<BoundFunctionExpression>(return_type, std::move(concat_func), std::move(children),
+		                                                 std::move(concat_bind_info));
+		right = std::move(result);
+	}
+
+	if (right_sql_type.id() == LogicalTypeId::VARCHAR && right_sql_type.GetAlias() == "JSON" &&
+	    (left_sql_type.id() == LogicalTypeId::STRING_LITERAL || left_sql_type.id() == LogicalTypeId::VARCHAR)) {
+		vector<unique_ptr<Expression>> children;
+		LogicalType return_type = left->return_type;
+		children.push_back(std::move(make_uniq<BoundConstantExpression>(Value(std::string("\"")))));
+		children.push_back(std::move(left));
+		children.push_back(std::move(make_uniq<BoundConstantExpression>(Value(std::string("\"")))));
+		auto concat_func = ConcatFun::GetFunction();
+		auto concat_bind_info = concat_func.bind(context, concat_func, children);
+		auto result = make_uniq<BoundFunctionExpression>(return_type, std::move(concat_func), std::move(children),
+		                                                 std::move(concat_bind_info));
+		left = std::move(result);
+	}
+
 	// add casts (if necessary)
 	left = BoundCastExpression::AddCastToType(context, std::move(left), input_type,
 	                                          input_type.id() == LogicalTypeId::ENUM);
