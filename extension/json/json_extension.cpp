@@ -34,6 +34,12 @@ static DefaultMacro json_macros[] = {
      {{nullptr, nullptr}},
      "json_structure(json_group_array(x))->0"},
     {DEFAULT_SCHEMA, "json", {"x", nullptr}, {{nullptr, nullptr}}, "json_extract(x, '$')"},
+    {DEFAULT_SCHEMA, "json_contains", {"j1", "j2", nullptr}, {{nullptr, nullptr}}, "json_contains_duckdb(j1, j2)"},
+    {DEFAULT_SCHEMA,
+     "json_contains",
+     {"j1", "j2", "path", nullptr},
+     {{nullptr, nullptr}},
+     "json_contains_duckdb(json_extract(j1, path), j2)"},
     {nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}};
 
 void JsonExtension::Load(DuckDB &db) {
@@ -78,8 +84,17 @@ void JsonExtension::Load(DuckDB &db) {
 
 	// JSON macro's
 	for (idx_t index = 0; json_macros[index].name != nullptr; index++) {
-		auto info = DefaultFunctionGenerator::CreateInternalMacroInfo(json_macros[index]);
+		idx_t overload_count;
+		for (overload_count = 1; json_macros[index + overload_count].name; overload_count++) {
+			if (!(json_macros[index + overload_count].schema == json_macros[index].schema &&
+			      json_macros[index + overload_count].name == json_macros[index].name)) {
+				break;
+			}
+		}
+		auto info = DefaultFunctionGenerator::CreateInternalMacroInfo(
+		    array_ptr<const DefaultMacro>(json_macros + index, overload_count));
 		ExtensionUtil::RegisterFunction(db_instance, *info);
+		index = index + (overload_count - 1);
 	}
 }
 

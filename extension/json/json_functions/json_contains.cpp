@@ -142,7 +142,7 @@ static void GetContainsFunctionInternal(ScalarFunctionSet &set, const LogicalTyp
 }
 
 ScalarFunctionSet JSONFunctions::GetContainsFunction() {
-	ScalarFunctionSet set("json_contains");
+	ScalarFunctionSet set("json_contains_duckdb");
 	GetContainsFunctionInternal(set, LogicalType::VARCHAR, LogicalType::VARCHAR);
 	GetContainsFunctionInternal(set, LogicalType::VARCHAR, LogicalType::JSON());
 	GetContainsFunctionInternal(set, LogicalType::JSON(), LogicalType::VARCHAR);

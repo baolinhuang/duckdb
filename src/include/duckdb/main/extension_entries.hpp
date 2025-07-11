@@ -367,7 +367,7 @@ static constexpr ExtensionFunctionEntry EXTENSION_FUNCTIONS[] = {
     {"json", "json", CatalogType::MACRO_ENTRY},
     {"json_array", "json", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"json_array_length", "json", CatalogType::SCALAR_FUNCTION_ENTRY},
-    {"json_contains", "json", CatalogType::SCALAR_FUNCTION_ENTRY},
+    {"json_contains_duckdb", "json", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"json_deserialize_sql", "json", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"json_each", "json", CatalogType::TABLE_FUNCTION_ENTRY},
     {"json_execute_serialized_sql", "json", CatalogType::PRAGMA_FUNCTION_ENTRY},
