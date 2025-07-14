@@ -40,6 +40,16 @@ static DefaultMacro json_macros[] = {
      {"j1", "j2", "path", nullptr},
      {{nullptr, nullptr}},
      "json_contains_duckdb(json_extract(j1, path), j2)"},
+    {DEFAULT_SCHEMA,
+     "json_keys",
+     {"json", nullptr},
+     {{nullptr, nullptr}},
+     "cast(list_transform(json_keys_duckdb(json), x -> concat('\"', x, '\"')) as char)"},
+    {DEFAULT_SCHEMA,
+     "json_keys",
+     {"json", "path", nullptr},
+     {{nullptr, nullptr}},
+     "cast(list_transform(json_keys_duckdb(json_extract(json, path)), x -> concat('\"', x, '\"')) as char)"},
     {nullptr, nullptr, {nullptr}, {{nullptr, nullptr}}, nullptr}};
 
 void JsonExtension::Load(DuckDB &db) {

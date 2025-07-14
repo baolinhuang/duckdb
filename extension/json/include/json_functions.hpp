@@ -108,6 +108,9 @@ private:
 
 	static ScalarFunctionSet GetPrettyPrintFunction();
 
+	// MySQL
+	static ScalarFunctionSet GetLengthFunction();
+
 	static PragmaFunctionSet GetExecuteJsonSerializedSqlPragmaFunction();
 
 	template <class FUNCTION_INFO>

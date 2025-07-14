@@ -50,7 +50,7 @@ static void GetJSONKeysFunctionsInternal(ScalarFunctionSet &set, const LogicalTy
 }
 
 ScalarFunctionSet JSONFunctions::GetKeysFunction() {
-	ScalarFunctionSet set("json_keys");
+	ScalarFunctionSet set("json_keys_duckdb");
 	GetJSONKeysFunctionsInternal(set, LogicalType::VARCHAR);
 	GetJSONKeysFunctionsInternal(set, LogicalType::JSON());
 	return set;
