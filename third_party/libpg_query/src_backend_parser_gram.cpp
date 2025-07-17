@@ -24579,67 +24579,67 @@ yyreduce:
 
   case 466: /* select_option: STRAIGHT_JOIN  */
 #line 603 "third_party/libpg_query/grammar/statements/select.y"
-                                          { (yyval.list) = NULL; }
+                                                  { (yyval.list) = NULL; }
 #line 24584 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 467: /* select_option: HIGH_PRIORITY  */
 #line 604 "third_party/libpg_query/grammar/statements/select.y"
-                              { (yyval.list) = NULL; }
+                                              { (yyval.list) = NULL; }
 #line 24590 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 468: /* select_option: DISTINCT  */
 #line 605 "third_party/libpg_query/grammar/statements/select.y"
-                              { (yyval.list) = list_make1(NIL); }
+                                              { (yyval.list) = list_make1(NIL); }
 #line 24596 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 469: /* select_option: DISTINCTROW  */
 #line 606 "third_party/libpg_query/grammar/statements/select.y"
-                                          { (yyval.list) = list_make1(NIL); }
+                                                  { (yyval.list) = list_make1(NIL); }
 #line 24602 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 470: /* select_option: SQL_SMALL_RESULT  */
 #line 607 "third_party/libpg_query/grammar/statements/select.y"
-                              { (yyval.list) = NULL; }
+                                              { (yyval.list) = NULL; }
 #line 24608 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 471: /* select_option: SQL_BIG_RESULT  */
 #line 608 "third_party/libpg_query/grammar/statements/select.y"
-                              { (yyval.list) = NULL; }
+                                              { (yyval.list) = NULL; }
 #line 24614 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 472: /* select_option: SQL_BUFFER_RESULT  */
 #line 609 "third_party/libpg_query/grammar/statements/select.y"
-                              { (yyval.list) = NULL; }
+                                              { (yyval.list) = NULL; }
 #line 24620 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 473: /* select_option: SQL_CALC_FOUND_ROWS  */
 #line 610 "third_party/libpg_query/grammar/statements/select.y"
-                              { (yyval.list) = NULL; }
+                                              { (yyval.list) = NULL; }
 #line 24626 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 474: /* select_option: SQL_NO_CACHE  */
 #line 611 "third_party/libpg_query/grammar/statements/select.y"
-                                          { (yyval.list) = NULL; }
+                                                  { (yyval.list) = NULL; }
 #line 24632 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 475: /* select_option: SQL_CACHE  */
 #line 612 "third_party/libpg_query/grammar/statements/select.y"
-                                                  { (yyval.list) = NULL; }
+                                                          { (yyval.list) = NULL; }
 #line 24638 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 
   case 476: /* select_option: ALL  */
 #line 613 "third_party/libpg_query/grammar/statements/select.y"
-                              { (yyval.list) = NULL; }
+                                              { (yyval.list) = NULL; }
 #line 24644 "third_party/libpg_query/grammar/grammar_out.cpp"
     break;
 

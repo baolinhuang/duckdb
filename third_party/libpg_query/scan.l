@@ -381,7 +381,7 @@ not_distinct_from	"<=>"
  * rule for "operator"!
  */
 self			[,()\[\].;\:\+\-\*\/\%\^\<\>\=\&\|\~]
-op_chars		[\~\!\@\^\&\|\`\+\-\*\/\%\<\>\=]
+op_chars		[\~\!\@\^\&\|\+\-\*\/\%\<\>\=]
 operator		{op_chars}+
 
 /* we no longer allow unary minus in numbers.
