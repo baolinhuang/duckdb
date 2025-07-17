@@ -42,7 +42,7 @@ ScalarFunctionSet ToBase64Fun::GetFunctions() {
 }
 
 ScalarFunction FromBase64Fun::GetFunction() {
-	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::VARCHAR, Base64DecodeFunction);
+	ScalarFunction function({LogicalType::VARCHAR}, LogicalType::BLOB, Base64DecodeFunction);
 	BaseScalarFunction::SetReturnsError(function);
 	return function;
 }
