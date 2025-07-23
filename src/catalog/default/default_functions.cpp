@@ -177,7 +177,7 @@ static const DefaultMacro internal_macros[] = {
 	// mysql date function
 	{DEFAULT_SCHEMA, "convert_tz", {"timestamp", "tz1", "tz2", nullptr}, {{nullptr, nullptr}}, "timezone(tz2, timezone(tz1, timestamp))"},
 	{DEFAULT_SCHEMA, "datediff", {"date1", "date2", nullptr}, {{nullptr, nullptr}}, "date_diff('day', date2, date1)"},
-	{DEFAULT_SCHEMA, "date_sub", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date_add(cast(date as timestamp), -interval)"},
+	{DEFAULT_SCHEMA, "date_sub", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date - interval"},
 	{DEFAULT_SCHEMA, "date", {"expr", nullptr}, {{nullptr, nullptr}}, "cast(expr as DATE)"},
 	{DEFAULT_SCHEMA, "addtime", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 + to_days_duckdb(if(split_part(expr2, ' ', -2)=='', 0, cast(split_part(expr2, ' ', -2) as int))) + to_seconds_duckdb(epoch(cast(split_part(expr2, ' ', -1) as TIME)))"},
 	{DEFAULT_SCHEMA, "to_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast(expr1 as date) - DATE '0000-01-01'"},

@@ -2558,8 +2558,9 @@ a_expr:		c_expr									{ $$ = $1; }
 				}
 			| a_expr NOT_LA LIKE a_expr							%prec NOT_LA
 				{
-					$$ = (PGNode *) makeSimpleAExpr(PG_AEXPR_LIKE, "!~~",
-												   $1, $4, @2);
+					$$ = (PGNode *) makeFuncCall(SystemFuncName("not_like_escape"),
+												list_make3($1, $4, makeStringConst("\\\\", @2)),
+												@2);
 				}
 			| a_expr NOT_LA LIKE a_expr ESCAPE a_expr			%prec NOT_LA
 				{

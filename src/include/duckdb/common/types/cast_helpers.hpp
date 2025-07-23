@@ -201,7 +201,7 @@ struct DateToStringCast {
 		// To unify the format with MySQL
 		if (year <= 0) {
 			// add (BC) suffix
-			length += 5;
+			// length += 5;
 			year = -year + 1;
 			// add_bc = true;
 		}
