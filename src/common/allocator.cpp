@@ -18,12 +18,12 @@
 #include <execinfo.h>
 #endif
 
-#ifndef USE_JEMALLOC
-#if defined(DUCKDB_EXTENSION_JEMALLOC_LINKED) && DUCKDB_EXTENSION_JEMALLOC_LINKED && !defined(WIN32) &&                \
-    INTPTR_MAX == INT64_MAX
-#define USE_JEMALLOC
-#endif
-#endif
+// #ifndef USE_JEMALLOC
+// #if defined(DUCKDB_EXTENSION_JEMALLOC_LINKED) && DUCKDB_EXTENSION_JEMALLOC_LINKED && !defined(WIN32) &&                \
+//     INTPTR_MAX == INT64_MAX
+// #define USE_JEMALLOC
+// #endif
+// #endif
 
 #ifdef USE_JEMALLOC
 #include "jemalloc_extension.hpp"
