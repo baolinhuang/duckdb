@@ -208,12 +208,36 @@ static unique_ptr<FunctionData> LikeBindFunction(ClientContext &context, ScalarF
 	// pattern is the second argument. If its constant, we can already prepare the pattern and store it for later.
 	D_ASSERT(arguments.size() == 2 || arguments.size() == 3);
 	for (auto &arg : arguments) {
-		if (arg->return_type.id() == LogicalTypeId::VARCHAR && !StringType::GetCollation(arg->return_type).empty()) {
+		if (arg->return_type.id() == LogicalTypeId::VARCHAR &&
+		    (!StringType::GetCollation(arg->return_type).empty() &&
+		     strcasecmp(StringType::GetCollation(arg->return_type).c_str(), "posix"))) {
 			return nullptr;
 		}
 	}
 	if (arguments[1]->IsFoldable()) {
 		Value pattern_str = ExpressionExecutor::EvaluateScalar(context, *arguments[1]);
+		return LikeMatcher::CreateLikeMatcher(pattern_str.ToString());
+	}
+	return nullptr;
+}
+
+static unique_ptr<FunctionData> LikeEscapeBindFunction(ClientContext &context, ScalarFunction &bound_function,
+                                                       vector<unique_ptr<Expression>> &arguments) {
+	// pattern is the second argument. If its constant, we can already prepare the pattern and store it for later.
+	D_ASSERT(arguments.size() == 2 || arguments.size() == 3);
+	for (auto &arg : arguments) {
+		if (arg->return_type.id() == LogicalTypeId::VARCHAR &&
+		    (!StringType::GetCollation(arg->return_type).empty() &&
+		     strcasecmp(StringType::GetCollation(arg->return_type).c_str(), "posix"))) {
+			return nullptr;
+		}
+	}
+	if (arguments[1]->IsFoldable() && arguments[2]->IsFoldable()) {
+		Value pattern_str = ExpressionExecutor::EvaluateScalar(context, *arguments[1]);
+		Value escape_str = ExpressionExecutor::EvaluateScalar(context, *arguments[2]);
+		if (pattern_str.ToSQLString().find(escape_str.ToString()) != std::string::npos) {
+			return nullptr;
+		}
 		return LikeMatcher::CreateLikeMatcher(pattern_str.ToString());
 	}
 	return nullptr;
@@ -490,6 +514,26 @@ static void LikeEscapeFunction(DataChunk &args, ExpressionState &state, Vector &
 	    str, pattern, escape, result, args.size(), FUNC::template Operation<string_t, string_t, string_t>);
 }
 
+// This can be moved to the scalar_function class
+template <typename FUNC, bool INVERT>
+static void RegularLikeEscapeFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &func_expr = state.expr.Cast<BoundFunctionExpression>();
+	if (func_expr.bind_info) {
+		auto &matcher = func_expr.bind_info->Cast<LikeMatcher>();
+		// use fast like matcher
+		UnaryExecutor::Execute<string_t, bool>(args.data[0], result, args.size(), [&](string_t input) {
+			return INVERT ? !matcher.Match(input) : matcher.Match(input);
+		});
+	} else {
+		auto &str = args.data[0];
+		auto &pattern = args.data[1];
+		auto &escape = args.data[2];
+
+		TernaryExecutor::Execute<string_t, string_t, string_t, bool>(
+				str, pattern, escape, result, args.size(), FUNC::template Operation<string_t, string_t, string_t>);
+	}
+}
+
 template <class ASCII_OP>
 static unique_ptr<BaseStatistics> ILikePropagateStats(ClientContext &context, FunctionStatisticsInput &input) {
 	auto &child_stats = input.child_stats;
@@ -556,9 +600,9 @@ ScalarFunction LikeFun::GetFunction() {
 }
 
 ScalarFunction NotLikeEscapeFun::GetFunction() {
-	ScalarFunction not_like_escape("not_like_escape",
-	                               {LogicalType::VARCHAR, LogicalType::VARCHAR, LogicalType::VARCHAR},
-	                               LogicalType::BOOLEAN, LikeEscapeFunction<NotLikeEscapeOperator>);
+	ScalarFunction not_like_escape(
+	    "not_like_escape", {LogicalType::VARCHAR, LogicalType::VARCHAR, LogicalType::VARCHAR}, LogicalType::BOOLEAN,
+	    RegularLikeEscapeFunction<NotLikeEscapeOperator, true>, LikeEscapeBindFunction);
 	not_like_escape.collation_handling = FunctionCollationHandling::PUSH_COMBINABLE_COLLATIONS;
 	return not_like_escape;
 }
@@ -577,9 +621,11 @@ ScalarFunction NotIlikeEscapeFun::GetFunction() {
 	not_ilike_escape.collation_handling = FunctionCollationHandling::PUSH_COMBINABLE_COLLATIONS;
 	return not_ilike_escape;
 }
+
 ScalarFunction LikeEscapeFun::GetFunction() {
 	ScalarFunction like_escape("like_escape", {LogicalType::VARCHAR, LogicalType::VARCHAR, LogicalType::VARCHAR},
-	                           LogicalType::BOOLEAN, LikeEscapeFunction<LikeEscapeOperator>);
+	                           LogicalType::BOOLEAN, RegularLikeEscapeFunction<LikeEscapeOperator, false>,
+	                           LikeEscapeBindFunction);
 	like_escape.collation_handling = FunctionCollationHandling::PUSH_COMBINABLE_COLLATIONS;
 	return like_escape;
 }
