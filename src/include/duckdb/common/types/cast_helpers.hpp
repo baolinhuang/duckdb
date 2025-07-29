@@ -202,7 +202,7 @@ struct DateToStringCast {
 		if (year <= 0) {
 			// add (BC) suffix
 			// length += 5;
-			year = -year + 1;
+			year = 0;
 			// add_bc = true;
 		}
 
