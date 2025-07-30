@@ -590,6 +590,8 @@ template <>
 DUCKDB_API bool TryCast::Operation(dtime_t input, dtime_t &result, bool strict);
 template <>
 DUCKDB_API bool TryCast::Operation(dtime_t input, dtime_tz_t &result, bool strict);
+template <>
+DUCKDB_API bool TryCast::Operation(dtime_t input, double &result, bool strict);
 
 //===--------------------------------------------------------------------===//
 // Time With Time Zone Casts (Offset)
@@ -626,6 +628,8 @@ template <>
 DUCKDB_API bool TryCast::Operation(timestamp_tz_t input, timestamp_tz_t &result, bool strict);
 template <>
 DUCKDB_API bool TryCast::Operation(timestamp_t input, timestamp_tz_t &result, bool strict);
+template <>
+DUCKDB_API bool TryCast::Operation(timestamp_t input, double &result, bool strict);
 
 //===--------------------------------------------------------------------===//
 // Interval Casts
@@ -716,6 +720,11 @@ template <>
 DUCKDB_API bool TryCastToTimestampMS::Operation(date_t input, timestamp_t &result, bool strict);
 template <>
 DUCKDB_API bool TryCastToTimestampSec::Operation(date_t input, timestamp_t &result, bool strict);
+
+template <>
+DUCKDB_API bool TryCast::Operation(date_t input, double &result, bool strict);
+template <>
+DUCKDB_API bool TryCast::Operation(date_t input, int64_t &result, bool strict);
 
 //===--------------------------------------------------------------------===//
 // Non-Standard Timestamps -> string/timestamp types
