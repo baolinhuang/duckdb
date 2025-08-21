@@ -1215,6 +1215,16 @@ struct SecretDirectorySetting {
 	static Value GetSetting(const ClientContext &context);
 };
 
+struct SqlModeSetting {
+    using RETURN_TYPE = uint64_t;
+    static constexpr const char *Name = "sql_mode";
+    static constexpr const char *Description = "MySQL sql_mode";
+    static constexpr const char *InputType = "UBIGINT";
+    static void SetLocal(ClientContext &context, const Value &parameter);
+    static void ResetLocal(ClientContext &context);
+    static Value GetSetting(const ClientContext &context);
+};
+
 struct StorageCompatibilityVersionSetting {
 	using RETURN_TYPE = string;
 	static constexpr const char *Name = "storage_compatibility_version";

@@ -30,6 +30,8 @@
 #include "duckdb/planner/expression_binder/where_binder.hpp"
 #include "duckdb/planner/query_node/bound_select_node.hpp"
 
+#include "duckdb/common/enums/sql_mode.hpp"
+
 namespace duckdb {
 
 unique_ptr<Expression> Binder::BindOrderExpression(OrderBinder &order_binder, unique_ptr<ParsedExpression> expr) {
@@ -546,12 +548,29 @@ unique_ptr<BoundQueryNode> Binder::BindSelectNode(SelectNode &statement, unique_
 	vector<idx_t> group_by_all_indexes;
 	vector<string> new_names;
 	vector<LogicalType> internal_sql_types;
+	vector<unique_ptr<ParsedExpression>> expr_backups;
+	vector<idx_t> rebind_indexes;
+	bool need_rebind = false;
+	if (!(ClientConfig::GetConfig(context).GetSetting<SqlModeSetting>(context) &
+	      1ULL << static_cast<uint8_t>(SqlModeType::MODE_ONLY_FULL_GROUP_BY))) {
+		need_rebind = true;
+	}
 
 	for (idx_t i = 0; i < statement.select_list.size(); i++) {
 		bool is_window = statement.select_list[i]->IsWindow();
 		idx_t unnest_count = result->unnests.size();
 		LogicalType result_type;
+
+		if (need_rebind) {
+			expr_backups.emplace_back(std::move(statement.select_list[i]->Copy()));
+		}
+
 		auto expr = select_binder.Bind(statement.select_list[i], &result_type, true);
+
+		if (need_rebind && select_binder.GetBoundColumns().size() > rebind_indexes.size()) {
+			rebind_indexes.push_back(i);
+		}
+
 		bool is_original_column = i < result->column_count;
 		bool can_group_by_all =
 		    statement.aggregate_handling == AggregateHandling::FORCE_AGGREGATES && is_original_column;
@@ -652,6 +671,7 @@ unique_ptr<BoundQueryNode> Binder::BindSelectNode(SelectNode &statement, unique_
 			for (auto &bound_qualify_col : bound_qualify_columns) {
 				bound_columns.push_back(bound_qualify_col);
 			}
+
 			if (!bound_columns.empty()) {
 				string error;
 				error = "column \"%s\" must appear in the GROUP BY clause or must be part of an aggregate function.";
@@ -660,11 +680,19 @@ unique_ptr<BoundQueryNode> Binder::BindSelectNode(SelectNode &statement, unique_
 					         "GROUP BY this entry explicitly.";
 					throw BinderException(bound_columns[0].query_location, error, bound_columns[0].name);
 				} else {
-					error +=
-					    "\nEither add it to the GROUP BY list, or use \"ANY_VALUE(%s)\" if the exact value of \"%s\" "
-					    "is not important.";
-					throw BinderException(bound_columns[0].query_location, error, bound_columns[0].name,
-					                      bound_columns[0].name, bound_columns[0].name);
+					for (auto &index : rebind_indexes) {
+						vector<unique_ptr<ParsedExpression>> first_children;
+						first_children.emplace_back(std::move(expr_backups[index]));
+						unique_ptr<ParsedExpression> first_func = make_uniq<FunctionExpression>("first", std::move(first_children));
+						LogicalType result_type;
+						auto expr = select_binder.Bind(first_func, &result_type, true);
+						result->select_list[index] = std::move(expr);
+					}
+					// error +=
+					//     "\nEither add it to the GROUP BY list, or use \"ANY_VALUE(%s)\" if the exact value of \"%s\" "
+					//     "is not important.";
+					// throw BinderException(bound_columns[0].query_location, error, bound_columns[0].name,
+					//                       bound_columns[0].name, bound_columns[0].name);
 				}
 			}
 		}

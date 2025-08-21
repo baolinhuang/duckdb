@@ -165,6 +165,9 @@ struct ClientConfig {
 	//! Force disable push collation
 	bool force_no_collation = false;
 
+	//! MySQL Sql Mode
+	idx_t sql_mode = 0;
+
 public:
 	static ClientConfig &GetConfig(ClientContext &context);
 	static const ClientConfig &GetConfig(const ClientContext &context);

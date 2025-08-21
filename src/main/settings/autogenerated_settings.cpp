@@ -1141,6 +1141,22 @@ Value SchedulerProcessPartialSetting::GetSetting(const ClientContext &context) {
 }
 
 //===----------------------------------------------------------------------===//
+// Sql Mode
+//===----------------------------------------------------------------------===//
+void SqlModeSetting::SetLocal(ClientContext &context, const Value &parameter) {
+	ClientConfig::GetConfig(context).sql_mode = parameter.GetValue<idx_t>();
+}
+
+void SqlModeSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).sql_mode = 0;
+}
+
+Value SqlModeSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::UBIGINT(config.sql_mode);
+}
+
+//===----------------------------------------------------------------------===//
 // Zstd Min String Length
 //===----------------------------------------------------------------------===//
 void ZstdMinStringLengthSetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
