@@ -100,7 +100,7 @@ static const ConfigurationOption internal_options[] = {
     DUCKDB_GLOBAL(DisabledCompressionMethodsSetting),
     DUCKDB_GLOBAL(DisabledFilesystemsSetting),
     DUCKDB_GLOBAL(DisabledLogTypes),
-    DUCKDB_GLOBAL(DisabledOptimizersSetting),
+    DUCKDB_LOCAL(DisabledOptimizersSetting),
     DUCKDB_GLOBAL(DuckDBAPISetting),
     DUCKDB_LOCAL(DynamicOrFilterThresholdSetting),
     DUCKDB_GLOBAL(EnableExternalAccessSetting),

@@ -200,7 +200,7 @@ struct DBConfigOptions {
 	//! You should probably not touch this unless you know what you are doing
 	bool initialize_default_database = true;
 	//! The set of disabled optimizers (default empty)
-	set<OptimizerType> disabled_optimizers;
+	// set<OptimizerType> disabled_optimizers;
 	//! The average string length required to use ZSTD compression.
 	uint64_t zstd_min_string_length = 4096;
 	//! Force a specific compression method to be used when checkpointing (if available)

@@ -494,8 +494,8 @@ struct DisabledOptimizersSetting {
 	static constexpr const char *Name = "disabled_optimizers";
 	static constexpr const char *Description = "DEBUG SETTING: disable a specific set of optimizers (comma separated)";
 	static constexpr const char *InputType = "VARCHAR";
-	static void SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &parameter);
-	static void ResetGlobal(DatabaseInstance *db, DBConfig &config);
+	static void SetLocal(ClientContext &context, const Value &input);
+	static void ResetLocal(ClientContext &context);
 	static Value GetSetting(const ClientContext &context);
 };
 

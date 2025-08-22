@@ -168,6 +168,9 @@ struct ClientConfig {
 	//! MySQL Sql Mode
 	idx_t sql_mode = 0;
 
+	//! The set of disabled optimizers (default empty)
+	set<OptimizerType> disabled_optimizers;
+
 public:
 	static ClientConfig &GetConfig(ClientContext &context);
 	static const ClientConfig &GetConfig(const ClientContext &context);

@@ -76,8 +76,8 @@ bool Optimizer::OptimizerDisabled(OptimizerType type) {
 }
 
 bool Optimizer::OptimizerDisabled(ClientContext &context_p, OptimizerType type) {
-	auto &config = DBConfig::GetConfig(context_p);
-	return config.options.disabled_optimizers.find(type) != config.options.disabled_optimizers.end();
+	auto &config = ClientConfig::GetConfig(context_p);
+	return config.disabled_optimizers.find(type) != config.disabled_optimizers.end();
 }
 
 void Optimizer::RunOptimizer(OptimizerType type, const std::function<void()> &callback) {
