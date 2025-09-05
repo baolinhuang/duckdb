@@ -45,24 +45,84 @@ static inline bool JSONFuzzyEquals(yyjson_val *haystack, yyjson_val *needle) {
 	D_ASSERT(haystack && needle);
 
 	// Strict equality
-	if (unsafe_yyjson_equals(haystack, needle)) {
-		return true;
-	}
-
-	auto haystack_tag = yyjson_get_tag(needle);
-	if (haystack_tag != yyjson_get_tag(haystack)) {
+	yyjson_type type = unsafe_yyjson_get_type(haystack);
+    if (type != unsafe_yyjson_get_type(needle)) {
+		if (type == YYJSON_TYPE_ARR && unsafe_yyjson_get_type(needle) != YYJSON_TYPE_ARR) {
+			auto lhs_tmp = unsafe_yyjson_get_first(haystack);
+			idx_t lhs_len = unsafe_yyjson_get_len(haystack);
+			while (lhs_len > 0) {
+				if (JSONFuzzyEquals(lhs_tmp, needle)) break;
+				lhs_len--;
+				if (lhs_len == 0) return false;
+				lhs_tmp = unsafe_yyjson_get_next(lhs_tmp);
+			}
+			return true;
+		}
+		if (type != YYJSON_TYPE_ARR && unsafe_yyjson_get_type(needle) == YYJSON_TYPE_ARR) {
+			if (unsafe_yyjson_get_len(needle) > 0) {
+				return false;
+			}
+			auto rhs = unsafe_yyjson_get_first(needle);
+			if (unsafe_yyjson_get_type(rhs) == YYJSON_TYPE_ARR) return false;
+			return JSONFuzzyEquals(haystack, rhs);
+		}
 		return false;
 	}
 
-	// Fuzzy equality (contained in)
-	switch (haystack_tag) {
-	case YYJSON_TYPE_ARR | YYJSON_SUBTYPE_NONE:
-		return JSONArrayFuzzyEquals(haystack, needle);
-	case YYJSON_TYPE_OBJ | YYJSON_SUBTYPE_NONE:
-		return JSONObjectFuzzyEquals(haystack, needle);
-	default:
-		return false;
-	}
+    switch (type) {
+        case YYJSON_TYPE_OBJ: {
+            idx_t len = unsafe_yyjson_get_len(needle);
+            // if (len != unsafe_yyjson_get_len(rhs)) return false;
+            if (len > 0) {
+                yyjson_obj_iter iter;
+                yyjson_obj_iter_init(haystack, &iter);
+                auto rhs = unsafe_yyjson_get_first(needle);
+                while (len-- > 0) {
+                    auto lhs = yyjson_obj_iter_getn(&iter, rhs->uni.str,
+                                               unsafe_yyjson_get_len(rhs));
+                    if (!lhs) return false;
+                    if (!JSONFuzzyEquals(lhs, rhs + 1)) return false;
+                    rhs = unsafe_yyjson_get_next(rhs + 1);
+                }
+            }
+            /* yyjson allows duplicate keys, so the check may be inaccurate */
+            return true;
+        }
+
+        case YYJSON_TYPE_ARR: {
+            idx_t lhs_len = unsafe_yyjson_get_len(haystack);
+            idx_t rhs_len = unsafe_yyjson_get_len(needle);
+            // if (len != unsafe_yyjson_get_len(rhs)) return false;
+            auto rhs = unsafe_yyjson_get_first(needle);
+            while(true) {
+                auto lhs_tmp = unsafe_yyjson_get_first(haystack);
+                while (lhs_len > 0) {
+                    if (JSONFuzzyEquals(lhs_tmp, rhs)) break;
+                    lhs_len--;
+                    if (lhs_len == 0) return false;
+                    lhs_tmp = unsafe_yyjson_get_next(lhs_tmp);
+                }
+                rhs_len--;
+                if (rhs_len == 0) return true;
+                rhs = unsafe_yyjson_get_next(rhs);
+            }
+            return true;
+        }
+
+        case YYJSON_TYPE_NUM:
+            return unsafe_yyjson_equals(haystack, needle);
+
+        case YYJSON_TYPE_RAW:
+        case YYJSON_TYPE_STR:
+            return unsafe_yyjson_equals(haystack, needle);
+
+        case YYJSON_TYPE_NULL:
+        case YYJSON_TYPE_BOOL:
+            return haystack->tag == needle->tag;
+
+        default:
+            return false;
+    }
 }
 
 static inline bool JSONArrayContains(yyjson_val *haystack_array, yyjson_val *needle) {
@@ -95,6 +155,9 @@ static inline bool JSONContains(yyjson_val *haystack, yyjson_val *needle) {
 	if (JSONFuzzyEquals(haystack, needle)) {
 		return true;
 	}
+
+	// In MySQL, we will not traverse all paths.
+	return false;
 
 	switch (yyjson_get_tag(haystack)) {
 	case YYJSON_TYPE_ARR | YYJSON_SUBTYPE_NONE:

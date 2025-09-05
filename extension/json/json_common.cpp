@@ -268,9 +268,6 @@ yyjson_val *JSONCommon::GetPath(yyjson_val *val, const char *ptr, const idx_t &l
 			break;
 		}
 		case '[': { // Array index
-			if (!unsafe_yyjson_is_arr(val)) {
-				return nullptr;
-			}
 			idx_t array_index;
 			bool from_back;
 #ifdef DEBUG
@@ -280,6 +277,13 @@ yyjson_val *JSONCommon::GetPath(yyjson_val *val, const char *ptr, const idx_t &l
 #ifdef DEBUG
 			D_ASSERT(success);
 #endif
+			if (!unsafe_yyjson_is_arr(val)) {
+				if (array_index == 0) {
+					break;
+				} else {
+					return nullptr;
+				}
+			}
 			if (from_back && array_index != 0) {
 				array_index = unsafe_yyjson_get_len(val) - array_index;
 			}
