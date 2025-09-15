@@ -1547,4 +1547,20 @@ Value UsernameSetting::GetSetting(const ClientContext &context) {
 	return Value();
 }
 
+//===----------------------------------------------------------------------===//
+// Appender Allocator Flush Threshold
+//===----------------------------------------------------------------------===//
+void AppenderAllocatorFlushThresholdSetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
+	config.options.appender_allocator_flush_threshold = DBConfig::ParseMemoryLimit(input.ToString());
+}
+
+void AppenderAllocatorFlushThresholdSetting::ResetGlobal(DatabaseInstance *db, DBConfig &config) {
+	config.options.appender_allocator_flush_threshold = DBConfig().options.appender_allocator_flush_threshold;
+}
+
+Value AppenderAllocatorFlushThresholdSetting::GetSetting(const ClientContext &context) {
+	auto &config = DBConfig::GetConfig(context);
+	return Value(StringUtil::BytesToHumanReadableString(config.options.appender_allocator_flush_threshold));
+}
+
 } // namespace duckdb

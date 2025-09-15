@@ -777,3 +777,24 @@ TEST_CASE("Test appending rows with an active column list", "[appender]") {
 	REQUIRE(CHECK_COLUMN(result, 3, {84, Value()}));
 	REQUIRE(CHECK_COLUMN(result, 4, {43, 44}));
 }
+
+TEST_CASE("Test appender_allocator_flush_threshold", "[appender]") {
+	duckdb::unique_ptr<QueryResult> result;
+	DuckDB db(nullptr);
+	Connection con(db);
+
+	const size_t blob_size = 100 * 1024;
+	std::vector<uint8_t> data(blob_size, 'A');
+
+	REQUIRE_NO_FAIL(con.Query("SET GLOBAL memory_limit='2GB'"));
+	REQUIRE_NO_FAIL(con.Query("SET GLOBAL appender_allocator_flush_threshold='16MB'"));
+	REQUIRE_NO_FAIL(con.Query("CREATE TABLE my_table (b BLOB)"));
+	Appender appender(con, "my_table");
+	for (int i = 0; i < 10000; i++) {
+		appender.BeginRow();
+		auto value = duckdb::Value::BLOB(data.data(), data.size());
+		appender.Append(value);
+		appender.EndRow();
+	}
+	appender.Close();
+}

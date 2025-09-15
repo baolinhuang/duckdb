@@ -23,9 +23,9 @@ BaseAppender::BaseAppender(Allocator &allocator, const AppenderType type_p)
 }
 
 BaseAppender::BaseAppender(Allocator &allocator_p, vector<LogicalType> types_p, const AppenderType type_p,
-                           const idx_t flush_count_p)
+                           const idx_t flush_count_p, const idx_t flush_memory_threshold_p)
     : allocator(allocator_p), types(std::move(types_p)), collection(make_uniq<ColumnDataCollection>(allocator, types)),
-      column(0), appender_type(type_p), flush_count(flush_count_p) {
+      column(0), appender_type(type_p), flush_count(flush_count_p), flush_memory_threshold(flush_memory_threshold_p) {
 	InitializeChunk();
 }
 
@@ -62,6 +62,8 @@ InternalAppender::~InternalAppender() {
 
 Appender::Appender(Connection &con, const string &database_name, const string &schema_name, const string &table_name)
     : BaseAppender(Allocator::DefaultAllocator(), AppenderType::LOGICAL), context(con.context) {
+	auto &config = DBConfig::GetConfig(*context.get());
+	flush_memory_threshold = config.options.appender_allocator_flush_threshold;
 
 	description = con.TableInfo(database_name, schema_name, table_name);
 	if (!description) {
@@ -417,7 +419,7 @@ void BaseAppender::AppendDataChunk(DataChunk &chunk_p) {
 	// Early-out, if types match.
 	if (chunk_types == appender_types) {
 		collection->Append(chunk_p);
-		if (collection->Count() >= flush_count) {
+		if (collection->Count() >= flush_count || collection->AllocationSize() >= flush_memory_threshold) {
 			Flush();
 		}
 		return;
@@ -450,7 +452,7 @@ void BaseAppender::AppendDataChunk(DataChunk &chunk_p) {
 	}
 
 	collection->Append(cast_chunk);
-	if (collection->Count() >= flush_count) {
+	if (collection->Count() >= flush_count || collection->AllocationSize() >= flush_memory_threshold) {
 		Flush();
 	}
 }
@@ -461,7 +463,7 @@ void BaseAppender::FlushChunk() {
 	}
 	collection->Append(chunk);
 	chunk.Reset();
-	if (collection->Count() >= flush_count) {
+	if (collection->Count() >= flush_count || collection->AllocationSize() >= flush_memory_threshold) {
 		Flush();
 	}
 }

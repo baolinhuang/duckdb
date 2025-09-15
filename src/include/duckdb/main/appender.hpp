@@ -49,10 +49,14 @@ protected:
 	//! The amount of rows after which the appender flushes automatically.
 	idx_t flush_count = DEFAULT_FLUSH_COUNT;
 
+	//! Peak allocation threshold at which to flush the allocator when appender flushs chunk.
+	idx_t flush_memory_threshold = DConstants::INVALID_INDEX;
+
 protected:
 	DUCKDB_API BaseAppender(Allocator &allocator, const AppenderType type);
 	DUCKDB_API BaseAppender(Allocator &allocator, vector<LogicalType> types, const AppenderType type,
-	                        const idx_t flush_count = DEFAULT_FLUSH_COUNT);
+	                        const idx_t flush_count = DEFAULT_FLUSH_COUNT,
+	                        const idx_t flush_memory_threshold = DConstants::INVALID_INDEX);
 
 public:
 	DUCKDB_API virtual ~BaseAppender();

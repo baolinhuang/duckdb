@@ -179,6 +179,7 @@ static const ConfigurationOption internal_options[] = {
     DUCKDB_GLOBAL(UsernameSetting),
     DUCKDB_GLOBAL_ALIAS("user", UsernameSetting),
     DUCKDB_GLOBAL(ZstdMinStringLengthSetting),
+    DUCKDB_GLOBAL(AppenderAllocatorFlushThresholdSetting),
     FINAL_SETTING};
 
 vector<ConfigurationOption> DBConfig::GetOptions() {

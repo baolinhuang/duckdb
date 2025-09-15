@@ -303,6 +303,9 @@ struct DBConfigOptions {
 	bool scheduler_process_partial = false;
 #endif
 
+	//! Peak allocation threshold at which to flush the allocator when appender flushs chunk
+	idx_t appender_allocator_flush_threshold = DConstants::INVALID_INDEX;
+
 	bool operator==(const DBConfigOptions &other) const;
 };
 
