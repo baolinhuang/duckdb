@@ -54,6 +54,8 @@ const vector<LogicalType> &BaseAppender::GetActiveTypes() const {
 InternalAppender::InternalAppender(ClientContext &context_p, TableCatalogEntry &table_p, const idx_t flush_count_p)
     : BaseAppender(Allocator::DefaultAllocator(), table_p.GetTypes(), AppenderType::PHYSICAL, flush_count_p),
       context(context_p), table(table_p) {
+	auto &config = DBConfig::GetConfig(context);
+	flush_memory_threshold = config.options.appender_allocator_flush_threshold;
 }
 
 InternalAppender::~InternalAppender() {
@@ -147,7 +149,7 @@ void BaseAppender::EndRow() {
 	}
 	column = 0;
 	chunk.SetCardinality(chunk.size() + 1);
-	if (chunk.size() >= STANDARD_VECTOR_SIZE) {
+	if (chunk.size() >= STANDARD_VECTOR_SIZE || collection->AllocationSize() >= flush_memory_threshold) {
 		FlushChunk();
 	}
 }

@@ -785,6 +785,7 @@ TEST_CASE("Test appender_allocator_flush_threshold", "[appender]") {
 
 	const size_t blob_size = 100 * 1024;
 	std::vector<uint8_t> data(blob_size, 'A');
+	auto value = duckdb::Value::BLOB(data.data(), data.size());
 
 	REQUIRE_NO_FAIL(con.Query("SET GLOBAL memory_limit='2GB'"));
 	REQUIRE_NO_FAIL(con.Query("SET GLOBAL appender_allocator_flush_threshold='16MB'"));
@@ -792,9 +793,16 @@ TEST_CASE("Test appender_allocator_flush_threshold", "[appender]") {
 	Appender appender(con, "my_table");
 	for (int i = 0; i < 10000; i++) {
 		appender.BeginRow();
-		auto value = duckdb::Value::BLOB(data.data(), data.size());
 		appender.Append(value);
 		appender.EndRow();
 	}
+
+	REQUIRE_NO_FAIL(con.Query("SET GLOBAL appender_allocator_flush_threshold='64KB'"));
+	for (int i = 0; i < 10000; i++) {
+		appender.BeginRow();
+		appender.Append(value);
+		appender.EndRow();
+	}
+
 	appender.Close();
 }
