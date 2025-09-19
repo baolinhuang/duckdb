@@ -3351,6 +3351,13 @@ func_expr_common_subexpr:
 					 */
 					$$ = (PGNode *) makeFuncCall(SystemFuncName("substring"), $3, @1);
 				}
+			| SUBSTR '(' substr_list ')'
+				{
+					/* substr(A from B for C) is converted to
+					 * substr(A, B, C) - thomas 2000-11-28
+					 */
+					$$ = (PGNode *) makeFuncCall(SystemFuncName("substring"), $3, @1);
+				}
 			| TREAT '(' a_expr AS Typename ')'
 				{
 					/* TREAT(expr AS target) converts expr of a particular type to target,
