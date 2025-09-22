@@ -680,19 +680,22 @@ unique_ptr<BoundQueryNode> Binder::BindSelectNode(SelectNode &statement, unique_
 					         "GROUP BY this entry explicitly.";
 					throw BinderException(bound_columns[0].query_location, error, bound_columns[0].name);
 				} else {
-					for (auto &index : rebind_indexes) {
-						vector<unique_ptr<ParsedExpression>> first_children;
-						first_children.emplace_back(std::move(expr_backups[index]));
-						unique_ptr<ParsedExpression> first_func = make_uniq<FunctionExpression>("first", std::move(first_children));
-						LogicalType result_type;
-						auto expr = select_binder.Bind(first_func, &result_type, true);
-						result->select_list[index] = std::move(expr);
+					if (need_rebind) {
+						for (auto &index : rebind_indexes) {
+							vector<unique_ptr<ParsedExpression>> first_children;
+							first_children.emplace_back(std::move(expr_backups[index]));
+							unique_ptr<ParsedExpression> first_func = make_uniq<FunctionExpression>("first", std::move(first_children));
+							LogicalType result_type;
+							auto expr = select_binder.Bind(first_func, &result_type, true);
+							result->select_list[index] = std::move(expr);
+						}
+					} else {
+						error +=
+							"\nEither add it to the GROUP BY list, or use \"ANY_VALUE(%s)\" if the exact value of \"%s\" "
+							"is not important.";
+						throw BinderException(bound_columns[0].query_location, error, bound_columns[0].name,
+											bound_columns[0].name, bound_columns[0].name);
 					}
-					// error +=
-					//     "\nEither add it to the GROUP BY list, or use \"ANY_VALUE(%s)\" if the exact value of \"%s\" "
-					//     "is not important.";
-					// throw BinderException(bound_columns[0].query_location, error, bound_columns[0].name,
-					//                       bound_columns[0].name, bound_columns[0].name);
 				}
 			}
 		}
