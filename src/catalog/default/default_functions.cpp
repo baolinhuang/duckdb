@@ -207,6 +207,7 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "substring_index", {"expr1", "sep", "index", nullptr}, {{nullptr, nullptr}}, "if(expr1 is null or sep is null or index is null, null, if(index != 0, if((index > 0), list_reduce((split(expr1, sep)[:index]), (ret, x)->concat_ws(sep, ret, x)), list_reduce((split(expr1, sep)[index:]), (ret, x)->concat_ws(sep, ret, x))), ''))"},
 	{DEFAULT_SCHEMA, "space", {"num", nullptr}, {{nullptr, nullptr}}, "repeat(' ', cast(num as double))"},
 	{DEFAULT_SCHEMA, "insert", {"str", "pos", "len", "newstr", nullptr}, {{nullptr, nullptr}}, "if(str is null or pos is null or len is null or newstr is null, null, if(pos between 1 and length(str), concat(cast(str as varchar)[:pos - 1], cast(newstr as varchar), cast(str as varchar)[pos+len:]), str))"},
+	{DEFAULT_SCHEMA, "not_regexp_like", {"str", "pattern", nullptr}, {{nullptr, nullptr}}, "not regexp_like(str, pattern)"},
 
 	// mysql numeric function
 	{DEFAULT_SCHEMA, "rand", {nullptr}, {{nullptr, nullptr}}, "random()"},

@@ -196,10 +196,10 @@
         "type": "scalar_function_set"
     },
     {
-        "name": "regexp_replace",
+        "name": "regexp_replace_duckdb",
         "parameters": "string,pattern,replacement[,options]",
         "description": "If `string` contains the regexp `pattern`, replaces the matching part with `replacement`. A set of optional `options` can be set.",
-        "example": "regexp_replace('hello', '[lo]', '-')",
+        "example": "regexp_replace_duckdb('hello', '[lo]', '-')",
         "type": "scalar_function_set"
     },
     {

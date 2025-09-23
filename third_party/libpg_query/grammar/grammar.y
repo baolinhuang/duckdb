@@ -116,7 +116,7 @@
 %right		NOT
 %nonassoc	IS ISNULL NOTNULL NOT_DISTINCT_FROM	/* IS sets precedence for IS NULL, etc */
 %nonassoc	'<' '>' '=' LESS_EQUALS GREATER_EQUALS NOT_EQUALS
-%nonassoc	BETWEEN IN_P GLOB LIKE ILIKE SIMILAR NOT_LA
+%nonassoc	BETWEEN IN_P GLOB LIKE ILIKE RLIKE REGEXP SIMILAR NOT_LA
 %nonassoc	ESCAPE			/* ESCAPE must be just above LIKE/ILIKE/SIMILAR */
 %left		POSTFIXOP		/* dummy for postfix Op rules */
 /*

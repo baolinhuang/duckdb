@@ -2593,7 +2593,34 @@ a_expr:		c_expr									{ $$ = $1; }
 											   @2);
 					$$ = (PGNode *) n;
 				}
-
+			| a_expr RLIKE a_expr
+				{
+					PGFuncCall *n = makeFuncCall(SystemFuncName("regexp_like"),
+											   list_make2($1, $3),
+											   @2);
+					$$ = (PGNode *) n;
+				}
+			| a_expr REGEXP a_expr
+				{
+					PGFuncCall *n = makeFuncCall(SystemFuncName("regexp_like"),
+											   list_make2($1, $3),
+											   @2);
+					$$ = (PGNode *) n;
+				}
+			| a_expr NOT_LA RLIKE a_expr						%prec NOT_LA
+				{
+					PGFuncCall *n = makeFuncCall(SystemFuncName("not_regexp_like"),
+											   list_make2($1, $4),
+											   @2);
+					$$ = (PGNode *) n;
+				}
+			| a_expr NOT_LA REGEXP a_expr						%prec NOT_LA
+				{
+					PGFuncCall *n = makeFuncCall(SystemFuncName("not_regexp_like"),
+											   list_make2($1, $4),
+											   @2);
+					$$ = (PGNode *) n;
+				}
 			| a_expr SIMILAR TO a_expr							%prec SIMILAR
 				{
 					PGFuncCall *n = makeFuncCall(SystemFuncName("similar_escape"),

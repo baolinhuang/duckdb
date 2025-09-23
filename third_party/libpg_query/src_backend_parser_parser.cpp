@@ -257,6 +257,7 @@ int base_yylex(YYSTYPE *lvalp, YYLTYPE *llocp, core_yyscan_t yyscanner) {
 		case LIKE:
 		case ILIKE:
 		case SIMILAR:
+		case REGEXP:
 			cur_token = NOT_LA;
 			break;
 		}

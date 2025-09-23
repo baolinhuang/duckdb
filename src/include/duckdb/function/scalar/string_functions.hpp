@@ -332,10 +332,10 @@ struct RegexpMatchesFun {
 };
 
 struct RegexpReplaceFun {
-	static constexpr const char *Name = "regexp_replace";
+	static constexpr const char *Name = "regexp_replace_duckdb";
 	static constexpr const char *Parameters = "string,pattern,replacement[,options]";
 	static constexpr const char *Description = "If `string` contains the regexp `pattern`, replaces the matching part with `replacement`. A set of optional `options` can be set.";
-	static constexpr const char *Example = "regexp_replace('hello', '[lo]', '-')";
+	static constexpr const char *Example = "regexp_replace_duckdb('hello', '[lo]', '-')";
 	static constexpr const char *Categories = "";
 
 	static ScalarFunctionSet GetFunctions();
