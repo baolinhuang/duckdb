@@ -142,9 +142,10 @@ class Appender : public BaseAppender {
 
 public:
 	DUCKDB_API Appender(Connection &con, const string &database_name, const string &schema_name,
-	                    const string &table_name);
-	DUCKDB_API Appender(Connection &con, const string &schema_name, const string &table_name);
-	DUCKDB_API Appender(Connection &con, const string &table_name);
+	                    const string &table_name, AppenderType appender_type = AppenderType::LOGICAL);
+	DUCKDB_API Appender(Connection &con, const string &schema_name, const string &table_name,
+	                    AppenderType appender_type = AppenderType::LOGICAL);
+	DUCKDB_API Appender(Connection &con, const string &table_name, AppenderType appender_type = AppenderType::LOGICAL);
 	DUCKDB_API ~Appender() override;
 
 public:

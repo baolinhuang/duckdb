@@ -62,8 +62,9 @@ InternalAppender::~InternalAppender() {
 	Destructor();
 }
 
-Appender::Appender(Connection &con, const string &database_name, const string &schema_name, const string &table_name)
-    : BaseAppender(Allocator::DefaultAllocator(), AppenderType::LOGICAL), context(con.context) {
+Appender::Appender(Connection &con, const string &database_name, const string &schema_name, const string &table_name,
+                   AppenderType appender_type)
+    : BaseAppender(Allocator::DefaultAllocator(), appender_type), context(con.context) {
 	auto &config = DBConfig::GetConfig(*context.get());
 	flush_memory_threshold = config.options.appender_allocator_flush_threshold;
 
@@ -122,12 +123,12 @@ Appender::Appender(Connection &con, const string &database_name, const string &s
 	collection = make_uniq<ColumnDataCollection>(allocator, GetActiveTypes());
 }
 
-Appender::Appender(Connection &con, const string &schema_name, const string &table_name)
-    : Appender(con, INVALID_CATALOG, schema_name, table_name) {
+Appender::Appender(Connection &con, const string &schema_name, const string &table_name, AppenderType appender_type)
+    : Appender(con, INVALID_CATALOG, schema_name, table_name, appender_type) {
 }
 
-Appender::Appender(Connection &con, const string &table_name)
-    : Appender(con, INVALID_CATALOG, DEFAULT_SCHEMA, table_name) {
+Appender::Appender(Connection &con, const string &table_name, AppenderType appender_type)
+    : Appender(con, INVALID_CATALOG, DEFAULT_SCHEMA, table_name, appender_type) {
 }
 
 Appender::~Appender() {
