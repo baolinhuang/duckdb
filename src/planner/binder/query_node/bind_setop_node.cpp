@@ -240,19 +240,24 @@ unique_ptr<BoundQueryNode> Binder::BindNode(SetOperationNode &statement) {
 				std::string result_collation;
 				if (StringUtil::Lower(left_collation).find("nocase") != std::string::npos && 
 					StringUtil::Lower(right_collation).find("nocase") != std::string::npos) {
-					result_collation.append("nocase");
+					result_collation.append("NOCASE");
 				}
 				if (StringUtil::Lower(left_collation).find("noaccent") != std::string::npos && 
 					StringUtil::Lower(right_collation).find("noaccent") != std::string::npos) {
 					if (result_collation.size() > 0) {
 						result_collation.push_back('.');
 					}
-					result_collation.append("noaccent");
+					result_collation.append("NOACCENT");
 				}
 				if (result_collation.empty()) {
-					result_collation.append("binary");
+					if (left_collation.empty() && right_collation.empty()) {
+						result->types.push_back(LogicalType::VARCHAR);
+					} else {
+						result->types.push_back(LogicalType::VARCHAR_COLLATION("POSIX"));
+					}
+				} else {
+					result->types.push_back(LogicalType::VARCHAR_COLLATION(result_collation));
 				}
-				result->types.push_back(LogicalType::VARCHAR_COLLATION(result_collation));
 				continue;
 			}
 			auto result_type = LogicalType::ForceMaxLogicalType(result->left->types[i], result->right->types[i]);

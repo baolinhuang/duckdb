@@ -1121,6 +1121,16 @@ static bool CombineEqualTypes(const LogicalType &left, const LogicalType &right,
 		return true;
 	case LogicalTypeId::VARCHAR:
 		// varchar: use type that has collation (if any)
+		{
+			// Column with all collations can be compared in binary format with column with binary collation.
+			auto left_collation = StringType::GetCollation(left);
+			auto right_collation = StringType::GetCollation(right);
+			if (!strcasecmp(left_collation.c_str(), "posix") || !strcasecmp(left_collation.c_str(), "binary") ||
+			    !strcasecmp(right_collation.c_str(), "posix") || !strcasecmp(right_collation.c_str(), "binary")) {
+				result = LogicalType::VARCHAR_COLLATION("POSIX");
+				return true;
+			}
+		}
 		if (StringType::GetCollation(right).empty()) {
 			result = left;
 		} else {

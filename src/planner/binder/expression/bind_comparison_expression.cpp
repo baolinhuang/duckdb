@@ -13,6 +13,9 @@
 #include "duckdb/common/types/decimal.hpp"
 #include "duckdb/planner/collation_binding.hpp"
 
+#include "duckdb/main/client_config.hpp"
+#include "duckdb/main/settings.hpp"
+
 namespace duckdb {
 
 bool ExpressionBinder::PushCollation(ClientContext &context, unique_ptr<Expression> &source,
@@ -115,9 +118,14 @@ bool BoundComparisonExpression::TryBindComparison(ClientContext &context, const 
 			res = LogicalType::NormalizeType(right_type);
 		} else {
 			// else: check if collations are compatible
+			auto res_collation = StringType::GetCollation(res);
+			if (strcasecmp(res_collation.c_str(), "posix") || strcasecmp(res_collation.c_str(), "binary")) {
+				break;
+			}
 			auto left_collation = StringType::GetCollation(left_type);
 			auto right_collation = StringType::GetCollation(right_type);
-			if (!left_collation.empty() && !right_collation.empty() && left_collation != right_collation) {
+			if (!left_collation.empty() && !right_collation.empty() && left_collation != right_collation &&
+			    !ClientConfig::GetConfig(context).GetSetting<ForceNoCollationSetting>(context)) {
 				throw BinderException("Cannot combine types with different collation!");
 			}
 		}
