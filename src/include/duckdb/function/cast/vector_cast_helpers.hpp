@@ -16,6 +16,8 @@
 #include "duckdb/common/string_map_set.hpp"
 #include "duckdb/function/cast/nested_to_varchar_cast.hpp"
 
+#include "utf8proc_wrapper.hpp"
+
 namespace duckdb {
 
 template <class OP>
@@ -24,6 +26,19 @@ struct VectorStringCastOperator {
 	static RESULT_TYPE Operation(INPUT_TYPE input, ValidityMask &mask, idx_t idx, void *dataptr) {
 		auto result = reinterpret_cast<Vector *>(dataptr);
 		return OP::template Operation<INPUT_TYPE>(input, *result);
+	}
+};
+
+template <class OP>
+struct VectorStringCastOperatorWithCheck {
+	template <class INPUT_TYPE, class RESULT_TYPE>
+	static string_t Operation(string_t input, ValidityMask &mask, idx_t idx, void *dataptr) {
+		if (Utf8Proc::Analyze(input.GetData(), input.GetSize()) == UnicodeType::INVALID) {
+			mask.SetInvalid(idx);
+			return string_t();
+		}
+		auto result = reinterpret_cast<Vector *>(dataptr);
+		return OP::template Operation<string_t>(input, *result);
 	}
 };
 
@@ -150,6 +165,20 @@ struct VectorCastHelpers {
 		D_ASSERT(result.GetType().InternalType() == PhysicalType::VARCHAR);
 		UnaryExecutor::GenericExecute<SRC, string_t, VectorStringCastOperator<OP>>(source, result, count,
 		                                                                           (void *)&result);
+		return true;
+	}
+
+	template <class SRC, class OP>
+	static bool StringCastWithCheck(Vector &source, Vector &result, idx_t count, CastParameters &parameters) {
+		D_ASSERT(result.GetType().InternalType() == PhysicalType::VARCHAR);
+		if (parameters.check_blob_to_varchar) {
+			UnaryExecutor::GenericExecute<SRC, string_t, VectorStringCastOperatorWithCheck<CastFromBlobWithCheck>>(
+			    source, result, count, (void *)&result);
+		} else {
+			UnaryExecutor::GenericExecute<SRC, string_t, VectorStringCastOperator<OP>>(
+			    source, result, count, (void *)&result);
+		}
+
 		return true;
 	}
 

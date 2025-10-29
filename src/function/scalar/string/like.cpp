@@ -235,7 +235,7 @@ static unique_ptr<FunctionData> LikeEscapeBindFunction(ClientContext &context, S
 	if (arguments[1]->IsFoldable() && arguments[2]->IsFoldable()) {
 		Value pattern_str = ExpressionExecutor::EvaluateScalar(context, *arguments[1]);
 		Value escape_str = ExpressionExecutor::EvaluateScalar(context, *arguments[2]);
-		if (pattern_str.ToSQLString().find(escape_str.ToString()) != std::string::npos) {
+		if (pattern_str.ToString().find(escape_str.ToString()) != std::string::npos) {
 			return nullptr;
 		}
 		return LikeMatcher::CreateLikeMatcher(pattern_str.ToString());

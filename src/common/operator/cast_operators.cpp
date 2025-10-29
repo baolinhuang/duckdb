@@ -32,6 +32,8 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "utf8proc_wrapper.hpp"
+
 namespace duckdb {
 
 ConversionException TryCast::UnimplementedErrorMessage(PhysicalType source, PhysicalType target,
@@ -1408,6 +1410,17 @@ string_t CastFromBlob::Operation(string_t input, Vector &vector) {
 
 	string_t result = StringVector::EmptyString(vector, result_size);
 	Blob::ToString(input, result.GetDataWriteable());
+	result.Finalize();
+
+	return result;
+}
+
+template <>
+string_t CastFromBlobWithCheck::Operation<string_t>(string_t input, Vector &vector) {
+	idx_t result_size = input.GetSize();
+
+	string_t result = StringVector::EmptyString(vector, result_size);
+	memcpy(result.GetDataWriteable(), input.GetData(), result_size);
 	result.Finalize();
 
 	return result;

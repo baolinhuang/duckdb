@@ -85,6 +85,8 @@ struct CastParameters {
 	optional_idx query_location;
 	//! In the case of a nested type, when facing a cast error, if we nullify the parent
 	bool nullify_parent = false;
+	// ! Whether to check when casting blob to varchar
+	bool check_blob_to_varchar = true;
 };
 
 struct CastLocalStateParameters {

@@ -15,6 +15,7 @@ bool VectorOperations::TryCast(CastFunctionSet &set, GetCastFunctionInput &input
 		local_state = cast_function.init_local_state(lparameters);
 	}
 	CastParameters parameters(cast_function.cast_data.get(), strict, error_message, local_state.get(), nullify_parent);
+	parameters.check_blob_to_varchar = false;
 	return cast_function.function(source, result, count, parameters);
 }
 

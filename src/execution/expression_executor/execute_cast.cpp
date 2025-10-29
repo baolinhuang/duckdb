@@ -37,6 +37,7 @@ void ExpressionExecutor::Execute(const BoundCastExpression &expr, ExpressionStat
 	parameters.query_location = expr.GetQueryLocation();
 	parameters.cast_source = expr.child.get();
 	parameters.cast_target = expr;
+	parameters.check_blob_to_varchar = true;
 	expr.bound_cast.function(child, result, count, parameters);
 }
 
