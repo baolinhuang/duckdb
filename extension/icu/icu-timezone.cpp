@@ -294,6 +294,15 @@ struct ICUTimeToTimestamp : public ICUDateFunc {
 	struct BindData : ICUDateFunc::BindData {
 		explicit BindData(ClientContext &context);
 		timestamp_t start_timestamp;
+
+		bool Equals(const FunctionData &other_p) const override {
+			auto &other = other_p.Cast<const BindData>();
+			return start_timestamp == other.start_timestamp && (ICUDateFunc::BindData::Equals(other_p));
+		}
+		duckdb::unique_ptr<FunctionData> Copy() const override{
+			return make_uniq<BindData>(*this);
+		}
+		
 	};
 
 	static BoundCastInfo BindCastToTimestamp(BindCastInput &input, const LogicalType &source, const LogicalType &target) {
