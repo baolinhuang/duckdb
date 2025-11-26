@@ -367,7 +367,7 @@ struct ICUDatePart : public ICUDateFunc {
 	}
 
 	static string_t DayName(icu::Calendar *calendar, const uint64_t micros) {
-		return Date::DAY_NAMES[ExtractDayOfWeek(calendar, micros)];
+		return Date::DAY_NAMES[ExtractDayOfWeek(calendar, micros) - 1];
 	}
 
 	template <typename RESULT_TYPE>
