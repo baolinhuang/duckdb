@@ -945,9 +945,13 @@ bool TryCast::Operation(double input, double &result, bool strict) {
 
 template <>
 bool TryCast::Operation(string_t input, bool &result, bool strict) {
-	auto input_data = reinterpret_cast<const char *>(input.GetData());
-	auto input_size = input.GetSize();
-	return TryCastStringBool(input_data, input_size, result, strict);
+	// auto input_data = reinterpret_cast<const char *>(input.GetData());
+	// auto input_size = input.GetSize();
+	// return TryCastStringBool(input_data, input_size, result, strict);
+	double tmp;
+	TryCast::Operation(input, tmp, strict);
+	result = tmp != 0;
+	return true;
 }
 template <>
 bool TryCast::Operation(string_t input, int8_t &result, bool strict) {
