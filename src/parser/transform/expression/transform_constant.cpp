@@ -15,7 +15,50 @@ unique_ptr<ConstantExpression> Transformer::TransformValue(duckdb_libpgquery::PG
 	case duckdb_libpgquery::T_PGInteger:
 		D_ASSERT(val.val.ival <= NumericLimits<int32_t>::Maximum());
 		return make_uniq<ConstantExpression>(Value::INTEGER((int32_t)val.val.ival));
-	case duckdb_libpgquery::T_PGBitString: // FIXME: this should actually convert to BLOB
+	case duckdb_libpgquery::T_PGBitString: {
+		D_ASSERT(val.val.str[0] == 'x' || val.val.str[0] == 'b');
+		if (val.val.str[0] == 'x') {
+			auto unhex_input = make_uniq<ConstantExpression>(Value(string(val.val.str + 1)));
+			string unhex_string;
+			char *c = val.val.str + 1;
+			while (*c) {
+				if (!(*(c + 1)))
+					throw ParserException("Invalid bit string");
+				uint8_t major = StringUtil::GetHexValue(*c);
+				uint8_t minor = StringUtil::GetHexValue(*(c + 1));
+				unhex_string += (static_cast<char>((major << 4) | minor));
+				c += 2;
+			}
+			return make_uniq<ConstantExpression>(
+			    Value::BLOB(reinterpret_cast<const_data_ptr_t>(unhex_string.c_str()), unhex_string.size()));
+		} else {
+			string unbin_string;
+			idx_t size = 0;
+			char *c = val.val.str + 1;
+			while (*c) {
+				size += 1;
+				c++;
+			}
+			c = val.val.str + 1;
+			idx_t remainder = size % 8;
+			uint8_t byte = 0;
+			if (remainder) {
+				for (idx_t i = remainder; i > 0; --i, ++c) {
+					byte |= StringUtil::GetBinaryValue(*c) << (i - 1);
+				}
+				unbin_string += byte;
+			}
+			while (*c) {
+				uint8_t byte = 0;
+				for (idx_t j = 8; j > 0; --j, ++c) {
+					byte |= StringUtil::GetBinaryValue(*c) << (j - 1);
+				}
+				unbin_string += byte;
+			}
+			return make_uniq<ConstantExpression>(
+			    Value::BLOB(reinterpret_cast<const_data_ptr_t>(unbin_string.c_str()), unbin_string.size()));
+		}
+	}
 	case duckdb_libpgquery::T_PGString: {
 		std::string unescape_string;
 		char *c = val.val.str;
