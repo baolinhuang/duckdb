@@ -120,7 +120,7 @@ optional_ptr<CompressionFunction> DBConfig::GetCompressionFunction(CompressionTy
 		if (function) {
 			return function;
 		} else if (not_supported) {
-			// The function is not loaded but not supported for this physical type
+			// The function is loaded but not supported for this physical type
 			return nullptr;
 		}
 	}
