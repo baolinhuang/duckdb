@@ -950,7 +950,7 @@ bool TryCast::Operation(string_t input, bool &result, bool strict) {
 	// return TryCastStringBool(input_data, input_size, result, strict);
 	double tmp;
 	TryCast::Operation(input, tmp, strict);
-	result = tmp != 0;
+	result = (tmp == 1);
 	return true;
 }
 template <>
