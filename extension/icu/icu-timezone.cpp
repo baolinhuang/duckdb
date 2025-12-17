@@ -385,8 +385,10 @@ struct ICUTimestampToDouble : public ICUDateFunc {
 			const auto hr = ExtractField(calendar.get(), UCAL_HOUR_OF_DAY);
 			const auto mn = ExtractField(calendar.get(), UCAL_MINUTE);
 			const auto secs = ExtractField(calendar.get(), UCAL_SECOND);
-			const auto millis = ExtractField(calendar.get(), UCAL_MILLISECOND);
-			return (year * 10000LL + mm * 100LL + dd) * 1000000LL + hr * 10000LL + mn * 100LL + secs + millis / 1000000.;
+			const auto microsecond = UnsafeNumericCast<int32_t>(
+			    ICUDateFunc::ExtractField(calendar.get(), UCAL_MILLISECOND) * Interval::MICROS_PER_MSEC + micros);
+			return (year * 10000LL + mm * 100LL + dd) * 1000000LL + hr * 10000LL + mn * 100LL + secs +
+			       microsecond / 1000000.;
 		});
 		return true;
 	}

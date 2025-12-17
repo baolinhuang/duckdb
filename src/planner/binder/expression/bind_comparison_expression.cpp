@@ -79,6 +79,11 @@ bool BoundComparisonExpression::TryBindComparison(ClientContext &context, const 
 		is_equality = false;
 		break;
 	}
+	if (((left_type.IsNumeric() || left_type.id() == LogicalTypeId::INTEGER_LITERAL) && right_type.IsTemporal()) ||
+	    (left_type.IsTemporal() && (right_type.IsNumeric() || right_type.id() == LogicalTypeId::INTEGER_LITERAL))) {
+		result_type = LogicalType::DOUBLE;
+		return true;
+	}
 	if (is_equality) {
 		res = LogicalType::ForceMaxLogicalType(left_type, right_type);
 	} else {
