@@ -81,6 +81,7 @@ public:
 		auto &bind_data = bind_data_p->Cast<TableScanBindData>();
 		auto &duck_table = bind_data.table.Cast<DuckTableEntry>();
 		max_threads = duck_table.GetStorage().MaxThreads(context);
+		max_threads = MinValue<idx_t>(max_threads, ClientConfig::GetConfig(context).max_threads_per_query);
 	}
 
 	//! The maximum number of threads for this table scan.

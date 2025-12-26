@@ -10,6 +10,7 @@
 #include "duckdb/parallel/base_pipeline_event.hpp"
 #include "duckdb/parallel/executor_task.hpp"
 #include "duckdb/storage/buffer_manager.hpp"
+#include "duckdb/main/client_config.hpp"
 
 #include <algorithm>
 
@@ -292,7 +293,10 @@ public:
 public:
 	void Schedule() override {
 		vector<shared_ptr<Task>> tasks;
-		for (idx_t i = 0; i < idx_t(TaskScheduler::GetScheduler(context).NumberOfThreads()); i++) {
+		idx_t max_threads_per_query = ClientConfig::GetConfig(context).max_threads_per_query;
+		for (idx_t i = 0;
+		     i < MinValue<idx_t>(idx_t(TaskScheduler::GetScheduler(context).NumberOfThreads()), max_threads_per_query);
+		     i++) {
 			auto process_task =
 			    make_uniq<ProcessRemainingBatchesTask>(pipeline->executor, shared_from_this(), gstate, context, op);
 			tasks.push_back(std::move(process_task));

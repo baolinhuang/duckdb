@@ -493,7 +493,7 @@ void UngroupedDistinctAggregateFinalizeEvent::Schedule() {
 	}
 	n_tasks = MaxValue<idx_t>(n_tasks, 1);
 	n_tasks = MinValue<idx_t>(n_tasks, NumericCast<idx_t>(TaskScheduler::GetScheduler(context).NumberOfThreads()));
-
+	n_tasks = MinValue<idx_t>(n_tasks, ClientConfig::GetConfig(context).max_threads_per_query);
 	vector<shared_ptr<Task>> tasks;
 	for (idx_t i = 0; i < n_tasks; i++) {
 		tasks.push_back(

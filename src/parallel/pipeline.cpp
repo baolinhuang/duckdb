@@ -130,6 +130,7 @@ bool Pipeline::ScheduleParallel(shared_ptr<Event> &event) {
 	if (max_threads > active_threads) {
 		max_threads = active_threads;
 	}
+	max_threads = MinValue<idx_t>(max_threads, ClientConfig::GetConfig(executor.context).max_threads_per_query);
 	return LaunchScanTasks(event, max_threads);
 }
 

@@ -1298,6 +1298,16 @@ struct AppenderAllocatorFlushThresholdSetting {
 	static Value GetSetting(const ClientContext &context);
 };
 
+struct QueryMaxThreadsSetting {
+    using RETURN_TYPE = idx_t;
+    static constexpr const char *Name = "max_threads_per_query";
+    static constexpr const char *Description = "The max threads for single query";
+    static constexpr const char *InputType = "UBIGINT";
+    static void SetLocal(ClientContext &context, const Value &parameter);
+    static void ResetLocal(ClientContext &context);
+    static Value GetSetting(const ClientContext &context);
+};
+
 //===----------------------------------------------------------------------===//
 // End of the auto-generated list of settings structures
 //===--------------------------------------------------------------------===//

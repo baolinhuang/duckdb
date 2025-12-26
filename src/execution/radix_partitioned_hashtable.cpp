@@ -10,7 +10,7 @@
 #include "duckdb/execution/operator/aggregate/physical_hash_aggregate.hpp"
 #include "duckdb/planner/expression/bound_reference_expression.hpp"
 #include "duckdb/storage/temporary_memory_manager.hpp"
-
+#include "duckdb/main/client_config.hpp"
 namespace duckdb {
 
 RadixPartitionedHashTable::RadixPartitionedHashTable(GroupingSet &grouping_set_p, const GroupedAggregateData &op_p)
@@ -209,7 +209,8 @@ public:
 RadixHTGlobalSinkState::RadixHTGlobalSinkState(ClientContext &context_p, const RadixPartitionedHashTable &radix_ht_p)
     : context(context_p), temporary_memory_state(TemporaryMemoryManager::Get(context).Register(context)),
       finalized(false), external(false), active_threads(0),
-      number_of_threads(NumericCast<idx_t>(TaskScheduler::GetScheduler(context).NumberOfThreads())),
+      number_of_threads(MinValue<idx_t>(NumericCast<idx_t>(TaskScheduler::GetScheduler(context).NumberOfThreads()),
+                                        ClientConfig::GetConfig(context).max_threads_per_query)),
       any_combined(false), radix_ht(radix_ht_p), config(*this), stored_allocators_size(0), finalize_done(0),
       scan_pin_properties(TupleDataPinProperties::DESTROY_AFTER_DONE), count_before_combining(0),
       max_partition_size(0) {
@@ -650,8 +651,10 @@ idx_t RadixPartitionedHashTable::MaxThreads(GlobalSinkState &sink_p) const {
 		return 0;
 	}
 
-	const auto max_threads = MinValue<idx_t>(
-	    NumericCast<idx_t>(TaskScheduler::GetScheduler(sink.context).NumberOfThreads()), sink.partitions.size());
+	auto max_threads = MinValue<idx_t>(NumericCast<idx_t>(TaskScheduler::GetScheduler(sink.context).NumberOfThreads()),
+	                                   sink.partitions.size());
+	max_threads = MinValue<idx_t>(max_threads, ClientConfig::GetConfig(sink.context).max_threads_per_query);
+
 	sink.temporary_memory_state->SetRemainingSizeAndUpdateReservation(
 	    sink.context, sink.stored_allocators_size + max_threads * sink.max_partition_size);
 
@@ -818,7 +821,8 @@ void RadixHTLocalSourceState::Finalize(RadixHTGlobalSinkState &sink, RadixHTGlob
 		const auto capacity = GroupedAggregateHashTable::GetCapacityForCount(partition.data->Count());
 
 		// However, we will limit the initial capacity so we don't do a huge over-allocation
-		const auto n_threads = NumericCast<idx_t>(TaskScheduler::GetScheduler(gstate.context).NumberOfThreads());
+		auto n_threads = NumericCast<idx_t>(TaskScheduler::GetScheduler(gstate.context).NumberOfThreads());
+		n_threads = MinValue<idx_t>(n_threads, ClientConfig::GetConfig(gstate.context).max_threads_per_query);
 		const auto memory_limit = BufferManager::GetBufferManager(gstate.context).GetMaxMemory();
 		const idx_t thread_limit = LossyNumericCast<idx_t>(0.6 * double(memory_limit) / double(n_threads));
 

@@ -1157,6 +1157,22 @@ Value SqlModeSetting::GetSetting(const ClientContext &context) {
 }
 
 //===----------------------------------------------------------------------===//
+// Query Max Threads
+//===----------------------------------------------------------------------===//
+void QueryMaxThreadsSetting::SetLocal(ClientContext &context, const Value &parameter) {
+	ClientConfig::GetConfig(context).max_threads_per_query = parameter.GetValue<idx_t>();
+}
+
+void QueryMaxThreadsSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).max_threads_per_query = ClientConfig().max_threads_per_query;
+}
+
+Value QueryMaxThreadsSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::UBIGINT(config.max_threads_per_query);
+}
+
+//===----------------------------------------------------------------------===//
 // Zstd Min String Length
 //===----------------------------------------------------------------------===//
 void ZstdMinStringLengthSetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {

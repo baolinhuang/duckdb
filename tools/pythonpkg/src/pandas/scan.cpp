@@ -129,7 +129,8 @@ unique_ptr<LocalTableFunctionState> PandasScanFunction::PandasScanInitLocal(Exec
 
 idx_t PandasScanFunction::PandasScanMaxThreads(ClientContext &context, const FunctionData *bind_data_p) {
 	if (ClientConfig::GetConfig(context).verify_parallelism) {
-		return context.db->NumberOfThreads();
+		return MinValue<idx_t>(NumericCast<idx_t>(context.db->NumberOfThreads()),
+		                       ClientConfig::GetConfig(context).max_threads_per_query);
 	}
 	auto &bind_data = bind_data_p->Cast<PandasScanFunctionData>();
 	return bind_data.row_count / PANDAS_PARTITION_COUNT + 1;

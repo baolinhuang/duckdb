@@ -102,6 +102,7 @@ PhysicalOperator &DuckCatalog::PlanInsert(ClientContext &context, PhysicalPlanGe
 	bool parallel_streaming_insert = !PhysicalPlanGenerator::PreserveInsertionOrder(context, *plan);
 	bool use_batch_index = PhysicalPlanGenerator::UseBatchIndex(context, *plan);
 	auto num_threads = TaskScheduler::GetScheduler(context).NumberOfThreads();
+	num_threads = MinValue<idx_t>(num_threads, ClientConfig::GetConfig(context).max_threads_per_query);
 	if (op.return_chunk) {
 		// not supported for RETURNING (yet?)
 		parallel_streaming_insert = false;

@@ -171,6 +171,9 @@ struct ClientConfig {
 	//! The set of disabled optimizers (default empty)
 	set<OptimizerType> disabled_optimizers;
 
+	//! The max threads for single query
+	idx_t max_threads_per_query = 1000000;
+
 public:
 	static ClientConfig &GetConfig(ClientContext &context);
 	static const ClientConfig &GetConfig(const ClientContext &context);

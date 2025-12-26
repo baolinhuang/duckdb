@@ -256,7 +256,8 @@ public:
 			throw InternalException("parallel_lock is not held in TryOpenNextFile, this should not happen");
 		}
 
-		const auto file_lookahead_limit = NumericCast<idx_t>(TaskScheduler::GetScheduler(context).NumberOfThreads());
+		auto file_lookahead_limit = NumericCast<idx_t>(TaskScheduler::GetScheduler(context).NumberOfThreads());
+		file_lookahead_limit = MinValue<idx_t>(file_lookahead_limit, ClientConfig::GetConfig(context).max_threads_per_query);
 
 		idx_t file_index = global_state.file_index;
 		idx_t i = 0;
@@ -502,7 +503,9 @@ public:
 		result->column_indexes = input.column_indexes;
 		result->filters = input.filters.get();
 		result->global_state = bind_data.interface->InitializeGlobalState(context, bind_data, *result);
-		result->max_threads = NumericCast<idx_t>(TaskScheduler::GetScheduler(context).NumberOfThreads());
+		result->max_threads =
+		    MinValue<idx_t>(NumericCast<idx_t>(TaskScheduler::GetScheduler(context).NumberOfThreads()),
+		                    ClientConfig::GetConfig(context).max_threads_per_query);
 
 		// Ensure all readers are initialized and FileListScan is sync with readers list
 		for (auto &reader_data : result->readers) {
