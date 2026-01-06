@@ -102,13 +102,26 @@ void LocalTableStorage::InitializeScan(CollectionScanState &state, optional_ptr<
 
 idx_t LocalTableStorage::EstimatedSize() {
 	// count the appended rows
-	idx_t appended_rows = row_groups->GetTotalRows() - deleted_rows;
+	idx_t data_size = 0;
 
-	// get the (estimated) size of a row (no compressions, etc.)
-	idx_t row_size = 0;
-	auto &types = row_groups->GetTypes();
-	for (auto &type : types) {
-		row_size += GetTypeIdSize(type.InternalType());
+	if (row_groups->GetTotalRows() >= row_groups->GetRowGroupSize() && deleted_rows == 0) {
+		// Optimistic insertion does not generate many WAL logs, so we estimate the size of the Data Block Pointers here
+		idx_t row_group_count = row_groups->GetRowGroupCount();
+		idx_t column_count = row_groups->GetTypes().size();
+
+		data_size = row_group_count * (sizeof(PersistentRowGroupData) +
+		                               column_count * (sizeof(PersistentColumnData) + sizeof(DataPointer)));
+	} else {
+		idx_t appended_rows = row_groups->GetTotalRows() - deleted_rows;
+
+		// get the (estimated) size of a row (no compressions, etc.)
+		idx_t row_size = 0;
+		auto &types = row_groups->GetTypes();
+		for (auto &type : types) {
+			row_size += GetTypeIdSize(type.InternalType());
+		}
+
+		data_size = appended_rows * row_size;
 	}
 
 	// get the index size
@@ -120,7 +133,7 @@ idx_t LocalTableStorage::EstimatedSize() {
 	});
 
 	// return the size of the appended rows and the index size
-	return appended_rows * row_size + index_sizes;
+	return data_size + index_sizes;
 }
 
 void LocalTableStorage::WriteNewRowGroup() {

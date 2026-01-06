@@ -54,6 +54,8 @@ public:
 
 	bool IsEmpty() const;
 
+	idx_t GetRowGroupCount() const;
+
 	void AppendRowGroup(SegmentLock &l, idx_t start_row);
 	//! Get the nth row-group, negative numbers start from the back (so -1 is the last row group, etc)
 	RowGroup *GetRowGroup(int64_t index);
