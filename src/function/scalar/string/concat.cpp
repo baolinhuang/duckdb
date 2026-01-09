@@ -93,7 +93,7 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 		// loop over the vector and concat to all results
 		if (input.GetVectorType() == VectorType::CONSTANT_VECTOR) {
 			// constant vector
-			if (ConstantVector::IsNull(input) || input_has_null[0]) {
+			if (ConstantVector::IsNull(input)) {
 				break;
 			}
 			// append the constant vector to each of the strings
@@ -101,6 +101,9 @@ static void StringConcatFunction(DataChunk &args, ExpressionState &state, Vector
 			auto input_ptr = input_data->GetData();
 			auto input_len = input_data->GetSize();
 			for (idx_t i = 0; i < args.size(); i++) {
+				if (input_has_null[i]) {
+					continue;
+				}
 				memcpy(result_data[i].GetDataWriteable() + result_lengths[i], input_ptr, input_len);
 				result_lengths[i] += input_len;
 			}
