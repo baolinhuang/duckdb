@@ -180,7 +180,7 @@ static const DefaultMacro internal_macros[] = {
 	{DEFAULT_SCHEMA, "date_sub", {"date", "interval", nullptr}, {{nullptr, nullptr}}, "date - interval"},
 	{DEFAULT_SCHEMA, "date", {"expr", nullptr}, {{nullptr, nullptr}}, "cast(expr as DATE)"},
 	{DEFAULT_SCHEMA, "addtime", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 + to_days_duckdb(if(split_part(expr2, ' ', -2)=='', 0, cast(split_part(expr2, ' ', -2) as int))) + to_seconds_duckdb(epoch(cast(split_part(expr2, ' ', -1) as TIME)))"},
-	{DEFAULT_SCHEMA, "to_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast(expr1 as date) - DATE '0000-01-01'"},
+	{DEFAULT_SCHEMA, "to_days", {"expr1", nullptr}, {{nullptr, nullptr}}, "cast(cast(expr1 as timestamp) as date) - DATE '0000-01-01'"},
 	{DEFAULT_SCHEMA, "to_seconds", {"expr1", nullptr}, {{nullptr, nullptr}}, "epoch(cast(expr1 as timestamp) - TIMESTAMP '0000-01-01')"},
 	// The function timediff will return incorrect result due to the different domain, so remove it.
 	// {DEFAULT_SCHEMA, "timediff", {"expr1", "expr2", nullptr}, {{nullptr, nullptr}}, "expr1 - expr2 + TIMESTAMP '1970-01-01 00:00:00'"},
