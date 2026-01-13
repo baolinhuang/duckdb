@@ -84,6 +84,18 @@ bool BoundComparisonExpression::TryBindComparison(ClientContext &context, const 
 		result_type = LogicalType::DOUBLE;
 		return true;
 	}
+	//
+	if ((left_type.id() == LogicalTypeId::VARCHAR && right_type.id() == LogicalTypeId::BLOB_LITERAL)) {
+		result_type = left_type;
+		return true;
+	} else if (left_type.id() == LogicalTypeId::BLOB_LITERAL && right_type.id() == LogicalTypeId::VARCHAR) {
+		result_type = right_type;
+		return true;
+	} else if ((left_type.id() == LogicalTypeId::VARCHAR && right_type.id() == LogicalTypeId::BLOB) ||
+	           (right_type.id() == LogicalTypeId::VARCHAR && left_type.id() == LogicalTypeId::BLOB)) {
+		result_type = LogicalType::BLOB;
+		return true;
+	}
 	if (is_equality) {
 		res = LogicalType::ForceMaxLogicalType(left_type, right_type);
 	} else {
@@ -163,6 +175,9 @@ LogicalType ExpressionBinder::GetExpressionReturnType(const Expression &expr) {
 				return LogicalType::INTEGER_LITERAL(constant.value);
 			}
 		}
+	}
+	if (expr.return_type == LogicalTypeId::BLOB && expr.IsFoldable()) {
+		return LogicalTypeId::BLOB_LITERAL;
 	}
 	return expr.return_type;
 }

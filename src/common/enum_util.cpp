@@ -2470,14 +2470,15 @@ const StringUtil::EnumStringLiteral *GetLogicalTypeIdValues() {
 		{ static_cast<uint32_t>(LogicalTypeId::AGGREGATE_STATE), "AGGREGATE_STATE" },
 		{ static_cast<uint32_t>(LogicalTypeId::LAMBDA), "LAMBDA" },
 		{ static_cast<uint32_t>(LogicalTypeId::UNION), "UNION" },
-		{ static_cast<uint32_t>(LogicalTypeId::ARRAY), "ARRAY" }
+		{ static_cast<uint32_t>(LogicalTypeId::ARRAY), "ARRAY" },
+		{ static_cast<uint32_t>(LogicalTypeId::BLOB_LITERAL), "BLOB_LITERAL" }
 	};
 	return values;
 }
 
 template<>
 const char* EnumUtil::ToChars<LogicalTypeId>(LogicalTypeId value) {
-	return StringUtil::EnumToString(GetLogicalTypeIdValues(), 47, "LogicalTypeId", static_cast<uint32_t>(value));
+	return StringUtil::EnumToString(GetLogicalTypeIdValues(), 48, "LogicalTypeId", static_cast<uint32_t>(value));
 }
 
 template<>

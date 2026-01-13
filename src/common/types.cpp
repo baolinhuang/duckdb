@@ -155,6 +155,7 @@ PhysicalType LogicalType::GetInternalType() {
 	case LogicalTypeId::UNKNOWN:
 	case LogicalTypeId::STRING_LITERAL:
 	case LogicalTypeId::INTEGER_LITERAL:
+	case LogicalTypeId::BLOB_LITERAL:
 		return PhysicalType::INVALID;
 	case LogicalTypeId::USER:
 		return PhysicalType::UNKNOWN;
@@ -953,6 +954,8 @@ LogicalType LogicalType::NormalizeType(const LogicalType &type) {
 		return LogicalType::VARCHAR;
 	case LogicalTypeId::INTEGER_LITERAL:
 		return IntegerLiteral::GetType(type);
+	case LogicalTypeId::BLOB_LITERAL:
+		return LogicalType::BLOB;
 	case LogicalTypeId::UNKNOWN:
 		throw ParameterNotResolvedException();
 	default:
@@ -1252,6 +1255,7 @@ static idx_t GetLogicalTypeScore(const LogicalType &type) {
 	case LogicalTypeId::ANY:
 	case LogicalTypeId::STRING_LITERAL:
 	case LogicalTypeId::INTEGER_LITERAL:
+	case LogicalTypeId::BLOB_LITERAL:
 		return 0;
 	// numerics
 	case LogicalTypeId::BOOLEAN:

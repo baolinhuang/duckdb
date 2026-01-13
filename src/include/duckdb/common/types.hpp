@@ -230,7 +230,9 @@ enum class LogicalTypeId : uint8_t {
 	AGGREGATE_STATE = 105,
 	LAMBDA = 106,
 	UNION = 107,
-	ARRAY = 108
+	ARRAY = 108,
+
+	BLOB_LITERAL = 129/* blob literals, used for constant blob - only exists while binding */
 };
 
 struct ExtraTypeInfo;

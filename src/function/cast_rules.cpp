@@ -438,6 +438,15 @@ int64_t CastRules::ImplicitCast(const LogicalType &from, const LogicalType &to) 
 		// in any other case we use the casting rules of the preferred type of the literal
 		return CastRules::ImplicitCast(IntegerLiteral::GetType(from), to);
 	}
+	if (from.id() == LogicalTypeId::BLOB_LITERAL) {
+		if (!LogicalTypeIsValid(to)) {
+			return -1;
+		}
+		if (to.id() == LogicalTypeId::BLOB) {
+			return 1;
+		}
+		return CastRules::ImplicitCast(LogicalType{LogicalTypeId::BLOB}, to);
+	}
 	if (from.GetAlias() != to.GetAlias()) {
 		// if aliases are different, an implicit cast is not possible
 		return -1;
