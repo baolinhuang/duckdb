@@ -57,18 +57,6 @@ ColumnDataCheckpointer::ColumnDataCheckpointer(vector<reference<ColumnCheckpoint
                                                ColumnCheckpointInfo &checkpoint_info)
     : checkpoint_states(checkpoint_states), storage_manager(storage_manager), row_group(row_group),
       intermediate(CreateIntermediateVector(checkpoint_states)), checkpoint_info(checkpoint_info) {
-
-	auto &db = storage_manager.GetDatabase();
-	auto &config = DBConfig::GetConfig(db);
-	compression_functions.resize(checkpoint_states.size());
-	for (idx_t i = 0; i < checkpoint_states.size(); i++) {
-		auto &col_data = checkpoint_states[i].get().column_data;
-		auto to_add = config.GetCompressionFunctions(col_data.type.InternalType());
-		auto &functions = compression_functions[i];
-		for (auto &func : to_add) {
-			functions.push_back(&func.get());
-		}
-	}
 }
 
 void ColumnDataCheckpointer::ScanSegments(const std::function<void(Vector &, idx_t)> &callback) {
@@ -410,6 +398,19 @@ void ColumnDataCheckpointer::Checkpoint() {
 		// Nothing has undergone any changes, no need to checkpoint
 		// just move on to finalizing
 		return;
+	}
+
+	D_ASSERT(compression_functions.empty());
+	auto &db = storage_manager.GetDatabase();
+	auto &config = DBConfig::GetConfig(db);
+	compression_functions.resize(checkpoint_states.size());
+	for (idx_t i = 0; i < checkpoint_states.size(); i++) {
+		auto &col_data = checkpoint_states[i].get().column_data;
+		auto to_add = config.GetCompressionFunctions(col_data.type.InternalType());
+		auto &functions = compression_functions[i];
+		for (auto &func : to_add) {
+			functions.push_back(&func.get());
+		}
 	}
 
 	WriteToDisk();
