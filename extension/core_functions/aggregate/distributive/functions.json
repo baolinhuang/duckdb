@@ -138,6 +138,14 @@
         "aliases": ["group_concat","listagg"]
     },
     {
+        "name": "multi_string_agg",
+        "parameters": "array,arg",
+        "description": "Concatenates the array with an optional separator.",
+        "example": "array_group_concat(A, '-')",
+        "type": "aggregate_function",
+        "aliases": ["multi_group_concat"]
+    },
+    {
         "name": "sum",
         "parameters": "arg",
         "description": "Calculates the sum value for all tuples in arg.",

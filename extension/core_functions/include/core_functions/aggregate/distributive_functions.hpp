@@ -259,6 +259,22 @@ struct ListaggFun {
 	static constexpr const char *Name = "listagg";
 };
 
+struct MultiStringAggFun {
+	static constexpr const char *Name = "multi_string_agg";
+	static constexpr const char *Parameters = "array,arg";
+	static constexpr const char *Description = "Concatenates the array with an optional separator.";
+	static constexpr const char *Example = "array_group_concat(A, '-')";
+	static constexpr const char *Categories = "";
+
+	static AggregateFunction GetFunction();
+};
+
+struct MultiGroupConcatFun {
+	using ALIAS = MultiStringAggFun;
+
+	static constexpr const char *Name = "multi_group_concat";
+};
+
 struct SumFun {
 	static constexpr const char *Name = "sum";
 	static constexpr const char *Parameters = "arg";

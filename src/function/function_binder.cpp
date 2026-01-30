@@ -516,7 +516,9 @@ unique_ptr<BoundAggregateExpression> FunctionBinder::BindAggregateFunction(Aggre
 	if (bound_function.bind) {
 		bind_info = bound_function.bind(context, bound_function, children);
 		// we may have lost some arguments in the bind
-		children.resize(MinValue(bound_function.arguments.size(), children.size()));
+		if (bound_function.varargs == LogicalType::INVALID) {
+			children.resize(MinValue(bound_function.arguments.size(), children.size()));
+		}
 	}
 
 	// check if we need to add casts to the children

@@ -283,6 +283,8 @@ static const StaticFunctionDefinition core_functions[] = {
 	DUCKDB_AGGREGATE_FUNCTION_SET(ModeFun),
 	DUCKDB_SCALAR_FUNCTION_SET(MonthFun),
 	DUCKDB_SCALAR_FUNCTION_SET(MonthNameFun),
+	DUCKDB_AGGREGATE_FUNCTION_ALIAS(MultiGroupConcatFun),
+	DUCKDB_AGGREGATE_FUNCTION(MultiStringAggFun),
 	DUCKDB_SCALAR_FUNCTION_SET(NanosecondsFun),
 	DUCKDB_SCALAR_FUNCTION_SET(NextAfterFun),
 	DUCKDB_SCALAR_FUNCTION(NormalizedIntervalFun),
