@@ -637,9 +637,6 @@ unique_ptr<BoundCreateTableInfo> Binder::BindCreateTableInfo(unique_ptr<CreateIn
 		auto &config = DBConfig::Get(catalog.GetAttached());
 		VerifyCompressionType(storage_manager, config, *result);
 		CreateColumnDependencyManager(*result);
-		// bind the generated column expressions
-		BindGeneratedColumns(*result);
-		// bind any constraints
 
 		// bind collations to detect any unsupported collation errors
 		for (idx_t i = 0; i < base.columns.PhysicalColumnCount(); i++) {
@@ -649,6 +646,10 @@ unique_ptr<BoundCreateTableInfo> Binder::BindCreateTableInfo(unique_ptr<CreateIn
 			}
 			BindLogicalType(column.TypeMutable(), &result->schema.catalog, result->schema.name);
 		}
+		// bind the generated column expressions
+		BindGeneratedColumns(*result);
+		// bind any constraints
+
 		BindCreateTableConstraints(base, entry_retriever, schema);
 
 		if (AnyConstraintReferencesGeneratedColumn(base)) {
