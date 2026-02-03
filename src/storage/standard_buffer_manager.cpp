@@ -498,7 +498,7 @@ void StandardBufferManager::RequireTemporaryDirectory() {
 	}
 }
 
-void StandardBufferManager::WriteTemporaryBuffer(MemoryTag tag, block_id_t block_id, FileBuffer &buffer) {
+void StandardBufferManager::WriteTemporaryBuffer(MemoryTag tag, block_id_t block_id, FileBuffer &buffer, BlockHandle *block) {
 
 	// WriteTemporaryBuffer assumes that we never write a buffer below DEFAULT_BLOCK_ALLOC_SIZE.
 	RequireTemporaryDirectory();
@@ -520,6 +520,8 @@ void StandardBufferManager::WriteTemporaryBuffer(MemoryTag tag, block_id_t block
 	temporary_directory.handle->GetTempFile().IncreaseSizeOnDisk(buffer.AllocSize() + sizeof(idx_t));
 	handle->Write(&buffer.size, sizeof(idx_t), 0);
 	buffer.Write(*handle, sizeof(idx_t));
+
+	block->SetWrittenToTemporaryBlock(true);
 }
 
 unique_ptr<FileBuffer> StandardBufferManager::ReadTemporaryBuffer(MemoryTag tag, BlockHandle &block,
@@ -567,6 +569,15 @@ void StandardBufferManager::DeleteTemporaryFile(BlockHandle &block) {
 		temporary_directory.handle->GetTempFile().DeleteTemporaryBuffer(id);
 		return;
 	}
+
+	if (!block.IsUnloaded()) {
+		return;
+	}
+
+	if (!block.HasWrittenToTemporaryBlock()) {
+		return;
+	}
+	block.SetWrittenToTemporaryBlock(false);
 
 	// The file is not in the shared pool of files.
 	auto &fs = FileSystem::GetFileSystem(db);

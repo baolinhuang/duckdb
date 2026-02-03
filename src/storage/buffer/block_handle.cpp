@@ -13,7 +13,7 @@ BlockHandle::BlockHandle(BlockManager &block_manager, block_id_t block_id_p, Mem
     : block_manager(block_manager), readers(0), block_id(block_id_p), tag(tag), buffer_type(FileBufferType::BLOCK),
       buffer(nullptr), eviction_seq_num(0), destroy_buffer_upon(DestroyBufferUpon::BLOCK),
       memory_charge(tag, block_manager.buffer_manager.GetBufferPool()), unswizzled(nullptr),
-      eviction_queue_idx(DConstants::INVALID_INDEX) {
+      eviction_queue_idx(DConstants::INVALID_INDEX), written_temporary_block(false) {
 	eviction_seq_num = 0;
 	state = BlockState::BLOCK_UNLOADED;
 	memory_usage = block_manager.GetBlockAllocSize();
@@ -25,7 +25,7 @@ BlockHandle::BlockHandle(BlockManager &block_manager, block_id_t block_id_p, Mem
     : block_manager(block_manager), readers(0), block_id(block_id_p), tag(tag), buffer_type(buffer_p->GetBufferType()),
       eviction_seq_num(0), destroy_buffer_upon(destroy_buffer_upon_p),
       memory_charge(tag, block_manager.buffer_manager.GetBufferPool()), unswizzled(nullptr),
-      eviction_queue_idx(DConstants::INVALID_INDEX) {
+      eviction_queue_idx(DConstants::INVALID_INDEX), written_temporary_block(false) {
 	buffer = std::move(buffer_p);
 	state = BlockState::BLOCK_LOADED;
 	memory_usage = block_size;
@@ -171,7 +171,7 @@ unique_ptr<FileBuffer> BlockHandle::UnloadAndTakeBlock(BlockLock &lock) {
 
 	if (block_id >= MAXIMUM_BLOCK && MustWriteToTemporaryFile()) {
 		// temporary block that cannot be destroyed upon evict/unpin: write to temporary file
-		block_manager.buffer_manager.WriteTemporaryBuffer(tag, block_id, *buffer);
+		block_manager.buffer_manager.WriteTemporaryBuffer(tag, block_id, *buffer, this);
 	}
 	memory_charge.Resize(0);
 	state = BlockState::BLOCK_UNLOADED;

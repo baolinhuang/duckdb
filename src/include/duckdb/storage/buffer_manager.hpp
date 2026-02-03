@@ -110,7 +110,8 @@ public:
 protected:
 	virtual void PurgeQueue(const BlockHandle &handle) = 0;
 	virtual void AddToEvictionQueue(shared_ptr<BlockHandle> &handle);
-	virtual void WriteTemporaryBuffer(MemoryTag tag, block_id_t block_id, FileBuffer &buffer);
+	virtual void WriteTemporaryBuffer(MemoryTag tag, block_id_t block_id, FileBuffer &buffer,
+	                                  BlockHandle *block);
 	virtual unique_ptr<FileBuffer> ReadTemporaryBuffer(MemoryTag tag, BlockHandle &block,
 	                                                   unique_ptr<FileBuffer> buffer);
 	virtual void DeleteTemporaryFile(BlockHandle &block);

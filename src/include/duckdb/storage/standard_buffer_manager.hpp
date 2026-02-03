@@ -135,7 +135,7 @@ protected:
 	TemporaryMemoryManager &GetTemporaryMemoryManager() final;
 
 	//! Write a temporary buffer to disk
-	void WriteTemporaryBuffer(MemoryTag tag, block_id_t block_id, FileBuffer &buffer) final;
+	void WriteTemporaryBuffer(MemoryTag tag, block_id_t block_id, FileBuffer &buffer, BlockHandle *block) final;
 	//! Read a temporary buffer from disk
 	unique_ptr<FileBuffer> ReadTemporaryBuffer(MemoryTag tag, BlockHandle &block,
 	                                           unique_ptr<FileBuffer> buffer = nullptr) final;
