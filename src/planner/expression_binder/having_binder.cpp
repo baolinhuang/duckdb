@@ -6,6 +6,11 @@
 #include "duckdb/planner/expression_binder/aggregate_binder.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/planner/query_node/bound_select_node.hpp"
+#include "duckdb/main/client_config.hpp"
+#include "duckdb/common/enums/sql_mode.hpp"
+#include "duckdb/main/settings.hpp"
+#include "duckdb/planner/expression_binder.hpp"
+#include "duckdb/parser/expression/function_expression.hpp"
 
 namespace duckdb {
 
@@ -68,6 +73,16 @@ BindResult HavingBinder::BindColumnRef(unique_ptr<ParsedExpression> &expr_ptr, i
 	}
 
 	if (aggregate_handling != AggregateHandling::FORCE_AGGREGATES) {
+		bool only_full_group_by = (ClientConfig::GetConfig(context).GetSetting<SqlModeSetting>(context) &
+		                           1ULL << static_cast<uint8_t>(SqlModeType::MODE_ONLY_FULL_GROUP_BY));
+		if (!only_full_group_by) {
+			vector<unique_ptr<ParsedExpression>> func_children;
+			func_children.push_back(std::move(expr_ptr));
+			unique_ptr<ParsedExpression> any_value =
+			    std::move(make_uniq<FunctionExpression>("any_value", std::move(func_children)));
+			auto result = ExpressionBinder::BindExpression(any_value, depth, root_expression);
+			return result;
+		}
 		return BindResult(StringUtil::Format(
 		    "column %s must appear in the GROUP BY clause or be used in an aggregate function", column_name));
 	}
