@@ -209,8 +209,10 @@ unique_ptr<DecimalArithmeticBindData> BindDecimalArithmetic(ClientContext &conte
 		required_width = NumericCast<uint8_t>(required_width + 1);
 		if (required_width > Decimal::MAX_WIDTH_INT64 && max_width <= Decimal::MAX_WIDTH_INT64) {
 			// we don't automatically promote past the hugeint boundary to avoid the large hugeint performance penalty
-			bind_data->check_overflow = true;
-			required_width = Decimal::MAX_WIDTH_INT64;
+			if (!ClientConfig::GetConfig(context).GetSetting<PreferHighPrecisionSetting>(context)) {
+				bind_data->check_overflow = true;
+				required_width = Decimal::MAX_WIDTH_INT64;
+			}
 		}
 	}
 	if (required_width > Decimal::MAX_WIDTH_DECIMAL) {
@@ -826,8 +828,10 @@ unique_ptr<FunctionData> BindDecimalMultiply(ClientContext &context, ScalarFunct
 	}
 	if (result_width > Decimal::MAX_WIDTH_INT64 && max_width <= Decimal::MAX_WIDTH_INT64 &&
 	    result_scale < Decimal::MAX_WIDTH_INT64) {
-		bind_data->check_overflow = true;
-		result_width = Decimal::MAX_WIDTH_INT64;
+		if (!ClientConfig::GetConfig(context).GetSetting<PreferHighPrecisionSetting>(context)) {
+			bind_data->check_overflow = true;
+			result_width = Decimal::MAX_WIDTH_INT64;
+		}
 	}
 	if (result_width > Decimal::MAX_WIDTH_DECIMAL) {
 		bind_data->check_overflow = true;

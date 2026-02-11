@@ -1085,6 +1085,16 @@ struct PivotLimitSetting {
 	static Value GetSetting(const ClientContext &context);
 };
 
+struct PreferHighPrecisionSetting {
+	using RETURN_TYPE = bool;
+	static constexpr const char *Name = "prefer_high_precision";
+	static constexpr const char *Description = "Prefer using high precision calculation";
+	static constexpr const char *InputType = "BOOLEAN";
+	static void SetLocal(ClientContext &context, const Value &parameter);
+	static void ResetLocal(ClientContext &context);
+	static Value GetSetting(const ClientContext &context);
+};
+
 struct PreferRangeJoinsSetting {
 	using RETURN_TYPE = bool;
 	static constexpr const char *Name = "prefer_range_joins";

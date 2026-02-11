@@ -83,6 +83,8 @@ struct ClientConfig {
 	bool force_asof_iejoin = false;
 	//! Force use of fetch row instead of scan, used for testing
 	bool force_fetch_row = false;
+	//! Prefer High Precision Calculation
+	bool prefer_high_precision = false;
 	//! Use range joins for inequalities, even if there are equality predicates
 	bool prefer_range_joins = false;
 	//! If this context should also try to use the available replacement scans

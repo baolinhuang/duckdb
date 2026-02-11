@@ -157,6 +157,7 @@ static const ConfigurationOption internal_options[] = {
     DUCKDB_LOCAL(PerfectHtThresholdSetting),
     DUCKDB_LOCAL(PivotFilterThresholdSetting),
     DUCKDB_LOCAL(PivotLimitSetting),
+    DUCKDB_LOCAL(PreferHighPrecisionSetting),
     DUCKDB_LOCAL(PreferRangeJoinsSetting),
     DUCKDB_LOCAL(PreserveIdentifierCaseSetting),
     DUCKDB_GLOBAL(PreserveInsertionOrderSetting),

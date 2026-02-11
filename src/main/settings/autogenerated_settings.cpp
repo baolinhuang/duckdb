@@ -1041,6 +1041,23 @@ Value PivotLimitSetting::GetSetting(const ClientContext &context) {
 }
 
 //===----------------------------------------------------------------------===//
+//Prefer High Precision Multiplication
+//===----------------------------------------------------------------------===//
+void PreferHighPrecisionSetting::SetLocal(ClientContext &context, const Value &input) {
+	auto &config = ClientConfig::GetConfig(context);
+	config.prefer_high_precision = input.GetValue<bool>();
+}
+
+void PreferHighPrecisionSetting::ResetLocal(ClientContext &context) {
+	ClientConfig::GetConfig(context).prefer_high_precision = ClientConfig().prefer_high_precision;
+}
+
+Value PreferHighPrecisionSetting::GetSetting(const ClientContext &context) {
+	auto &config = ClientConfig::GetConfig(context);
+	return Value::BOOLEAN(config.prefer_high_precision);
+}
+
+//===----------------------------------------------------------------------===//
 // Prefer Range Joins
 //===----------------------------------------------------------------------===//
 void PreferRangeJoinsSetting::SetLocal(ClientContext &context, const Value &input) {
