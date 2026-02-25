@@ -1498,7 +1498,7 @@ template <>
 bool CastFromBitToNumeric::Operation(string_t input, bool &result, CastParameters &parameters) {
 	D_ASSERT(input.GetSize() > 1);
 
-	uint8_t value;
+	uint64_t value;
 	bool success = CastFromBitToNumeric::Operation(input, value, parameters);
 	result = (value > 0);
 	return (success);
