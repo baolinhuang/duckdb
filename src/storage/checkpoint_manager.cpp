@@ -1,4 +1,5 @@
 #include "duckdb/storage/checkpoint_manager.hpp"
+#include "duckdb/common/printer.hpp"
 
 #include "duckdb/catalog/catalog_entry/duck_index_entry.hpp"
 #include "duckdb/catalog/catalog_entry/duck_table_entry.hpp"
@@ -533,6 +534,8 @@ void CheckpointReader::ReadTableMacro(CatalogTransaction transaction, Deserializ
 // Table Metadata
 //===--------------------------------------------------------------------===//
 void SingleFileCheckpointWriter::WriteTable(TableCatalogEntry &table, Serializer &serializer) {
+	Printer::PrintF("Checkpoint: writing table \"%s\".\"%s\"", table.ParentSchema().name, table.name);
+
 	// Write the table metadata
 	serializer.WriteProperty(100, "table", &table);
 
