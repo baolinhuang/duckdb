@@ -151,7 +151,8 @@ public:
 		for (const auto &col_idx : input.column_indexes) {
 			l_state->column_ids.push_back(bind_data.table.GetStorageIndex(col_idx));
 		}
-		l_state->scan_state.Initialize(l_state->column_ids, context.client, input.filters.get());
+		l_state->scan_state.Initialize(storage.GetAttached().GetDatabase(), l_state->column_ids, context.client,
+		                               input.filters.get());
 		local_storage.InitializeScan(storage, l_state->scan_state.local_state, input.filters);
 		return std::move(l_state);
 	}
@@ -306,8 +307,8 @@ public:
 			    make_uniq<RowGroupReorderer>(*bind_data.order_options, TransactionData(tx));
 		}
 
-		l_state->scan_state.Initialize(std::move(storage_ids), context.client, input.filters, input.sample_options,
-		                               total_rows);
+		l_state->scan_state.Initialize(storage.GetAttached().GetDatabase(), std::move(storage_ids), context.client,
+		                               input.filters, input.sample_options, total_rows);
 
 		l_state->rows_in_current_row_group = storage.NextParallelScan(context.client, state, l_state->scan_state);
 		if (l_state->rows_in_current_row_group > 0) {
@@ -400,12 +401,14 @@ public:
 				// We can avoid looping, and just return as appropriate
 				if (l_state.rows_in_current_row_group == 0) {
 					data_p.async_result = AsyncResultType::FINISHED;
+					l_state.scan_state.table_state.size_predictor.LogStats(context);
 				} else {
 					data_p.async_result = AsyncResultType::HAVE_MORE_OUTPUT;
 				}
 				return;
 			}
 			if (l_state.rows_in_current_row_group == 0) {
+				l_state.scan_state.table_state.size_predictor.LogStats(context);
 				return;
 			}
 
